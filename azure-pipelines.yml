@@ -76,24 +76,25 @@ stages:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
-              env:
-                DB_HOST: $(DB_HOST)
-                DB_PORT: $(DB_PORT)
-                DB_USER: $(DB_USER)
-                DB_PASSWORD: $(DB_PASSWORD)
-                DB_NAME: $(DB_NAME)
-                KEYCLOAK_REALM: $(KEYCLOAK_REALM)
-                KEYCLOAK_CLIENT_ID: $(KEYCLOAK_CLIENT_ID)
-                KEYCLOAK_SERVER_URL: $(KEYCLOAK_SERVER_URL)
-                KEYCLOAK_PUBLIC_KEY: $(KEYCLOAK_PUBLIC_KEY)
-                KEYCLOAK_ADMIN_CLIENT_ID: $(KEYCLOAK_ADMIN_CLIENT_ID)
-                KEYCLOAK_ADMIN_CLIENT_SECRET: $(KEYCLOAK_ADMIN_CLIENT_SECRET)
-                SMTP_HOST: $(SMTP_HOST)
-                SMTP_PORT: $(SMTP_PORT)
-                SMTP_USER: $(SMTP_USER)
-                SMTP_PASS: $(SMTP_PASS)
-                SMTP_FROM_EMAIL: $(SMTP_FROM_EMAIL)
               inlineScript: |
+                # 스크립트 내에서 직접 환경 변수를 선언하여 안정성을 높입니다.
+                export DB_HOST="$(DB_HOST)"
+                export DB_PORT="$(DB_PORT)"
+                export DB_USER="$(DB_USER)"
+                export DB_PASSWORD="$(DB_PASSWORD)"
+                export DB_NAME="$(DB_NAME)"
+                export KEYCLOAK_REALM="$(KEYCLOAK_REALM)"
+                export KEYCLOAK_CLIENT_ID="$(KEYCLOAK_CLIENT_ID)"
+                export KEYCLOAK_SERVER_URL="$(KEYCLOAK_SERVER_URL)"
+                export KEYCLOAK_PUBLIC_KEY="$(KEYCLOAK_PUBLIC_KEY)"
+                export KEYCLOAK_ADMIN_CLIENT_ID="$(KEYCLOAK_ADMIN_CLIENT_ID)"
+                export KEYCLOAK_ADMIN_CLIENT_SECRET="$(KEYCLOAK_ADMIN_CLIENT_SECRET)"
+                export SMTP_HOST="$(SMTP_HOST)"
+                export SMTP_PORT="$(SMTP_PORT)"
+                export SMTP_USER="$(SMTP_USER)"
+                export SMTP_PASS="$(SMTP_PASS)"
+                export SMTP_FROM_EMAIL="$(SMTP_FROM_EMAIL)"
+
                 set -e
                 echo "Getting AKS admin credentials..."
                 az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --admin --overwrite-existing
