@@ -1,0 +1,110 @@
+
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  # Azure DevOps Service Connection 이름으로 변경해야 합니다.
+  azureServiceConnection: 'Your-Azure-Service-Connection-Name'
+  
+  # Azure Container Registry 정보로 변경해야 합니다.
+  azureContainerRegistry: 'youracrname.azurecr.io'
+  imageRepository: 'itc-app'
+  
+  # Azure Kubernetes Service 정보로 변경해야 합니다.
+  azureResourceGroup: 'Your-AKS-Resource-Group'
+  kubernetesCluster: 'Your-AKS-Cluster-Name'
+
+  # Dockerfile 경로
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build and Push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+
+    - script: npm install
+      displayName: 'npm install'
+
+    # (선택 사항) 테스트 스크립트가 있다면 여기에 추가합니다.
+    # - script: npm test
+    #   displayName: 'npm test'
+
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(azureServiceConnection) # ACR에 연결된 Service Connection
+        tags: |
+          $(tag)
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/k8s'
+        artifact: 'manifests'
+        publishLocation: 'pipeline'
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    pool:
+      vmImage: ubuntu-latest
+    environment: 'production' # Azure DevOps 환경 이름
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifact: 'manifests'
+              path: '$(Pipeline.Workspace)/manifests'
+
+          - task: replacetokens@3
+            displayName: 'Replace tokens in Kubernetes manifests'
+            inputs:
+              targetFiles: '$(Pipeline.Workspace)/manifests/k8s/deployment.yaml'
+              encoding: 'auto'
+              writeBOM: true
+              actionOnMissing: 'warn'
+              keepToken: false
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+              useLegacyPattern: false
+              variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
+
+          - task: Kubernetes@1
+            displayName: Deploy to Kubernetes cluster
+            inputs:
+              connectionType: 'Azure Resource Manager'
+              azureSubscriptionEndpoint: $(azureServiceConnection) # AKS에 연결된 Service Connection
+              azureResourceGroup: $(azureResourceGroup)
+              kubernetesCluster: $(kubernetesCluster)
+              command: 'apply'
+              useConfigurationFile: true
+              configuration: '$(Pipeline.Workspace)/manifests/k8s'
+              secretType: 'dockerRegistry'
+              containerRegistryType: 'Azure Container Registry'
+              azureContainerRegistry: $(azureContainerRegistry)

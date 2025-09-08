@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itc-deployment
+  labels:
+    app: itc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: itc
+  template:
+    metadata:
+      labels:
+        app: itc
+    spec:
+      containers:
+      - name: itc-container
+        # Skaffold will replace this with the actual image name + tag
+        image: your-registry/your-app:tag
+        ports:
+        - containerPort: 3000

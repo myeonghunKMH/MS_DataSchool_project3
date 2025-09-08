@@ -1,0 +1,20 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: itc
+build:
+  artifacts:
+    - image: itc-app
+      context: .
+      docker:
+        dockerfile: Dockerfile
+manifests:
+  rawYaml:
+    - k8s/*.yaml
+deploy:
+  kubectl: {}
+portForward:
+  - resourceType: service
+    resourceName: itc-service
+    port: 3000
+    localPort: 9000

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>개인 페이지 | ITC</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    :root { color-scheme: dark; }
+    body{
+      margin:0; background:#1a1a1a; color:#e8e8e8;
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+    header{ position:fixed; top:16px; left:16px; z-index:10; }
+    header img{
+      width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none;
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+    }
+
+    /* ▶ 전체를 더 아래로 */
+    main{
+      flex:1; width:100%; max-width:960px;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+      padding:110px 16px 70px; /* ↑ 상단 여백 증가 */
+      gap:28px;
+    }
+
+    .card{
+      width:100%; max-width:720px;
+      background:#242424;
+      border:1px solid #3a3a3a;
+      border-radius:16px; padding:28px 22px;
+      box-shadow:0 10px 30px rgba(0,0,0,.12);
+    }
+    /* ▶ 제목과 내용 사이 간격 확대 */
+    .card h2{
+      margin:0 0 24px;
+      font-size:22px; font-weight:700;
+    }
+
+    /* 프로필 블록 */
+    .profile-wrap{
+      display:flex; gap:20px; align-items:center;
+      margin:6px 0 18px; /* 제목과의 간격 보강 */
+    }
+    .avatar{
+      width:84px; height:84px; aspect-ratio:1/1; /* 완전 원형 보장 */
+      border-radius:50%; flex:none;
+      background:#0f0f0f; border:1px solid #2a2a2a;
+      display:flex; align-items:center; justify-content:center;
+      font-size:30px; font-weight:800; color:#bcd9ff;
+    }
+    .profile{
+      display:grid; gap:12px; grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+    .field .label{opacity:.7; font-size:13px}
+    .field .value{font-size:17px; margin-top:2px}
+    @media (max-width:640px){ .profile{ grid-template-columns:1fr; } }
+
+    /* ▶ 튜토리얼/실시간/기초 버튼 (프로필 아래에 배치) */
+    .quick{
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin:10px 0 18px;
+    }
+    .qbtn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:12px; border:1px solid #2a2a2a;
+      background:#111; color:#e8e8e8; text-decoration:none; font-weight:700;
+      transition: transform .12s ease, background-color .12s ease;
+    }
+    .qbtn:hover{ transform: translateY(-2px); background:#383838; }
+    .qbtn img{ width:18px; height:18px; display:block; }
+
+    /* 월렛 */
+    .wallet{ margin-top:6px; padding-top:16px; border-top:1px dashed #616161; display:grid; gap:14px; }
+    .cash{
+      display:flex; align-items:center; justify-content:space-between;
+      background:#151515; border:1px solid #2a2a2a; border-radius:12px;
+      padding:12px 14px;
+    }
+    .holdings{
+      background:#151515; border:1px solid #2a2a2a; border-radius:12px;
+      overflow:hidden;
+    }
+    table{ width:100%; border-collapse:collapse; font-size:15px; }
+    th, td{ padding:10px 12px; border-bottom:1px solid #262626; text-align:left; }
+    th{ background:#191919; font-weight:600 }
+    tr:last-child td{ border-bottom:none; }
+
+    .reports{
+      width:100%; max-width:720px;
+      display:flex; justify-content:flex-start;
+    }
+    .report-link{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 14px; border-radius:12px; border:1px solid #2a2a2a;
+      background:#111; color:#e8e8e8; text-decoration:none;
+      transition: transform .12s ease, background-color .12s ease;
+    }
+    .report-link:hover{ transform: translateY(-2px); background:#383838; }
+    h1.title{
+      margin:0; font-size:clamp(22px, 4vw, 30px); font-weight:800; text-align:center;
+    }
+  </style>
+</head>
+<body>
+  
+  
+  <header>
+    <a href="/"><img src="/images/logo.png" alt="ITC 로고"></a>
+    <a href="/logout" class="logout-btn">로그아웃</a>
+  </header>
+
+  <style>
+    header {
+      width: 100%;
+      max-width: 1000px; /* 컨텐츠 너비와 맞춤 */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logout-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #333;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .logout-btn:hover {
+      background-color: #555;
+    }
+  </style>
+
+
+  <main>
+    <h1 class="title">내 정보</h1>
+
+    <section class="card">
+      <h2>Profile</h2>
+
+      <!-- 아바타 + 기본 정보 -->
+      <div class="profile-wrap">
+        <div class="avatar" id="avatarInitial">U</div>
+        <div class="profile">
+          <div class="field"><div class="label">이름</div><div class="value" id="userName">-</div></div>
+          <div class="field"><div class="label">가입일자</div><div class="value" id="signupDate">-</div></div>
+        </div>
+      </div>
+
+      <!-- ▶ 프로필과 튜토리얼 사이에 아바타/정보가 오도록: 튜토리얼 버튼은 그 다음 -->
+      <div class="quick" aria-label="빠른 이동">
+        <a class="qbtn" href="historical.html">
+          <img src="/images/Document.png" alt="">튜토리얼
+        </a>
+        <a class="qbtn" href="realtime.html">
+          <img src="/images/Document.png" alt="">모의 투자
+        </a>
+        <a class="qbtn" href="crypto.html">
+          <img src="/images/Document.png" alt="">암호화폐 기초
+        </a>
+      </div>
+
+      <!-- 월렛 & 보유수량 -->
+      <div class="wallet">
+        <div class="cash"><div>월렛 (현금)</div><div id="cashKRW">0원</div></div>
+        <div class="holdings">
+          <table><thead><tr><th>자산</th><th>보유수량</th></tr></thead>
+            <tbody>
+              <tr><td>비트코인 (BTC)</td><td id="btcQty">0</td></tr>
+              <tr><td>이더리움 (ETH)</td><td id="ethQty">0</td></tr>
+              <tr><td>리플 (XRP)</td><td id="xrpQty">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <div class="reports">
+      <a class="report-link" href="report.html">
+        <img src="/images/Document.png" alt="">
+        <span>보고서 보러가기</span>
+      </a>
+    </div>
+
+    <style>
+      .reports{
+        width:100%; max-width:720px;
+        display:flex; justify-content:flex-start;
+        margin-left:-50px;
+      }
+      .report-link{
+        display:inline-flex; align-items:center;
+        gap:6px;                         /* 간격 줄임 */
+        font-size:18px;                  /* 글자 크기 줄임 */
+        padding:8px 12px;                /* 패딩 줄임 */
+        border-radius:10px;
+        border:1px solid #2a2a2a;
+        background:#111; color:#e8e8e8; text-decoration:none;
+        transition: transform .12s ease, background-color .12s ease;
+      }
+      .report-link img{ width:16px; height:16px; } /* 아이콘 크기 줄임 */
+      .report-link:hover{ transform:translateY(-2px); background:#161616; }
+    </style>
+
+  <section class="card danger-zone">
+      <h2>계정 관리</h2>
+      <div class="danger-item">
+        <div>
+          <strong>회원 탈퇴</strong>
+          <p>계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
+        </div>
+        <button id="show-deletion-modal-btn" class="danger-btn">탈퇴 요청</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="deletion-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h2>회원 탈퇴</h2>
+      <p>탈퇴 사유를 입력해주세요. 탈퇴 신청 후 확인 이메일이 발송되며, 이메일 인증 시 14일 후에 계정이 영구적으로 삭제됩니다.</p>
+      <form id="deletion-form">
+        <textarea id="deletion-reason" placeholder="(선택 사항) 탈퇴 사유를 알려주시면 서비스 개선에 큰 도움이 됩니다." rows="4"></textarea>
+        <div class="modal-actions">
+          <button type="button" id="cancel-deletion-btn" class="btn-secondary">취소</button>
+          <button type="submit" class="danger-btn">탈퇴 신청</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .danger-zone { border-color: #8a2a2a; }
+    .danger-item { display: flex; justify-content: space-between; align-items: center; }
+    .danger-btn { background-color: #c82333; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .danger-btn:hover { background-color: #a51c2b; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #2c2c2c; padding: 24px; border-radius: 12px; width: 90%; max-width: 480px; }
+    .modal-content h2 { margin-top: 0; }
+    .modal-content textarea { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #555; background: #1a1a1a; color: #e8e8e8; margin-top: 10px; }
+    .modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-secondary { background-color: #555; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .btn-secondary:hover { background-color: #777; }
+  </style>
+
+  <script>
+    (async () => {
+      const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
+      const fmtQty = (n, d = 4) => Number(n).toLocaleString('ko-KR', { maximumFractionDigits: d });
+
+      try {
+        const response = await fetch('/api/user');
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Not authenticated, Keycloak should handle the redirect.
+            // For safety, we can redirect manually.
+            window.location.href = '/';
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return;
+        }
+        const user = await response.json();
+
+        document.getElementById('userName').textContent = user.username || '사용자';
+        const joined = user.created_at ? new Date(user.created_at) : new Date();
+        document.getElementById('signupDate').textContent = joined.toLocaleDateString('ko-KR');
+
+        document.getElementById('cashKRW').textContent = fmtKRW(user.krw_balance || 0);
+        document.getElementById('btcQty').textContent = fmtQty(user.btc_balance || 0, 6);
+        document.getElementById('ethQty').textContent = fmtQty(user.eth_balance || 0, 6);
+        document.getElementById('xrpQty').textContent = fmtQty(user.xrp_balance || 0, 2);
+
+        document.getElementById('avatarInitial').textContent =
+          (user.username || 'U').trim().charAt(0).toUpperCase() || 'U';
+
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Optionally, display an error message to the user
+      }
+    })();
+  </script>
+
+  <script>
+    // Deletion Modal Logic
+    const showModalBtn = document.getElementById('show-deletion-modal-btn');
+    const modal = document.getElementById('deletion-modal');
+    const cancelBtn = document.getElementById('cancel-deletion-btn');
+    const deletionForm = document.getElementById('deletion-form');
+
+    showModalBtn.addEventListener('click', () => modal.style.display = 'flex');
+    cancelBtn.addEventListener('click', () => modal.style.display = 'none');
+    window.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    deletionForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const reason = document.getElementById('deletion-reason').value;
+      try {
+        const response = await fetch('/api/user/request-deletion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          modal.style.display = 'none';
+          if (result.scheduled) {
+            // Social login user: immediate schedule
+            alert('회원 탈퇴가 예약되었습니다. 14일 이내에 재로그인 시 탈퇴가 취소됩니다.');
+            window.location.href = '/logout';
+          } else {
+            // Local user: email confirmation
+            alert('회원 탈퇴 요청이 접수되었습니다. 이메일을 확인하여 탈퇴를 완료해주세요.');
+          }
+        } else {
+          alert(`오류: ${result.message || '알 수 없는 오류가 발생했습니다.'}`);
+        }
+      } catch (error) {
+        console.error('Deletion request failed:', error);
+        alert('탈퇴 요청 중 오류가 발생했습니다.');
+      }
+    });
+  </script>
+</body>
+
+</html>

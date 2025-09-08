@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>리포트 | ITC</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    :root { color-scheme: dark; }
+    body{
+      background:#0b0b0b; color:#eaeaea; margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+    a{ color:inherit; text-decoration:none; }
+
+    /* ===== 상단 헤더 ===== */
+    header{
+      position:fixed; top:16px; left:16px; right:16px; z-index:20;
+      display:flex; align-items:center; justify-content:space-between;
+      pointer-events:none;
+    }
+    header .left, header .right{ pointer-events:auto; display:flex; align-items:center; gap:10px; }
+    header img.logo{
+      width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none;
+      filter:drop-shadow(0 6px 18px rgba(0,0,0,.5));
+    }
+
+    /* index.html 스타일 참고한 네비 버튼 */
+    .btn-nav{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 14px; border-radius:14px; font-weight:600; font-size:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+      transition:transform .12s ease, background .2s ease, border-color .2s ease;
+    }
+    .btn-nav:hover{
+      transform:translateY(-1px);
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+      border-color:rgba(255,255,255,.22);
+    }
+
+    nav{ display:flex; gap:10px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:10px;
+      height:38px; padding:0 12px; border-radius:10px;
+      background:#121212; border:1px solid #262626; color:#e8e8e8;
+      text-decoration:none; font-weight:700;
+    }
+    .navbtn img{ width:16px; height:16px; }
+
+    /* ===== 페이지 레이아웃 ===== */
+    .wrap{ max-width:1200px; margin:0 auto; padding:90px 16px 48px; }
+
+    .grid{ display:grid; gap:14px; }
+    .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    @media (max-width:1024px){ .grid.cols-4{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:760px){ .grid.cols-4,.grid.cols-2{ grid-template-columns:1fr; } }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px; padding:16px 16px 14px;
+      box-shadow:0 12px 30px rgba(0,0,0,.35);
+      position:relative; overflow:hidden;
+    }
+    .title{ font-size:14px; color:#bdbdbd; letter-spacing:.2px; margin-bottom:8px; }
+
+    .kpi{ display:flex; align-items:flex-end; gap:8px; }
+    .kpi .value{ font-size:28px; font-weight:800; }
+    .kpi .sub{
+      font-size:12px; color:#9ec; padding:2px 8px; border-radius:999px;
+      background:rgba(70,215,198,.12); border:1px solid rgba(70,215,198,.28);
+    }
+
+    .table{ width:100%; border-collapse:collapse; font-size:14px; }
+    .table th, .table td{
+      padding:10px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .table th{ color:#bdbdbd; font-weight:600; }
+    .muted{ color:#a8a8a8; }
+
+    footer{ margin:40px 0 20px; text-align:center; color:#9a9a9a; font-size:13px; }
+    footer a{ color:#ddd; text-decoration:underline; }
+    .print-btn{
+      position:fixed; bottom:20px; right:20px; z-index:30;
+      border-radius:999px; padding:10px 14px; font-weight:600; font-size:14px;
+      border:1px solid rgba(255,255,255,.15);
+      background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03));
+      box-shadow:0 10px 28px rgba(0,0,0,.35); cursor:pointer;
+    }
+  </style>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- 헤더 -->
+  <header>
+    <div class="left">
+      <a href="index.html"><img class="logo" src="/images/logo.png" alt="ITC" /></a>
+    </div>
+    <div class="right">
+      <!-- index.html 버튼 톤으로 정리 -->
+      <a class="navbtn" href="guide.html"><img src="/images/Document.png">가이드</a>
+      <a class="btn-nav" href="/mypage.html">마이페이지</a>
+    </div>
+  </header>
+
+  <button class="print-btn" onclick="window.print()">📄 PDF로 저장</button>
+
+  <main class="wrap">
+    <h1 style="margin:0 4px 6px; font-size:28px; letter-spacing:.2px;">개인화된 사용자 리포트</h1>
+    <p class="muted" style="margin:0 4px 22px;">가상의 데이터로 렌더링되어 있습니다. 실데이터 연동은 하단 주석 참고.</p>
+
+    <!-- ======= 개인화 KPI ======= -->
+    <div class="grid cols-4">
+      <div class="card">
+        <div class="title">이번 달 내 거래 횟수</div>
+        <div class="kpi">
+          <div class="value" id="kpi_trades">—</div>
+          <div class="sub" id="kpi_trades_diff">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">이번 달 총 거래액</div>
+        <div class="kpi">
+          <div class="value" id="kpi_volume">—</div>
+          <div class="sub" id="kpi_volume_diff">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">내 수익률 (월간)</div>
+        <div class="kpi">
+          <div class="value" id="kpi_return">—</div>
+          <div class="sub" id="kpi_return_rank">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="title">가장 많이 거래한 종목</div>
+        <div class="kpi">
+          <div class="value" id="kpi_top_symbol">—</div>
+          <div class="sub" id="kpi_top_symbol_share">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= 차트: 자산 변화 / 수익률 비교 ======= -->
+    <div class="grid cols-2" style="margin-top:14px;">
+      <div class="card">
+        <div class="title">나의 보유 자산 변화</div>
+        <canvas id="chart_equity" height="120"></canvas>
+      </div>
+      <div class="card">
+        <div class="title">나의 수익률 vs 전체 평균 수익률</div>
+        <canvas id="chart_return_compare" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- ======= 내가 많이 거래한 종목 + 최근 체결 ======= -->
+    <div class="grid cols-2" style="margin-top:14px;">
+      <div class="card">
+        <div class="title">내가 가장 많이 거래한 종목(Top 5)</div>
+        <canvas id="chart_my_top_symbols" height="120"></canvas>
+      </div>
+      <div class="card">
+        <div class="title">최근 체결 히스토리 (샘플)</div>
+        <table class="table" id="table_recent">
+          <thead>
+            <tr><th>시간</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ================================
+    // 1) 샘플 데이터 (실데이터 연동시 대체)
+    // ================================
+    const days = Array.from({length: 30}, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (29 - i));
+      return d.toISOString().slice(5,10); // 'MM-DD'
+    });
+
+    const my = {
+      monthlyTrades: 64, monthlyTradesDiff: +12, // 전월 대비
+      monthlyVolume: 12_450_000, monthlyVolumeDiff: +8.2, // KRW
+      monthlyReturnPct: +6.4, returnRankPctile: 82, // 상위 백분위
+      topSymbols: [
+        {symbol:'BTC', share: 0.35}, {symbol:'ETH', share:0.28},
+        {symbol:'XRP', share:0.17}, {symbol:'SOL', share:0.12}, {symbol:'ADA', share:0.08}
+      ],
+      equityCurve: days.map((_, i) => 10_000_000 + i*55_000 + (Math.sin(i/3)*120_000)), // KRW
+      returnSeries: days.map((_, i) => 3 + Math.sin(i/4)*2), // 일간 %
+      marketReturnSeries: days.map((_, i) => 2 + Math.cos(i/5)*1.3),
+      recentFills: [
+        {ts:'12:31', sym:'ETH', side:'매수', qty:0.8, price:3_900_000},
+        {ts:'11:18', sym:'BTC', side:'매도', qty:0.06, price:93_500_000},
+        {ts:'10:44', sym:'XRP', side:'매수', qty:120, price:920},
+        {ts:'09:05', sym:'SOL', side:'매수', qty:2.1, price:220_000},
+        {ts:'어제', sym:'BTC', side:'매수', qty:0.05, price:92_700_000},
+      ]
+    };
+
+    // ================================
+    // 2) KPI 렌더링
+    // ================================
+    const fmtKRW = v => '₩' + v.toLocaleString('ko-KR');
+    const fmtPct = v => (v>=0?'+':'') + v.toFixed(1) + '%';
+
+    document.getElementById('kpi_trades').textContent = my.monthlyTrades.toLocaleString('ko-KR');
+    document.getElementById('kpi_trades_diff').textContent = (my.monthlyTradesDiff>=0?'+':'') + my.monthlyTradesDiff + '건';
+
+    document.getElementById('kpi_volume').textContent = fmtKRW(my.monthlyVolume);
+    document.getElementById('kpi_volume_diff').textContent = fmtPct(my.monthlyVolumeDiff);
+
+    document.getElementById('kpi_return').textContent = fmtPct(my.monthlyReturnPct);
+    document.getElementById('kpi_return_rank').textContent = `상위 ${my.returnRankPctile}%`;
+
+    document.getElementById('kpi_top_symbol').textContent = my.topSymbols[0].symbol;
+    document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
+
+    // 최근 체결 테이블
+    const tbody = document.querySelector('#table_recent tbody');
+    my.recentFills.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.ts}</td><td>${r.sym}</td><td>${r.side}</td><td>${r.qty}</td><td>${fmtKRW(r.price)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // ================================
+    // 3) 차트 렌더링
+    // ================================
+    const baseGrid = { color:'rgba(255,255,255,.12)' };
+    const baseTicks = { color:'#cfcfcf', font:{ size:11 } };
+    const tooltip = { enabled:true, intersect:false, mode:'index' };
+
+    // 자산 변화 (라인)
+    new Chart(document.getElementById('chart_equity'), {
+      type:'line',
+      data:{
+        labels: days,
+        datasets:[{
+          label:'보유 자산(₩)',
+          data: my.equityCurve,
+          fill:true,
+          borderWidth:2,
+          pointRadius:0,
+          tension:.35
+        }]
+      },
+      options:{
+        plugins:{ legend:{display:false}, tooltip },
+        scales:{
+          x:{ grid:{ display:false }, ticks: baseTicks },
+          y:{ grid: baseGrid, ticks: baseTicks }
+        }
+      }
+    });
+
+    // 나의 수익률 vs 전체 평균 (라인 2개)
+    new Chart(document.getElementById('chart_return_compare'), {
+      type:'bar', /* 바 타입 유지(툴팁 편리), 실제는 라인 2개 */
+      data:{
+        labels: days,
+        datasets:[
+          { type:'line', label:'내 수익률(%)', data: my.returnSeries, borderWidth:2, pointRadius:0, tension:.35 },
+          { type:'line', label:'전체 평균(%)', data: my.marketReturnSeries, borderDash:[5,5], borderWidth:2, pointRadius:0, tension:.35 }
+        ]
+      },
+      options:{
+        plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip },
+        scales:{
+          x:{ grid:{ display:false }, ticks: baseTicks },
+          y:{ grid: baseGrid, ticks: baseTicks }
+        }
+      }
+    });
+
+    // 내가 많이 거래한 종목 (가로 막대)
+    new Chart(document.getElementById('chart_my_top_symbols'), {
+      type:'bar',
+      data:{
+        labels: my.topSymbols.map(d=>d.symbol),
+        datasets:[{ label:'거래 비중(%)', data: my.topSymbols.map(d=>Math.round(d.share*100)) }]
+      },
+      options:{
+        indexAxis:'y',
+        plugins:{ legend:{display:false}, tooltip },
+        scales:{
+          x:{ grid: baseGrid, ticks: baseTicks, max:100 },
+          y:{ grid:{ display:false }, ticks: baseTicks }
+        }
+      }
+    });
+
+    // ================================
+    // 4) 실데이터 연동 가이드 (주석)
+    // ================================
+    /*
+      // (1) 개인 리포트 데이터
+      fetch('/api/user/report?userId=...').then(r=>r.json()).then(data=>{
+        // my = data.my; 이후 KPI/표/차트 업데이트
+      });
+
+      값 업데이트 후:
+        - KPI: innerText 다시 채우기
+        - 표: tbody.innerHTML = '' 후 append
+        - 차트: chart.data.datasets[i].data = ...; chart.update()
+    */
+  </script>
+</body>
+</html>

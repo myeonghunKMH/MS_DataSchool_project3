@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ITC | 암호화폐 모의 투자</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    :root { color-scheme: dark; }
+    body{
+      margin:0;
+      background:#1a1a1a;
+      color:#e8e8e8;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+
+    /* 헤더 */
+    header{
+      position:fixed;
+      inset:16px 16px auto 16px;
+      z-index:10;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand img{
+      width:120px;
+      height:auto;
+      filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));
+    }
+    nav{ display:flex; gap:10px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:10px;
+      height:38px; padding:0 12px; border-radius:10px;
+      background:#121212; border:1px solid #262626; color:#e8e8e8;
+      text-decoration:none; font-weight:700;
+    }
+    .navbtn img{ width:16px; height:16px; }
+
+    /* 레이아웃 */
+    main{
+      width:min(1100px,92vw);
+      margin:180px auto 60px; /* ⬅️ 원래 120px → 180px로 내려줌 */
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+    }
+
+    /* 타이핑 효과 영역 */
+    #typewriter{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      margin-bottom:20px;
+      gap:10px;
+    }
+    #line1, #line2{ min-height:1.4em; white-space:pre-wrap; }
+    #line1{ font-size:clamp(22px,3.5vw,34px); font-weight:700; }
+    #line2{ font-size:clamp(15px,2.5vw,20px); font-weight:400; color:#cfcfcf; }
+    .cursor{ display:inline-block; margin-left:2px; animation:caret 0.9s steps(1) infinite; }
+    .cursor.complete{ animation:blink 1s step-end infinite; }
+    @keyframes caret{50%{opacity:0;}}
+    @keyframes blink{50%{opacity:0;}}
+
+    /* 카드 */
+    .grid{ display:grid; gap:16px; grid-template-columns: repeat(3, minmax(0,1fr)); }
+    @media (max-width:980px){ .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width:640px){ .grid{ grid-template-columns: 1fr; } }
+    .card{ background:#141414; border:1px solid #262626; border-radius:16px; box-shadow:0 10px 26px rgba(0,0,0,.20); display:flex; flex-direction:column; }
+    .thumb{ aspect-ratio:16/9; background:#0f0f0f; border-bottom:1px solid #262626; display:flex; align-items:center; justify-content:center; color:#b8c7ff; font-weight:800; font-size:clamp(18px, 2.6vw, 28px); }
+    .body{ padding:16px; }
+    .desc{ color:#c9c9c9; font-size:14px; line-height:1.55; }
+    .actions{ display:flex; justify-content:flex-end; padding:0 16px 16px; }
+    .btn{ background:#1b1b1b; border:1px solid #2a2a2a; color:#eaeaea; border-radius:12px; height:42px; padding:0 16px; text-decoration:none; font-weight:800; display:inline-flex; align-items:center; gap:10px; }
+
+    footer{ display:flex; justify-content:center; margin:20px 0 40px; color:#7f7f7f; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="guide.html"><img src="/images/Document.png">가이드</a>
+      <a class="navbtn" href="mypage.html">마이페이지</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 타이핑 효과 -->
+    <div id="typewriter">
+      <div id="line1"></div>
+      <div id="line2"></div>
+    </div>
+
+    <!-- 기능 카드 -->
+    <section class="grid">
+      <article class="card"><div class="thumb">Tutorial</div><div class="body"><h3>과거 시나리오 튜토리얼</h3><p class="desc">급락/급등, 과열·침체 구간 등 실제 사건 직후 장면을 재현합니다.</p></div><div class="actions"><a class="btn" href="historical.html">들어가기</a></div></article>
+      <article class="card"><div class="thumb">Realtime</div><div class="body"><h3>BTC·ETH·XRP로 연습</h3><p class="desc">가상 자금으로 주문·체결·잔고 UI를 체험하며 규칙 기반 트레이딩을 익힙니다.</p></div><div class="actions"><a class="btn" href="realtime.html">들어가기</a></div></article>
+      <article class="card"><div class="thumb">Basics</div><div class="body"><h3>암호화폐 기초 빠르게 훑기</h3><p class="desc">암호화폐/주식 비교, 대표 코인, 스테이블 코인까지 핵심만 요약합니다.</p></div><div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div></article>
+    </section>
+  </main>
+
+  <footer>© ITC · HOME</footer>
+
+  <script>
+    (() => {
+      const texts = [
+        { el: "line1", text: "안녕하세요, ITC입니다👋" },
+        { el: "line2", text: "과거의 실제 데이터를 불러와 사건 직후의 시장을 체험하거나, 실시간 가격 흐름으로 모의 매매를 연습해 보세요." }
+      ];
+
+      function typeWriter({ el, text }, done) {
+        const target = document.getElementById(el);
+        let charIdx = 0;
+        function type() {
+          target.innerHTML = text.slice(0, charIdx) + '<span class="cursor">|</span>';
+          if (charIdx < text.length) { charIdx++; setTimeout(type, 40); }
+          else { const c = target.querySelector(".cursor"); if (c) c.classList.add("complete"); done && done(); }
+        }
+        type();
+      }
+      typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 400));
+    })();
+  </script>
+</body>
+</html>

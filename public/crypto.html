@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>암호화폐 기초 | ITC</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    :root { color-scheme: dark; }
+    body{
+      margin:0; background:#0b0b0b; color:#e8e8e8;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+
+    /* 좌상단 고정 로고 */
+    header{ position:fixed; top:16px; left:16px; z-index:10; }
+    header img{ width:120px; height:auto; filter:drop-shadow(0 6px 18px rgba(0,0,0,.35)); user-select:none; -webkit-user-drag:none; }
+
+    .page{ width:min(1100px,92vw); margin:100px auto 60px; }
+
+    /* 히어로 */
+    .hero{
+      background: radial-gradient(900px 220px at 10% -40%, rgba(59,130,246,.15), transparent 60%),
+                  radial-gradient(800px 200px at 120% 120%, rgba(16,185,129,.12), transparent 60%),
+                  #121212;
+      border:1px solid #262626; border-radius:16px; padding:22px 20px;
+      box-shadow:0 12px 30px rgba(0,0,0,.22);
+    }
+    .hero h1{ margin:0 0 6px; font-size:clamp(24px,3.2vw,34px); font-weight:800; }
+    .lead{ margin:0; color:#cfcfcf; line-height:1.6; }
+
+    /* 카드 그리드 */
+    .grid{ display:grid; gap:18px; grid-template-columns:1fr 1fr; margin-top:18px; }
+    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:#141414; border:1px solid #262626; border-radius:14px; padding:18px 16px;
+      box-shadow:0 8px 22px rgba(0,0,0,.18);
+    }
+    .card h2{ margin:0 0 10px; font-size:20px; }
+
+    /* 1) 암호화폐란? 리스트 간격 살짝 넓힘 */
+    #sec-what ul li{ margin:6px 0; } /* 필요하면 8px로 살짝 더 키워도 OK */
+
+    /* 표 */
+    table{ width:100%; border-collapse:collapse; background:#101010; margin-top:8px; }
+    th,td{ padding:10px 12px; border:1px solid #2d2d2d; text-align:left; }
+    th{ background:#171717; font-weight:700; }
+
+    /* 블록체인 콜아웃 */
+    .callout{
+      border-left:4px solid #ffd34d; background:#19160a; color:#ffe8a6;
+      padding:12px 14px; border-radius:8px; margin:12px 0 4px;
+    }
+    .callout ul{ margin:8px 0 0 18px; }
+    .callout li{ margin:4px 0; }
+
+    /* 뒤로가기 */
+    .back{ display:inline-flex; gap:8px; align-items:center; margin-top:18px;
+      padding:10px 14px; border-radius:10px; border:1px solid #2a2a2a; background:#111;
+      color:#eaeaea; text-decoration:none; font-weight:700; }
+    .back:hover{ background:#161616; }
+  </style>
+</head>
+<body>
+  <header><a href="/"><img src="/images/logo.png" alt="ITC 로고"></a></header>
+
+  <main class="page">
+    <section class="hero">
+      <h1>🪙 암호화폐 기초</h1>
+      <p class="lead">암호화폐의 개념, 주식과의 차이, 대표 자산을 한눈에 정리했습니다.  
+      아래 카드 섹션을 순서대로 확인해 보세요.</p>
+    </section>
+
+    <section class="grid">
+      <!-- 1) 암호화폐란 -->
+      <article class="card" id="sec-what">
+        <h2>1️⃣ 암호화폐란?</h2>
+        <ul>
+          <li>블록체인 기술 위에서 운영되는 <b>디지털 자산</b></li>
+          <li>탈중앙 네트워크로 누구나 참여 가능, 거래 기록은 공개 원장에 저장</li>
+          <li>2009년 비트코인 등장 이후 다양한 목적·기능의 코인 등장</li>
+          <br />
+        </ul>
+
+        <div class="callout">
+          <b>블록체인이란?</b> <br />
+          여러 컴퓨터(노드)가 거래를 묶어 ‘블록’으로 기록하고 시간 순서대로 연결해
+          모두가 공유·검증하는 분산 원장 기술입니다.
+        </div>
+      </article>
+
+      <!-- 2) 암호화폐 vs 주식 -->
+      <article class="card">
+        <h2>2️⃣ 암호화폐 vs 주식</h2>
+        <table>
+          <tr><th>구분</th><th>암호화폐</th><th>주식</th></tr>
+          <tr><td>거래 시간</td><td>24시간 365일</td><td>장중(휴일 불가)</td></tr>
+          <tr><td>가격 변동성</td><td>매우 높음</td><td>일일 변동폭 제한</td></tr>
+          <tr><td>중앙기관</td><td>없음(P2P)</td><td>있음(거래소/감독기관)</td></tr>
+          <tr><td>투명성</td><td>블록체인 공개 원장</td><td>거래소 시스템</td></tr>
+          <tr><td>보관</td><td>개인지갑(핫/콜드)</td><td>증권사 계좌</td></tr>
+        </table>
+      </article>
+
+      <!-- 3) 대표 코인 -->
+      <article class="card" style="grid-column:1 / -1">
+        <h2>3️⃣ 대표적인 암호화폐 예시</h2>
+        <table>
+          <tr><th>종류</th><th>설명</th><th>비유</th><th>주의점</th></tr>
+          <tr>
+            <td><b>비트코인 (BTC)</b></td>
+            <td>최초의 암호화폐, 발행량 제한·시장 방향성 지표</td>
+            <td>💰 디지털 금</td>
+            <td>금리·ETF 등 거시 변수에 민감</td>
+          </tr>
+          <tr>
+            <td><b>이더리움 (ETH)</b></td>
+            <td>스마트 컨트랙트 플랫폼(NFT/DeFi의 기반)</td>
+            <td>📱 스마트폰 OS</td>
+            <td>가스비·업그레이드 이슈</td>
+          </tr>
+          <tr>
+            <td><b>스테이블 코인 (USDT/USDC)</b></td>
+            <td>달러 1:1 연동, 거래·보관의 기반</td>
+            <td>💵 디지털 달러</td>
+            <td>발행사 신뢰·디페깅 위험</td>
+          </tr>
+          <tr>
+            <td><b>결제·송금형 (XRP/LTC 등)</b></td>
+            <td>빠른 결제·해외송금 목적</td>
+            <td>💳 송금 서비스</td>
+            <td>채택·규제 리스크</td>
+          </tr>
+          <tr>
+            <td><b>서비스형 토큰 (UNI/SAND 등)</b></td>
+            <td>특정 서비스(DEX·대출·메타버스 등)에서 사용</td>
+            <td>🚀 스타트업 주식</td>
+            <td>유행·보안 리스크</td>
+          </tr>
+        </table>
+      </article>
+    </section>
+
+    <div>
+      <a class="back" href="/index.html">← 메인으로</a>
+    </div>
+  </main>
+</body>
+</html>
