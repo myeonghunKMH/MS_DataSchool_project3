@@ -33,8 +33,8 @@ stages:
   jobs:
   - job: Build
     displayName: Build
-    pool:
-      vmImage: ubuntu-latest
+    pool: Default
+      #vmImage: ubuntu-latest
     steps:
     - task: NodeTool@0
       inputs:
