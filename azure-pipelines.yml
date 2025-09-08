@@ -2,19 +2,25 @@ trigger:
 - main
 
 variables:
-  # 1. DevOps 라이브러리에서 생성할 변수 그룹을 참조합니다.
   - group: itc-app-secrets
-
-  # 2. 파이프라인 고정 변수들입니다.
-  dockerRegistryServiceConnection: 'acr-connection'
-  azureServiceConnection: 'azure-aks-connection'
-  azureResourceGroup: '1dt-final-team1'
-  kubernetesCluster: '1dt-team1-aks'
-  azureContainerRegistry: '1dtteam1registry.azurecr.io'
-  imageRepository: 'itc-app'
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
-  imageFullName: '$(azureContainerRegistry)/$(imageRepository):$(tag)'
+  - name: dockerRegistryServiceConnection
+    value: 'acr-connection'
+  - name: azureServiceConnection
+    value: 'azure-aks-connection'
+  - name: azureResourceGroup
+    value: '1dt-final-team1'
+  - name: kubernetesCluster
+    value: '1dt-team1-aks'
+  - name: azureContainerRegistry
+    value: '1dtteam1registry.azurecr.io'
+  - name: imageRepository
+    value: 'itc-app'
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/Dockerfile'
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: imageFullName
+    value: '$(azureContainerRegistry)/$(imageRepository):$(tag)'
 
 pool:
   name: Default
