@@ -83,6 +83,13 @@ stages:
               artifact: 'manifests'
               path: '$(Pipeline.Workspace)/manifests'
 
+          # --- 디버깅을 위한 단계 추가 ---
+          - script: |
+              echo "Listing files in $(Pipeline.Workspace):"
+              ls -R $(Pipeline.Workspace)
+            displayName: 'List downloaded files'
+          # ---------------------------
+
           - task: replacetokens@3
             displayName: 'Replace tokens in Kubernetes manifests'
             inputs:
