@@ -71,8 +71,8 @@ stages:
   jobs:
   - deployment: Deploy
     displayName: Deploy
-    pool:
-      vmImage: ubuntu-latest
+    pool: Default
+      #vmImage: ubuntu-latest
     environment: 'production' # Azure DevOps 환경 이름
     strategy:
       runOnce:
