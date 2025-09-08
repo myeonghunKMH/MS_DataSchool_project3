@@ -3,20 +3,20 @@ kind: Deployment
 metadata:
   name: itc-deployment
   labels:
-    app: itc
+    app: itc-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: itc
+      app: itc-app
   template:
     metadata:
       labels:
-        app: itc
+        app: itc-app
     spec:
       containers:
       - name: itc-container
         # Skaffold will replace this with the actual image name + tag
-        image: your-registry/your-app:tag
+        image: __IMAGE__
         ports:
         - containerPort: 3000

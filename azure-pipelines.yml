@@ -12,15 +12,15 @@ resources:
 
 variables:
   # Azure DevOps Service Connection 이름으로 변경해야 합니다.
-  azureServiceConnection: 'Your-Azure-Service-Connection-Name'
+  azureServiceConnection: 'azure-aks-connection'
   
   # Azure Container Registry 정보로 변경해야 합니다.
-  azureContainerRegistry: 'youracrname.azurecr.io'
+  azureContainerRegistry: '1dtteam1registry.azurecr.io'
   imageRepository: 'itc-app'
   
   # Azure Kubernetes Service 정보로 변경해야 합니다.
-  azureResourceGroup: 'Your-AKS-Resource-Group'
-  kubernetesCluster: 'Your-AKS-Cluster-Name'
+  azureResourceGroup: '1dt-final-team1'
+  kubernetesCluster: '1dt-team1-aks'
 
   # Dockerfile 경로
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'

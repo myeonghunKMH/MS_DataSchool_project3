@@ -4,7 +4,7 @@ metadata:
   name: itc-service
 spec:
   selector:
-    app: itc
+    app: itc-app
   ports:
     - protocol: TCP
       port: 3000
