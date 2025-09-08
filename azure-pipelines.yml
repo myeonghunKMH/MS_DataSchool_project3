@@ -23,6 +23,7 @@ variables:
   kubernetesCluster: '1dt-team1-aks'
 
   # Dockerfile 경로
+  dockerRegistryServiceConnection: 'acr-connection'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
 
@@ -53,7 +54,7 @@ stages:
         command: buildAndPush
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
-        containerRegistry: $(azureServiceConnection) # ACR에 연결된 Service Connection
+        containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
 
