@@ -83,13 +83,6 @@ stages:
               artifact: 'manifests'
               path: '$(Pipeline.Workspace)/manifests'
 
-          # --- 디버깅을 위한 단계 추가 ---
-          - script: |
-              echo "Listing files in $(Pipeline.Workspace):"
-              ls -R $(Pipeline.Workspace)
-            displayName: 'List downloaded files'
-          # ---------------------------
-
           - task: replacetokens@3
             displayName: 'Replace tokens in Kubernetes manifests'
             inputs:
@@ -107,13 +100,15 @@ stages:
             displayName: Deploy to Kubernetes cluster
             inputs:
               connectionType: 'Azure Resource Manager'
-              azureSubscriptionEndpoint: $(azureServiceConnection) # AKS에 연결된 Service Connection
+              azureSubscriptionEndpoint: $(azureServiceConnection)
               azureResourceGroup: $(azureResourceGroup)
               kubernetesCluster: $(kubernetesCluster)
               kubectlVersion: 'latest'
               command: 'apply'
               useConfigurationFile: true
-              configuration: '$(Pipeline.Workspace)/manifests/*.yaml'
+              configuration: |
+                $(Pipeline.Workspace)/manifests/deployment.yaml
+                $(Pipeline.Workspace)/manifests/service.yaml
               secretType: 'dockerRegistry'
               containerRegistryType: 'Azure Container Registry'
               azureContainerRegistry: $(azureContainerRegistry)
