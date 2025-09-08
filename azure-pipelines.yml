@@ -11,18 +11,11 @@ resources:
 - repo: self
 
 variables:
-  # Azure DevOps Service Connection 이름으로 변경해야 합니다.
   azureServiceConnection: 'azure-aks-connection'
-  
-  # Azure Container Registry 정보로 변경해야 합니다.
   azureContainerRegistry: '1dtteam1registry.azurecr.io'
   imageRepository: 'itc-app'
-  
-  # Azure Kubernetes Service 정보로 변경해야 합니다.
   azureResourceGroup: '1dt-final-team1'
   kubernetesCluster: '1dt-team1-aks'
-
-  # Dockerfile 경로
   dockerRegistryServiceConnection: 'acr-connection'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
@@ -34,7 +27,6 @@ stages:
   - job: Build
     displayName: Build
     pool: Default
-      #vmImage: ubuntu-latest
     steps:
     - task: NodeTool@0
       inputs:
@@ -43,10 +35,6 @@ stages:
 
     - script: npm install
       displayName: 'npm install'
-
-    # (선택 사항) 테스트 스크립트가 있다면 여기에 추가합니다.
-    # - script: npm test
-    #   displayName: 'npm test'
 
     - task: Docker@2
       displayName: Build and push an image to container registry
@@ -95,19 +83,27 @@ stages:
               useLegacyPattern: false
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
-          - task: KubeCtlInstaller@0
-            displayName: 'Install Kubectl'
+          - task: AzureCLI@2
+            displayName: 'Deploy to AKS using Azure CLI'
             inputs:
-              kubectlVersion: 'latest'
-
-          - task: Kubernetes@1
-            displayName: 'Login to AKS Cluster'
-            inputs:
-              connectionType: 'Azure Resource Manager'
-              azureSubscriptionEndpoint: $(azureServiceConnection)
-              azureResourceGroup: $(azureResourceGroup)
-              kubernetesCluster: $(kubernetesCluster)
-              command: 'login'
-
-          - script: 'kubectl apply -f $(Pipeline.Workspace)/manifests'
-            displayName: 'Deploy Manifests'
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # AKS 자격 증명 가져오기
+                echo "Getting AKS credentials..."
+                az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --overwrite-existing
+                
+                # kubectl 버전 확인
+                kubectl version --client
+                
+                # 클러스터 연결 테스트
+                kubectl get nodes
+                
+                # Kubernetes 매니페스트 배포
+                echo "Deploying manifests..."
+                kubectl apply -f $(Pipeline.Workspace)/manifests
+                
+                # 배포 상태 확인
+                kubectl get pods
+                kubectl get services
