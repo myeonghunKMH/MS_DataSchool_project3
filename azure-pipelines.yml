@@ -75,7 +75,7 @@ stages:
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
           - task: AzureCLI@2
-            displayName: 'Invoke Deployment on AKS Cluster'
+            displayName: 'Invoke Deployment and Grant Team Permissions'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
@@ -89,3 +89,29 @@ stages:
                   --command "kubectl apply -f deployment.yaml -f service.yaml" \
                   --file $(Pipeline.Workspace)/manifests/deployment.yaml \
                   --file $(Pipeline.Workspace)/manifests/service.yaml
+
+                echo "Granting cluster-admin role to all team members..."
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl create clusterrolebinding 1dt021-admin-binding --clusterrole=cluster-admin --user=1dt021@msacademy.msai.kr || echo 'Binding for 1dt021 already exists.'"
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl create clusterrolebinding 1dt001-admin-binding --clusterrole=cluster-admin --user=1dt001@msacademy.msai.kr || echo 'Binding for 1dt001 already exists.'"
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl create clusterrolebinding 1dt019-admin-binding --clusterrole=cluster-admin --user=1dt019@msacademy.msai.kr || echo 'Binding for 1dt019 already exists.'"
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl create clusterrolebinding 1dt030-admin-binding --clusterrole=cluster-admin --user=1dt030@msacademy.msai.kr || echo 'Binding for 1dt030 already exists.'"
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl create clusterrolebinding 1dt035-admin-binding --clusterrole=cluster-admin --user=1dt035@msacademy.msai.kr || echo 'Binding for 1dt035 already exists.'"
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl create clusterrolebinding 1dt037-admin-binding --clusterrole=cluster-admin --user=1dt037@msacademy.msai.kr || echo 'Binding for 1dt037 already exists.'"
