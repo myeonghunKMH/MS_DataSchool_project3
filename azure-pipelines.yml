@@ -86,7 +86,7 @@ stages:
           - task: replacetokens@3
             displayName: 'Replace tokens in Kubernetes manifests'
             inputs:
-              targetFiles: '$(Pipeline.Workspace)/manifests/k8s/deployment.yaml'
+              targetFiles: '$(Pipeline.Workspace)/manifests/deployment.yaml'
               encoding: 'auto'
               writeBOM: true
               actionOnMissing: 'warn'
@@ -106,7 +106,7 @@ stages:
               kubectlVersion: 'latest'
               command: 'apply'
               useConfigurationFile: true
-              configuration: '$(Pipeline.Workspace)/manifests/k8s/*.yaml'
+              configuration: '$(Pipeline.Workspace)/manifests/*.yaml'
               secretType: 'dockerRegistry'
               containerRegistryType: 'Azure Container Registry'
               azureContainerRegistry: $(azureContainerRegistry)
