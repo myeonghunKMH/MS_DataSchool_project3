@@ -2,16 +2,11 @@ trigger:
 - main
 
 variables:
-  # --- 서비스 연결 이름 ---
   dockerRegistryServiceConnection: 'acr-connection'
   azureServiceConnection: 'azure-aks-connection'
-
-  # --- Azure 리소스 정보 ---
   azureResourceGroup: '1dt-final-team1'
   kubernetesCluster: '1dt-team1-aks'
   azureContainerRegistry: '1dtteam1registry.azurecr.io'
-  
-  # --- 애플리케이션 및 이미지 정보 ---
   imageRepository: 'itc-app'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
@@ -33,15 +28,13 @@ stages:
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+        tags: '$(tag)'
 
     - task: PublishPipelineArtifact@1
       displayName: 'Publish Kubernetes manifests'
       inputs:
         targetPath: '$(Build.SourcesDirectory)/k8s'
         artifact: 'manifests'
-        publishLocation: 'pipeline'
 
 - stage: Deploy
   displayName: 'Stage 2: Deploy to AKS'
@@ -62,7 +55,7 @@ stages:
               path: '$(Pipeline.Workspace)/manifests'
 
           - task: replacetokens@3
-            displayName: 'Replace image token in deployment.yaml'
+            displayName: 'Replace image token'
             inputs:
               targetFiles: '$(Pipeline.Workspace)/manifests/deployment.yaml'
               encoding: 'auto'
@@ -75,43 +68,18 @@ stages:
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
           - task: AzureCLI@2
-            displayName: 'Invoke Deployment and Grant Team Permissions'
+            displayName: 'Deploy to AKS using Admin Credentials'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -e
-                echo "Invoking kubectl apply command on AKS..."
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl apply -f deployment.yaml -f service.yaml" \
-                  --file $(Pipeline.Workspace)/manifests/deployment.yaml \
-                  --file $(Pipeline.Workspace)/manifests/service.yaml
+                echo "Getting AKS admin credentials..."
+                az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --admin --overwrite-existing
+                
+                echo "Ensuring namespace 'itc' exists..."
+                kubectl create namespace itc || echo "Namespace 'itc' already exists."
 
-                echo "Granting cluster-admin role to all team members..."
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl create clusterrolebinding 1dt021-admin-binding --clusterrole=cluster-admin --user=1dt021@msacademy.msai.kr || echo 'Binding for 1dt021 already exists.'"
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl create clusterrolebinding 1dt001-admin-binding --clusterrole=cluster-admin --user=1dt001@msacademy.msai.kr || echo 'Binding for 1dt001 already exists.'"
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl create clusterrolebinding 1dt019-admin-binding --clusterrole=cluster-admin --user=1dt019@msacademy.msai.kr || echo 'Binding for 1dt019 already exists.'"
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl create clusterrolebinding 1dt030-admin-binding --clusterrole=cluster-admin --user=1dt030@msacademy.msai.kr || echo 'Binding for 1dt030 already exists.'"
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl create clusterrolebinding 1dt035-admin-binding --clusterrole=cluster-admin --user=1dt035@msacademy.msai.kr || echo 'Binding for 1dt035 already exists.'"
-                az aks command invoke \
-                  --resource-group $(azureResourceGroup) \
-                  --name $(kubernetesCluster) \
-                  --command "kubectl create clusterrolebinding 1dt037-admin-binding --clusterrole=cluster-admin --user=1dt037@msacademy.msai.kr || echo 'Binding for 1dt037 already exists.'"
+                echo "Applying Kubernetes manifests to 'itc' namespace..."
+                kubectl apply -f $(Pipeline.Workspace)/manifests --namespace itc
