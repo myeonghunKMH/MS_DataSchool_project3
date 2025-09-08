@@ -72,8 +72,7 @@ stages:
   - deployment: Deploy
     displayName: Deploy
     pool: Default
-      #vmImage: ubuntu-latest
-    environment: 'production' # Azure DevOps 환경 이름
+    environment: 'production'
     strategy:
       runOnce:
         deploy:
@@ -86,9 +85,7 @@ stages:
           - task: replacetokens@3
             displayName: 'Replace tokens in Kubernetes manifests'
             inputs:
-              targetFiles: 
-                $(Pipeline.Workspace)/manifests/deployment.yaml
-                $(Pipeline.Workspace)/manifests/service.yaml
+              targetFiles: '$(Pipeline.Workspace)/manifests/deployment.yaml'
               encoding: 'auto'
               writeBOM: true
               actionOnMissing: 'warn'
@@ -98,19 +95,19 @@ stages:
               useLegacyPattern: false
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
+          - task: KubeCtlInstaller@0
+            displayName: 'Install Kubectl'
+            inputs:
+              kubectlVersion: 'latest'
+
           - task: Kubernetes@1
-            displayName: Deploy to Kubernetes cluster
+            displayName: 'Login to AKS Cluster'
             inputs:
               connectionType: 'Azure Resource Manager'
               azureSubscriptionEndpoint: $(azureServiceConnection)
               azureResourceGroup: $(azureResourceGroup)
               kubernetesCluster: $(kubernetesCluster)
-              kubectlVersion: 'latest'
-              command: 'apply'
-              useConfigurationFile: true
-              configuration: |
-                $(Pipeline.Workspace)/manifests/deployment.yaml
-                $(Pipeline.Workspace)/manifests/service.yaml
-              secretType: 'dockerRegistry'
-              containerRegistryType: 'Azure Container Registry'
-              azureContainerRegistry: $(azureContainerRegistry)
+              command: 'login'
+
+          - script: 'kubectl apply -f $(Pipeline.Workspace)/manifests'
+            displayName: 'Deploy Manifests'
