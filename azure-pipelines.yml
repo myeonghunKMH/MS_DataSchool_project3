@@ -83,6 +83,11 @@ stages:
               useLegacyPattern: false
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
+          - task: KubeCtlInstaller@0
+            displayName: 'Install Kubectl'
+            inputs:
+              kubectlVersion: 'latest'
+
           - task: AzureCLI@2
             displayName: 'Deploy to AKS using Azure CLI'
             inputs:
@@ -98,6 +103,7 @@ stages:
                 kubectl version --client
                 
                 # 클러스터 연결 테스트
+                echo "Testing cluster connection..."
                 kubectl get nodes
                 
                 # Kubernetes 매니페스트 배포
@@ -105,5 +111,6 @@ stages:
                 kubectl apply -f $(Pipeline.Workspace)/manifests
                 
                 # 배포 상태 확인
-                kubectl get pods
+                echo "Checking deployment status..."
+                kubectl get pods -o wide
                 kubectl get services
