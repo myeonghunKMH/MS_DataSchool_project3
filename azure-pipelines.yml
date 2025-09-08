@@ -75,36 +75,17 @@ stages:
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
           - task: AzureCLI@2
-            displayName: 'Login to Azure CLI'
-            inputs:
-              azureSubscription: $(azureServiceConnection)
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "Successfully logged in to Azure."
-
-          - script: |
-              set -e
-              KUBELOGIN_VERSION="v0.1.0"
-              echo "Downloading kubelogin..."
-              curl -sL "https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip" -o kubelogin.zip
-              unzip -q kubelogin.zip
-              echo "Installing kubelogin..."
-              sudo mv bin/linux_amd64/kubelogin /usr/local/bin
-              rm kubelogin.zip
-              echo "kubelogin installed successfully."
-            displayName: 'Install kubelogin for Entra ID'
-
-          - task: AzureCLI@2
-            displayName: 'Get AKS credentials and Deploy'
+            displayName: 'Invoke Deployment on AKS Cluster'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -e
-                echo "Getting AKS credentials..."
-                az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --overwrite-existing
-                
-                echo "Applying Kubernetes manifests..."
-                kubectl apply -f $(Pipeline.Workspace)/manifests
+                echo "Invoking kubectl apply command on AKS..."
+                az aks command invoke \
+                  --resource-group $(azureResourceGroup) \
+                  --name $(kubernetesCluster) \
+                  --command "kubectl apply -f deployment.yaml -f service.yaml" \
+                  --file $(Pipeline.Workspace)/manifests/deployment.yaml \
+                  --file $(Pipeline.Workspace)/manifests/service.yaml
