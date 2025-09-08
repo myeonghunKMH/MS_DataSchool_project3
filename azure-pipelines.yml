@@ -89,18 +89,27 @@ stages:
               kubectlVersion: 'latest'
 
           - task: AzureCLI@2
-            displayName: 'Deploy to AKS using Azure CLI'
+            displayName: 'Install kubelogin and Deploy to AKS'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                # kubelogin 최신 버전 다운로드 및 설치
+                echo "Installing kubelogin..."
+                KUBELOGIN_VERSION=$(curl -s https://api.github.com/repos/Azure/kubelogin/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                curl -LO "https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip"
+                unzip kubelogin-linux-amd64.zip
+                sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
+                kubelogin --version
+                
                 # AKS 자격 증명 가져오기
                 echo "Getting AKS credentials..."
                 az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --overwrite-existing
                 
-                # kubectl 버전 확인
-                kubectl version --client
+                # kubelogin을 사용하여 kubeconfig 변환
+                echo "Converting kubeconfig for Azure CLI authentication..."
+                kubelogin convert-kubeconfig -l azurecli
                 
                 # 클러스터 연결 테스트
                 echo "Testing cluster connection..."
@@ -108,7 +117,7 @@ stages:
                 
                 # Kubernetes 매니페스트 배포
                 echo "Deploying manifests..."
-                kubectl apply -f $(Pipeline.Workspace)/manifests
+                kubectl apply -f $(Pipeline.Workspace)/manifests/
                 
                 # 배포 상태 확인
                 echo "Checking deployment status..."
