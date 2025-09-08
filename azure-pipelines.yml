@@ -103,9 +103,10 @@ stages:
               azureSubscriptionEndpoint: $(azureServiceConnection) # AKS에 연결된 Service Connection
               azureResourceGroup: $(azureResourceGroup)
               kubernetesCluster: $(kubernetesCluster)
+              kubectlVersion: 'latest'
               command: 'apply'
               useConfigurationFile: true
-              configuration: '$(Pipeline.Workspace)/manifests/k8s'
+              configuration: '$(Pipeline.Workspace)/manifests/k8s/*.yaml'
               secretType: 'dockerRegistry'
               containerRegistryType: 'Azure Container Registry'
               azureContainerRegistry: $(azureContainerRegistry)
