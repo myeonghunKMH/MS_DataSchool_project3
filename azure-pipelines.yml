@@ -11,6 +11,9 @@ variables:
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
 
+  # 토큰 교체를 위한 전체 이미지 이름 변수 추가
+  imageFullName: '$(azureContainerRegistry)/$(imageRepository):$(tag)'
+
 pool:
   name: Default
 
@@ -64,8 +67,7 @@ stages:
               keepToken: false
               tokenPrefix: '__'
               tokenSuffix: '__'
-              useLegacyPattern: false
-              variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
+              # 문제가 되었던 variables 속성을 제거합니다.
 
           - task: AzureCLI@2
             displayName: 'Deploy to AKS using Admin Credentials'

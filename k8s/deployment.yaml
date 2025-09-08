@@ -18,6 +18,6 @@ spec:
       containers:
       - name: itc-container
         # Skaffold will replace this with the actual image name + tag
-        image: __IMAGE__
+        image: __imageFullName__
         ports:
         - containerPort: 3000
