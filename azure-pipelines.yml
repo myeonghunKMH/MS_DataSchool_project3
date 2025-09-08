@@ -86,7 +86,9 @@ stages:
           - task: replacetokens@3
             displayName: 'Replace tokens in Kubernetes manifests'
             inputs:
-              targetFiles: '$(Pipeline.Workspace)/manifests/deployment.yaml'
+              targetFiles: 
+                $(Pipeline.Workspace)/manifests/deployment.yaml
+                $(Pipeline.Workspace)/manifests/service.yaml
               encoding: 'auto'
               writeBOM: true
               actionOnMissing: 'warn'
