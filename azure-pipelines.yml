@@ -3,9 +3,7 @@ trigger:
 
 variables:
   # --- 서비스 연결 이름 ---
-  # Docker Registry 타입의 서비스 연결 (ACR에 이미지 푸시용)
   dockerRegistryServiceConnection: 'acr-connection'
-  # Azure Resource Manager 타입의 서비스 연결 (Azure CLI 로그인 및 AKS 접근용)
   azureServiceConnection: 'azure-aks-connection'
 
   # --- Azure 리소스 정보 ---
@@ -21,12 +19,7 @@ variables:
 pool:
   name: Default
 
-
 stages:
-# ==================================================================================
-# == STAGE 1: Build ==
-# == 역할: Docker 이미지를 빌드하고 ACR에 푸시, Kubernetes 매니페스트를 아티팩트로 게시
-# ==================================================================================
 - stage: Build
   displayName: 'Stage 1: Build and Push'
   jobs:
@@ -50,10 +43,6 @@ stages:
         artifact: 'manifests'
         publishLocation: 'pipeline'
 
-# ==================================================================================
-# == STAGE 2: Deploy ==
-# == 역할: Azure CLI를 사용하여 Entra ID로 AKS에 로그인하고 애플리케이션 배포
-# ==================================================================================
 - stage: Deploy
   displayName: 'Stage 2: Deploy to AKS'
   dependsOn: Build
@@ -86,37 +75,15 @@ stages:
               variables: 'IMAGE = $(azureContainerRegistry)/$(imageRepository):$(tag)'
 
           - task: AzureCLI@2
-            name: 'AzureLogin'
-            displayName: 'Login to Azure CLI'
-            inputs:
-              azureSubscription: $(azureServiceConnection)
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "Successfully logged in to Azure."
-
-          - script: |
-              set -e
-              KUBELOGIN_VERSION="v0.1.0"
-              echo "Downloading kubelogin..."
-              curl -sL "https://github.com/Azure/kubelogin/releases/download/${KUBELOGIN_VERSION}/kubelogin-linux-amd64.zip" -o kubelogin.zip
-              unzip -q kubelogin.zip
-              echo "Installing kubelogin to /usr/local/bin..."
-              sudo mv bin/linux_amd64/kubelogin /usr/local/bin
-              rm kubelogin.zip
-              echo "kubelogin installed successfully."
-            displayName: 'Install kubelogin for Entra ID'
-
-          - task: AzureCLI@2
-            displayName: 'Get AKS credentials and Deploy'
+            displayName: 'Get ADMIN credentials and Deploy to AKS'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -e
-                echo "Getting AKS credentials..."
-                az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --overwrite-existing
+                echo "Getting AKS admin credentials..."
+                az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --admin --overwrite-existing
                 
                 echo "Applying Kubernetes manifests..."
                 kubectl apply -f $(Pipeline.Workspace)/manifests
