@@ -473,7 +473,7 @@ wss.on("connection", (ws) => {
 // -------------------------------------------------------------------
 // 서버 실행/종료
 // -------------------------------------------------------------------
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(fs.readFileSync('/etc/secrets/PORT', 'utf8') || 3000);
 server.listen(PORT, async () => {
   console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
   const ok = await db.testDBConnection();
@@ -553,3 +553,4 @@ async function gracefulShutdown() {
 }
 process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
+IGTERM", gracefulShutdown);

@@ -1,14 +1,15 @@
 
+const fs = require('fs');
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: fs.readFileSync('/etc/secrets/DB_HOST', 'utf8'),
+  port: Number(fs.readFileSync('/etc/secrets/DB_PORT', 'utf8')),
+  user: fs.readFileSync('/etc/secrets/DB_USER', 'utf8'),
+  password: fs.readFileSync('/etc/secrets/DB_PASSWORD', 'utf8'),
+  database: fs.readFileSync('/etc/secrets/DB_NAME', 'utf8'),
   waitForConnections: true,
-  connectionLimit: process.env.DB_POOL_MAX || 10,
+  connectionLimit: Number(fs.readFileSync('/etc/secrets/DB_POOL_MAX', 'utf8')) || 10,
   queueLimit: 0
 });
 
