@@ -15,6 +15,9 @@ spec:
       labels:
         app: itc-app
     spec:
+      # Pod의 보안 설정을 추가하여 볼륨 접근 권한을 부여합니다.
+      securityContext:
+        fsGroup: 1000  # node 사용자의 그룹 ID
       containers:
       - name: itc-container
         image: __imageFullName__
