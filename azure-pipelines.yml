@@ -2,32 +2,23 @@ trigger:
 - main
 
 variables:
-  - group: itc-app-secrets
-  - name: dockerRegistryServiceConnection
-    value: 'acr-connection'
-  - name: azureServiceConnection
-    value: 'azure-aks-connection'
-  - name: azureResourceGroup
-    value: '1dt-final-team1'
-  - name: kubernetesCluster
-    value: '1dt-team1-aks'
-  - name: azureContainerRegistry
-    value: '1dtteam1registry.azurecr.io'
-  - name: imageRepository
-    value: 'itc-app'
-  - name: dockerfilePath
-    value: '$(Build.SourcesDirectory)/Dockerfile'
-  - name: tag
-    value: '$(Build.BuildId)'
-  - name: imageFullName
-    value: '$(azureContainerRegistry)/$(imageRepository):$(tag)'
+  azureServiceConnection: 'azure-aks-connection'
+  dockerRegistryServiceConnection: 'acr-connection'
+  azureResourceGroup: '1dt-final-team1'
+  kubernetesCluster: '1dt-team1-aks'
+  azureContainerRegistry: '1dtteam1registry.azurecr.io'
+  imageRepository: 'itc-app'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+  imageFullName: '$(azureContainerRegistry)/$(imageRepository):$(tag)'
+  k8sNamespace: 'itc'
 
 pool:
   name: Default
 
 stages:
 - stage: Build
-  displayName: 'Stage 1: Build and Push'
+  displayName: 'Build and Push'
   jobs:
   - job: BuildJob
     displayName: 'Build and Push Job'
@@ -48,7 +39,7 @@ stages:
         artifact: 'manifests'
 
 - stage: Deploy
-  displayName: 'Stage 2: Deploy to AKS'
+  displayName: 'Deploy to AKS'
   dependsOn: Build
   condition: succeeded()
   jobs:
@@ -71,56 +62,15 @@ stages:
               targetFiles: '$(Pipeline.Workspace)/manifests/deployment.yaml'
 
           - task: AzureCLI@2
-            displayName: 'Deploy to AKS using Admin Credentials'
+            displayName: 'Deploy to AKS'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                # 스크립트 내에서 직접 환경 변수를 선언하여 안정성을 높입니다.
-                export DB_HOST="$(DB_HOST)"
-                export DB_PORT="$(DB_PORT)"
-                export DB_USER="$(DB_USER)"
-                export DB_PASSWORD="$(DB_PASSWORD)"
-                export DB_NAME="$(DB_NAME)"
-                export KEYCLOAK_REALM="$(KEYCLOAK_REALM)"
-                export KEYCLOAK_CLIENT_ID="$(KEYCLOAK_CLIENT_ID)"
-                export KEYCLOAK_SERVER_URL="$(KEYCLOAK_SERVER_URL)"
-                export KEYCLOAK_PUBLIC_KEY="$(KEYCLOAK_PUBLIC_KEY)"
-                export KEYCLOAK_ADMIN_CLIENT_ID="$(KEYCLOAK_ADMIN_CLIENT_ID)"
-                export KEYCLOAK_ADMIN_CLIENT_SECRET="$(KEYCLOAK_ADMIN_CLIENT_SECRET)"
-                export SMTP_HOST="$(SMTP_HOST)"
-                export SMTP_PORT="$(SMTP_PORT)"
-                export SMTP_USER="$(SMTP_USER)"
-                export SMTP_PASS="$(SMTP_PASS)"
-                export SMTP_FROM_EMAIL="$(SMTP_FROM_EMAIL)"
-
                 set -e
                 echo "Getting AKS admin credentials..."
                 az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --admin --overwrite-existing
                 
-                echo "Ensuring namespace 'itc' exists..."
-                kubectl create namespace itc || echo "Namespace 'itc' already exists."
-
-                echo "Creating or updating Kubernetes secret..."
-                kubectl create secret generic itc-app-secret -n itc \
-                  --from-literal=DB_HOST="$DB_HOST" \
-                  --from-literal=DB_PORT="$DB_PORT" \
-                  --from-literal=DB_USER="$DB_USER" \
-                  --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-                  --from-literal=DB_NAME="$DB_NAME" \
-                  --from-literal=KEYCLOAK_REALM="$KEYCLOAK_REALM" \
-                  --from-literal=KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
-                  --from-literal=KEYCLOAK_SERVER_URL="$KEYCLOAK_SERVER_URL" \
-                  --from-literal=KEYCLOAK_PUBLIC_KEY="$KEYCLOAK_PUBLIC_KEY" \
-                  --from-literal=KEYCLOAK_ADMIN_CLIENT_ID="$KEYCLOAK_ADMIN_CLIENT_ID" \
-                  --from-literal=KEYCLOAK_ADMIN_CLIENT_SECRET="$KEYCLOAK_ADMIN_CLIENT_SECRET" \
-                  --from-literal=SMTP_HOST="$SMTP_HOST" \
-                  --from-literal=SMTP_PORT="$SMTP_PORT" \
-                  --from-literal=SMTP_USER="$SMTP_USER" \
-                  --from-literal=SMTP_PASS="$SMTP_PASS" \
-                  --from-literal=SMTP_FROM_EMAIL="$SMTP_FROM_EMAIL" \
-                  --dry-run=client -o yaml | kubectl apply -f -
-
-                echo "Applying Kubernetes manifests to 'itc' namespace..."
-                kubectl apply -f $(Pipeline.Workspace)/manifests --namespace itc
+                echo "Applying Kubernetes manifests to namespace [$(k8sNamespace)]..."
+                kubectl apply -f $(Pipeline.Workspace)/manifests --namespace $(k8sNamespace)
