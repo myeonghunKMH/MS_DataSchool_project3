@@ -7,6 +7,7 @@ variables:
   azureResourceGroup: '1dt-final-team1'
   kubernetesCluster: '1dt-team1-aks'
   azureContainerRegistry: '1dtteam1registry.azurecr.io'
+  keyVaultName: 'itc-kv'
   imageRepository: 'itc-app'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
@@ -23,6 +24,7 @@ stages:
   - job: BuildJob
     displayName: 'Build and Push Job'
     steps:
+    # Docker 이미지를 빌드하고 푸시합니다. 이 단계에서는 더 이상 시크릿을 다루지 않습니다.
     - task: Docker@2
       displayName: 'Build and Push image to ACR'
       inputs:
@@ -55,22 +57,60 @@ stages:
             inputs:
               artifact: 'manifests'
               path: '$(Pipeline.Workspace)/manifests'
-
-          - task: replacetokens@3
-            displayName: 'Replace image token'
+          
+          # 배포 직전에 Key Vault에서 시크릿을 가져옵니다.
+          - task: AzureKeyVault@2
+            displayName: 'Get secrets from Azure Key Vault'
             inputs:
-              targetFiles: '$(Pipeline.Workspace)/manifests/deployment.yaml'
+              azureSubscription: $(azureServiceConnection)
+              KeyVaultName: $(keyVaultName)
+              SecretsFilter: '*' # 모든 시크릿을 가져옵니다.
+              RunAsPreJob: false
 
           - task: AzureCLI@2
-            displayName: 'Deploy to AKS'
+            displayName: 'Create K8s Secret and Deploy'
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                set -e
+                set -e # 스크립트 실패 시 즉시 중단
+
                 echo "Getting AKS admin credentials..."
                 az aks get-credentials --resource-group $(azureResourceGroup) --name $(kubernetesCluster) --admin --overwrite-existing
                 
-                echo "Applying Kubernetes manifests to namespace [$(k8sNamespace)]..."
+                echo "Deleting existing secret if it exists..."
+                kubectl delete secret itc-secrets --namespace $(k8sNamespace) --ignore-not-found=true
+
+                echo "Creating new Kubernetes secret 'itc-secrets'"...
+                # Key Vault에서 가져온 변수들을 사용하여 K8s Secret을 생성합니다.
+                # Key Vault 시크릿 이름에 하이픈(-)이 있는 경우, 파이프라인 변수에서도 그대로 사용합니다 (예: $(DB-HOST)).
+                kubectl create secret generic itc-secrets --namespace $(k8sNamespace) \
+                  --from-literal=DB_HOST='$(DB-HOST)' \
+                  --from-literal=DB_PORT='$(DB-PORT)' \
+                  --from-literal=DB_USER='$(DB-USER)' \
+                  --from-literal=DB_PASSWORD='$(DB-PASSWORD)' \
+                  --from-literal=DB_NAME='$(DB-NAME)' \
+                  --from-literal=PORT='$(PORT)' \
+                  --from-literal=DB_POOL_MAX='$(DB-POOL-MAX)' \
+                  --from-literal=DB_POOL_IDLE_TIMEOUT='$(DB-POOL-IDLE-TIMEOUT)' \
+                  --from-literal=KEYCLOAK_REALM='$(KEYCLOAK-REALM)' \
+                  --from-literal=KEYCLOAK_CLIENT_ID='$(KEYCLOAK-CLIENT-ID)' \
+                  --from-literal=KEYCLOAK_SERVER_URL='$(KEYCLOAK-SERVER-URL)' \
+                  --from-literal=KEYCLOAK_PUBLIC_KEY='$(KEYCLOAK-PUBLIC-KEY)' \
+                  --from-literal=KEYCLOAK_ADMIN_CLIENT_ID='$(KEYCLOAK-ADMIN-CLIENT-ID)' \
+                  --from-literal=KEYCLOAK_ADMIN_CLIENT_SECRET='$(KEYCLOAK-ADMIN-CLIENT-SECRET)' \
+                  --from-literal=SMTP_HOST='$(SMTP-HOST)' \
+                  --from-literal=SMTP_PORT='$(SMTP-PORT)' \
+                  --from-literal=SMTP_USER='$(SMTP-USER)' \
+                  --from-literal=SMTP_PASS='$(SMTP-PASS)' \
+                  --from-literal=SMTP_FROM_EMAIL='$(SMTP-FROM-EMAIL)' \
+                  --from-literal=DEFAULT_USER='$(DEFAULT-USER)' \
+                  --from-literal=UPBIT_WS_URL='$(UPBIT-WS-URL)' \
+                  --from-literal=MARKET_CODES='$(MARKET-CODES)'
+
+                echo "Replacing image token in deployment.yaml"...
+                sed -i "s/__imageFullName__/$(imageFullName)/g" $(Pipeline.Workspace)/manifests/deployment.yaml
+
+                echo "Applying Kubernetes manifests to namespace [$(k8sNamespace)]"...
                 kubectl apply -f $(Pipeline.Workspace)/manifests --namespace $(k8sNamespace)
