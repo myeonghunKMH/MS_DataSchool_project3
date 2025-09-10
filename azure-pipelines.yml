@@ -110,7 +110,7 @@ stages:
                   --from-literal=MARKET_CODES='$(MARKET-CODES)'
 
                 echo "Replacing image token in deployment.yaml"...
-                sed -i "s/__imageFullName__/$(imageFullName)/g" $(Pipeline.Workspace)/manifests/deployment.yaml
+                sed -i "s#__imageFullName__#$(imageFullName)#g" $(Pipeline.Workspace)/manifests/deployment.yaml
 
                 echo "Applying Kubernetes manifests to namespace [$(k8sNamespace)]"...
                 kubectl apply -f $(Pipeline.Workspace)/manifests --namespace $(k8sNamespace)
