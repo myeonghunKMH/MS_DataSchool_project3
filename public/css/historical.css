@@ -1,0 +1,40 @@
+/* historical.css - 과거 시나리오 페이지 스타일 */
+
+.scenario-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.scenario-container h1 {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #e0e0e0;
+}
+
+.scenario-button-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 900px;
+}
+
+.scenario-button {
+  padding: 20px 40px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  background-color: #337ab7;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.scenario-button:hover {
+  background-color: #23527c;
+}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>시나리오3 | 유지장</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Chart libs -->
+  <!-- Charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -12,213 +12,136 @@
 
   <style>
     :root{
-      --bg:#1b1b1b;
-      --panel:#1b1b1b;
-      --panel-2:#1b1b1b;
-      --line:#303030;
-      --hairline:#5e5e5e;
-      --text:#E8ECF3;
-      --muted:#ffffff;
-
-      --active:#ffffff;
-      --active-600:#a3a3a3;
-
-      --candle-up:  rgb(255,77,77);
-      --candle-down:rgba(26,175,151);
-      --vol-up:     rgba(255,77,77,.56);
-      --vol-down:   rgba(26,175,151,.50);
-
-      /* 살짝 축소 */
-      --font-sm:12.5px; --font-md:14.5px; --font-lg:18px; --font-xl:20px;
-      --radius:16px;
-      --shadow:0 10px 28px rgba(0,0,0,.32);
-
-      /* 차트 세로 소폭 ↓ */
-      --chart-price-h: 60vh;
-      --chart-vol-h:   150px;
+      --bg:#212121; --panel:#1f1f1f; --panel-2:#1f1f1f;
+      --line:#424242; --hairline:#5e5e5e; --text:#E8ECF3; --muted:#bfc6d6;
+      --active:#ffffff; --active-600:#a3a3a3;
+      --headline:#ffd166;
+      --candle-up:  rgb(255, 103, 103);
+      --candle-down:rgb(74, 196, 175);
+      --vol-up:     rgba(255, 103, 103,.34);
+      --vol-down:   rgba(74, 196, 175,.30);
+      --font-sm:12.5px; --font-md:14.5px; --font-lg:18px;
+      --price-h:62vh; --vol-h:16vh;
     }
+    *{box-sizing:border-box}
+    body{margin:0;background:#1f1f1f;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:#1b1b1b;
-      color:var(--text);
-    }
+    .header{display:flex;align-items:center;justify-content:center;padding:16px;border-bottom:1px solid var(--line);position:relative;background:var(--panel)}
+    .header .left-tools{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;gap:10px;align-items:center}
+    .back-btn{padding:9px 12px;border-radius:12px;background:rgba(63, 63, 63, 0.705);border:1px solid var(--hairline);color:#dfe5f1;text-decoration:none;font-weight:700;height: 35px;display:flex;align-items: center;}
+    .header-date{font-family:ui-monospace,Menlo,Consolas,monospace;color:#ffffff;font-size:15px;opacity:.95}
 
-    .header{
-      display:flex; align-items:center; justify-content:center;
-      padding:18px; /* 20→18 */
-      background:var(--panel); border-bottom:1px solid var(--line);
-      position:relative;
-    }
-    .header .left-tools{ position:absolute; left:12px; top:50%; transform:translateY(-50%); display:flex; gap:8px; }
-    .back-btn,.help-btn{
-      padding:9px 12px; border-radius:12px;
-      background:rgba(255,255,255,.02); border:1px solid var(--hairline);
-      color:#dfe5f1; text-decoration:none; font-size:var(--font-md); font-weight:700; line-height:1;
-      transition:border-color .15s ease, filter .15s ease, transform .06s ease; backdrop-filter: blur(2px);
-    }
-    .help-btn{ font-size:18px; padding:9px 10px; }
-    .back-btn:hover,.help-btn:hover{ border-color:#313947; filter:brightness(1.06); }
-    .back-btn:active,.help-btn:active{ transform:translateY(1px); }
+    .scenario-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .scenario-badge{padding:5px 12px;border-radius:14px;background:rgba(49, 49, 49, 0.705);border:1px solid #bbbbbb;color:#bbbbbb;font-size:13px;font-weight:700}
+    .scenario-title{font-weight:800;color:#bbbbbb}
+    .balances{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:10px}
+    .b-item{padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,rgba(63, 63, 63, 0), rgb(63, 63, 63))}
+    .b-label{font-size:var(--font-sm);color:#bac0cc}
+    .b-value{font-size:var(--font-lg);font-weight:800;color:#eef3ff}
+    .positive{color:#9CD67A}.negative{color:#FF7A7A}
 
-    .scenario-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; }
-    .scenario-badge{ display:inline-block; padding:5px 12px; border-radius:14px; background:#1e1e1e; border:1px solid #84f3da; font-size:13px; font-weight:700; color:#84f3da; }
-    .scenario-title{ font-size:18px; font-weight:800; color:#84f3da; }
+    .grid{display:grid; gap:1px;
+      grid-template-columns:1.05fr 1.05fr 0.95fr; grid-auto-rows:min-content;
+      min-height:calc(92vh - 64px); border-top:1px solid var(--line); position:relative;}
+    .grid-bottom{position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line);}
+    .col{background:var(--panel-2);display:flex;flex-direction:column;min-width:0}
+    #leftCol{border-right:1px solid var(--line)}
+    #rightCol { border-right:1px solid var(--line); }
 
-    .balances{ position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:10px; }
-    .b-item{
-      text-align:right; padding:10px 12px; border:1px solid var(--line); border-radius:14px;
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-    }
-    .b-label{ font-size:var(--font-sm); color:#bac0cc; }
-    .b-value{ font-size:var(--font-lg); font-weight:800; color:#eef3ff; }
-    .positive{ color:#9CD67A; } .negative{ color:#FF7A7A; }
+    .pane-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#212121,#212121)}
+    .pane-title{display:flex;align-items:center;gap:10px;color:#ffd166;}
+    .badge{font-size:var(--font-sm);padding:4px 10px;border-radius:999px;border:1px solid var(--hairline);color:#bebebe;background:rgba(255,255,255,.02)}
+    .badge.active{border-color:#ffd166;color:#ffd166}
+    .price-block{text-align:right}.big{font-size:var(--font-lg);font-weight:800}.sub{font-size:var(--font-sm);color:#9aa0a6}
 
-    /* === GRID: 선 이중표시 방지 & 한몸처럼 === */
-    .grid{
-      display:grid;
-      gap:1px;                   /* 2px → 1px (중앙 이중선 제거) */
-      background:var(--line);    /* gap 영역을 선처럼 사용 */
-      grid-template-columns:1.05fr 1.05fr 0.96fr;
-      height: calc(91vh - 64px); /* 92vh-70 → 조금 줄임 */
-      border:1px solid var(--line); /* outline 대신 border로 컨테이너와 동기화 */
-      border-radius:0;           /* 모서리 움직임 일체화 */
-    }
-    /* 이중선 원인 제거: 중간/좌우 개별 border 제거 */
-    #leftCol{
-      border-right:1px solid var(--line);
-    }
-    .col{ background:var(--panel-2); display:flex; flex-direction:column; min-width:0; }
+    .chart-wrap{flex:1;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .chart-box{position:relative;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;background:#1b1b1b}
+    .price-box{height:var(--price-h)}
+    .vol-box{height:var(--vol-h)}
+    .chart{width:100%;height:100%;display:block}
 
-    .pane-header{
-      display:flex; align-items:center; justify-content:space-between; padding:12px 14px;
-      border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg,#1a1a1a,#191919);
-    }
-    .pane-title{ display:flex; align-items:center; gap:10px; }
-    .badge{
-      font-size:var(--font-sm); padding:4px 10px; border-radius:999px;
-      border:1px solid var(--hairline); color:#bebebe; background:rgba(255,255,255,.02);
-    }
-    .badge.active{ background:transparent; border-color: var(--active); color:#ffffff; box-shadow: 0 0 0 1px color-mix(in srgb, var(--active) 60%, rgba(0,0,0,0)) inset; }
-    .price-block{ text-align:right; }
-    .big{ font-size:var(--font-lg); font-weight:800; }
-    .sub{ font-size:var(--font-sm); color:var(--muted); }
+    .trade-panel{padding:12px;display:flex;flex-direction:column;gap:12px}
+    .seg{display:grid;gap:10px;background:rgba(43, 43, 43, 0.555);border:1px solid var(--line);border-radius:14px;padding:15px}
+    .seg-title{font-weight:900;border-bottom:1px dashed var(--hairline);padding-bottom:8px}
 
-    .chart-wrap{ flex:1; padding:12px; display:flex; flex-direction:column; gap:10px; background:var(--panel-2); }
-    .price-box,.vol-box{
-      position:relative; border:1px solid rgba(255,255,255,.08); border-radius:14px;
-      overflow:hidden; background:#141414;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 8px 22px rgba(0,0,0,.28);
-    }
-    .price-box{ height:var(--chart-price-h); }
-    .vol-box{ height:var(--chart-vol-h); }
-    .chart{ width:100%; height:100%; display:block; }
+    .toolbar{display:flex;align-items:center;gap:8px}
+    .controls-left{display:flex;gap:8px;align-items:center}
+    .btn{padding:10px 14px;border-radius:12px;font-weight:800;border:1px solid #414141;background:#202020;color:#b1b1b1;cursor:pointer}
+    .btn.is-active{border-color:var(--active);color:var(--active)}
+    .speed-wrap{margin-left:auto;display:flex;align-items:center;gap:6px}
+    #speedSlider{width:220px; accent-color: #cacaca;}
 
-    .trade-panel{ padding:12px; display:flex; flex-direction:column; gap:12px; overflow:auto; }
-    .seg{ display:grid; gap:10px; background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:14px; padding:12px; }
-    .seg-title{ font-weight:900; border-bottom:1px dashed var(--hairline); padding-bottom:8px; font-size:var(--font-md); }
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .tab{padding:10px 12px;border:1px solid var(--line);background:#202020;color:#cacaca;text-align:center;border-radius:12px;font-weight:800;cursor:pointer}
+    .tab.active{background:#d6d6d6;border-color:#d6d6d6;color:#0b0c0f}
 
-    .toolbar{ display:flex; align-items:center; gap:8px; }
-    .btn{
-      padding:10px 14px; border-radius:12px;
-      font-weight:800; font-size:14px; border:1px solid #2a313c; background:#1a1a1a; color:#b1b1b1;
-      transition:transform .06s ease, box-shadow .12s ease, border-color .2s ease, color .2s ease;
-      box-shadow:0 4px 12px rgba(0,0,0,.22); cursor:pointer; min-height:42px; line-height:1;
-    }
-    .btn:hover{ box-shadow:0 6px 16px rgba(0,0,0,.26); border-color:#343c49; }
-    .btn:active{ transform:translateY(1px); box-shadow:0 2px 9px rgba(0,0,0,.22) inset; }
-    .btn.is-active{ background:#1a1a1a; border-color:var(--active); color:var(--active); box-shadow:none; }
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .label{font-size:var(--font-sm);color:#ffffff; margin-bottom: 6px;}
+    .input{width:100%;padding:12px;border:1px solid var(--line);background:#202020;color:#e9eef8;border-radius:12px}
 
-    .timebox{
-      margin-left:auto;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      color:#d0d7ff; font-size:14px; opacity:.95;
-    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{background:transparent}
+    input[type="number"]{background:#202020}
 
-    .tabs{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .tab{
-      padding:10px 12px; border:1px solid var(--line); background:#1b1b1b; color:#cfd5e2;
-      cursor:pointer; text-align:center; border-radius:12px; transition:filter .15s, border-color .15s; font-weight:800;
-    }
-    .tab:hover{ filter:brightness(1.05); border-color:#343c49; }
-    .tab.active{ color:#0b0c0f; background:var(--active); border-color:var(--active); box-shadow:none; }
+    .pct-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:-13px}
+    .pct{padding:10px;border:1px solid var(--line);background:#202020;color:#cfd5e2;border-radius:12px;cursor:pointer;font-size:12px;font-weight:800}
+    .warn{min-height:18px;display:flex;align-items:center;font-size:12px;color:#f08585;background:rgba(229,62,62,.08);padding:6px;border-radius:12px;border:1px dashed rgba(229,62,62,.15);visibility:hidden;margin:10px 0 4px}
+    .warn.show{visibility:visible}
+    .order-row{grid-template-columns:1fr;margin-top:-4px;}
+    .order-btn{width:100%;padding:12px;border-radius:12px;font-weight:900;border:0;cursor:pointer;background:linear-gradient(180deg,var(--active),var(--active-600));color:#0b0c0f}
 
-    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .label{ font-size:var(--font-sm); color:var(--muted); }
-    .input{
-      width:100%; padding:12px; border:1px solid var(--line); background:#151515; color:#e9eef8; border-radius:12px; font-size:var(--font-md); outline:none;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
-    }
-    .input:focus{ border-color:#3b4660; box-shadow:0 0 0 3px color-mix(in srgb, var(--active) 24%, transparent); }
-    #amount::-webkit-outer-spin-button,#amount::-webkit-inner-spin-button,#pctInput::-webkit-outer-spin-button,#pctInput::-webkit-inner-spin-button{ -webkit-appearance:none!important; margin:0; }
-    #amount,#pctInput{ -moz-appearance:textfield; }
-    #total{ width:100%; }
+    .holdings-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#202020}
+    .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+    .kv:last-child{border-bottom:0}
 
-    .pct-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-    .pct{
-      padding:10px; border:1px solid var(--line); background:#1b1b1b; color:#cfd5e2;
-      border-radius:12px; cursor:pointer; font-size:var(--font-sm); font-weight:800; transition:filter .15s, border-color .15s; text-align:center;
-    }
-    .pct:hover{ filter:brightness(1.05); border-color:#343c49; }
+    /* === 뉴스 모달 === */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,4,8,.60);display:none;align-items:center;justify-content:center;z-index:9999}
+    .modal{width:min(920px,96vw);background:#1a1a1a;border:1px solid var(--line);border-radius:16px;box-shadow:0 32px 90px rgba(0,0,0,.6);overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);font-weight:900}
+    .modal-body{padding:16px;display:grid;gap:14px}
+    .hr{height:1px;background:var(--line);margin:6px 0}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+    .mbtn{padding:10px 12px;border-radius:12px;border:1px solid #2a2f38;background:linear-gradient(180deg,var(--active),var(--active-600));color:#0b0c0f;font-weight:900;cursor:pointer}
 
-    .order-btn{
-      width:100%; padding:12px; border-radius:12px; font-weight:900; border:0; cursor:pointer;
-      transition:filter .15s, transform .06s, box-shadow .12s; letter-spacing:.2px; font-size:14px;
-    }
-    .order-btn.buy{  background:linear-gradient(180deg,var(--active),var(--active-600)); color:#0b0c0f; }
-    .order-btn.sell{ background:linear-gradient(180deg,var(--active),var(--active-600)); color:#0b0c0f; }
-    .order-btn:hover{ filter:brightness(1.02); }
-    .order-btn:active{ transform:translateY(1px); box-shadow:0 2px 9px rgba(0,0,0,.18) inset; }
+    .news-list{display:grid;gap:8px}
+    .news-item{border:1px solid var(--line);border-radius:10px;padding:10px;background:#151515}
+    .news-time{font-size:12px;color:#9aa2b4}
+    .news-title{font-weight:800;font-size:13px;color:#e7edf8}
 
-    .warn{ font-size:var(--font-sm); color:#f08585; background:rgba(229,62,62,0.08); padding:8px; border-radius:12px; display:none; border:1px dashed rgba(229,62,62,0.15); }
+    #newsHeadline{font-weight:900;font-size:18px;color:var(--headline);letter-spacing:.2px}
+    .news-form{display:grid;grid-template-columns:1fr;gap:12px}
+    .news-form .row{grid-template-columns:1fr 1fr}
+    .news-pcts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 
-    .hold{ display:grid; gap:8px; }
-    .kv{ display:flex; justify-content:space-between; font-size:var(--font-md); }
-    .rule{ height:1px; background:var(--line); margin:6px 0; }
+    /* 하단 진행 상태 */
+    .footer-strip{margin-top:8px;border-top:1px solid var(--line);padding:8px 10px;color:#a7a7a7;font-size:15px;display:flex;justify-content:space-between}
+    #simStatus{white-space:nowrap}
+    #simCounter{white-space:nowrap}
 
-    .modal-backdrop{ position:fixed; inset:0; background:rgba(2,4,8,.60); display:none; align-items:center; justify-content:center; z-index:9999; }
-    .modal{ width:min(580px,94vw); background:#121212; border:1px solid var(--line); border-radius:16px; box-shadow:0 28px 72px rgba(0,0,0,.5); overflow:hidden; }
-    .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); font-weight:900; font-size:var(--font-lg); }
-    .modal-body{ padding:16px; display:grid; gap:10px; }
-    .kv-row{ display:flex; justify-content:space-between; }
-    .hr{ height:1px; background:var(--line); margin:6px 0; }
-    .modal-actions{ display:flex; justify-content:flex-end; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
-    .mbtn{ padding:10px 12px; border-radius:12px; border:1px solid #2a2f38; background:#1b1b1b; color:#fff; cursor:pointer; }
-    .mbtn.primary{ background:linear-gradient(180deg,var(--active),var(--active-600)); color:#0b0c0f; border:none; font-weight:900; }
-
-    .notice-backdrop{ position:fixed; inset:0; background:rgba(2,4,8,.82); display:none; align-items:center; justify-content:center; z-index:10000; }
-    .notice{ width:min(680px,96vw); background:#121212; border:1px solid var(--line); border-radius:16px; box-shadow:0 32px 82px rgba(0,0,0,.6); overflow:hidden; }
-    .notice-header{ padding:16px 18px; border-bottom:1px solid var(--line); font-size:20px; font-weight:900; }
-    .notice-body{ padding:16px 18px; color:#e8edf7; line-height:1.65; }
-    .notice-actions{ display:flex; justify-content:flex-end; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
+    /* === dd.html의 튜토리얼(안내) 전용 모달 === */
+    .notice-backdrop{position:fixed;inset:0;background:rgba(0, 0, 0, 0.705);display:none;align-items:center;justify-content:center;z-index:10000}
+    .notice{width:min(680px,94vw);background:#1a1a1a;border:1px solid #464646;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,.65);overflow:hidden}
+    .notice-header{padding:16px 18px;border-bottom:1px solid var(--line);font-size:20px;font-weight:800}
+    .notice-body{padding:16px 18px;color:#e8e8e8;line-height:1.6}
+    .notice-body p{margin:0 0 8px 0;color:#cfcfcf}
+    .notice-body ol{margin:8px 0 12px 20px}
+    .notice-body li{margin:6px 0}
+    .notice-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
 
     @media (max-width:1200px){
-      .grid{ grid-template-columns:1fr 1fr; height:auto; min-height: calc(100vh - 88px); }
-      .col:last-child{ grid-column:1 / -1; }
-      .trade-panel{ max-height:50vh; }
-    }
-    @media (max-width:900px){
-      .balances{ position:static; transform:none; margin-top:8px; }
-      .header{ flex-wrap:wrap; gap:10px; }
-      .header .left-tools{ position:static; transform:none; order:1; }
-      .grid{ grid-template-columns:1fr; height:auto; }
-      .trade-panel{ max-height:none; }
-    }
-    @media (prefers-reduced-motion:reduce){
-      .btn,.back-btn,.help-btn{ transition:none; }
+      .grid{grid-template-columns:1fr;min-height:auto}
+      .news-form .row{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
   <div class="header">
     <div class="left-tools">
-      <a href="/historical.html" class="back-btn" title="튜토리얼로">← 튜토리얼로</a>
-      <button id="helpBtn" class="help-btn" aria-label="참고사항 다시 보기" title="참고사항 다시 보기">📖</button>
+      <a href="/historical.html" class="back-btn">← 튜토리얼로</a>
+      <button id="newsToggle" class="back-btn" title="뉴스 타임라인">📰</button>
+      <button id="helpBtn" class="back-btn" title="튜토리얼 안내 보기" aria-label="튜토리얼 안내 보기">📖</button>
+      <div class="header-date" id="timebox">대기중…</div>
     </div>
     <div class="scenario-wrap">
       <span class="scenario-badge">SCENARIO 03</span>
@@ -231,7 +154,8 @@
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" id="gridRoot">
+    <!-- BTC -->
     <section class="col" id="leftCol">
       <div class="pane-header">
         <div class="pane-title">
@@ -241,11 +165,12 @@
         <div class="price-block"><div class="big" id="btcPrice">-</div><div class="sub" id="btcChange">-</div></div>
       </div>
       <div class="chart-wrap">
-        <div class="price-box"><canvas id="btcChart" class="chart"></canvas></div>
-        <div class="vol-box"><canvas id="btcVol" class="chart"></canvas></div>
+        <div class="chart-box price-box"><canvas id="btcPriceChart" class="chart"></canvas></div>
+        <div class="chart-box vol-box"><canvas id="btcVolChart" class="chart"></canvas></div>
       </div>
     </section>
 
+    <!-- XRP -->
     <section class="col" id="rightCol">
       <div class="pane-header">
         <div class="pane-title">
@@ -255,19 +180,26 @@
         <div class="price-block"><div class="big" id="xrpPrice">-</div><div class="sub" id="xrpChange">-</div></div>
       </div>
       <div class="chart-wrap">
-        <div class="price-box"><canvas id="xrpChart" class="chart"></canvas></div>
-        <div class="vol-box"><canvas id="xrpVol" class="chart"></canvas></div>
+        <div class="chart-box price-box"><canvas id="xrpPriceChart" class="chart"></canvas></div>
+        <div class="chart-box vol-box"><canvas id="xrpVolChart" class="chart"></canvas></div>
       </div>
     </section>
 
+    <!-- 우측 패널 -->
     <aside class="col">
       <div class="trade-panel">
         <div class="seg">
           <div class="toolbar">
-            <button class="btn" id="playBtn"  aria-pressed="false">▶ 시작</button>
-            <button class="btn" id="pauseBtn" aria-pressed="false">⏸ 일시정지</button>
-            <button class="btn" id="resetBtn" aria-pressed="false">🔄 리셋</button>
-            <div class="timebox" id="timebox">대기중…</div>
+            <div class="controls-left" id="controlsLeft">
+              <button class="btn" id="playBtn">▶ 시작</button>
+              <button class="btn" id="pauseBtn">⏸ 일시정지</button>
+              <button class="btn" id="resetBtn">🔄 리셋</button>
+            </div>
+            <div class="speed-wrap">
+              <label class="label" for="speedSlider">속도</label>
+              <input id="speedSlider" type="range" min="1" max="10" step="1" value="1" />
+              <span id="speedVal" class="label">1x</span>
+            </div>
           </div>
         </div>
 
@@ -300,7 +232,7 @@
               <input class="input" id="amount" type="number" step="0.00000001" placeholder="0" />
             </div>
             <div>
-              <div class="label">주문 총액 (표시=체결, KRW)</div>
+              <div class="label">주문 총액 (KRW)</div>
               <input class="input" id="total" type="text" placeholder="0" readonly />
             </div>
           </div>
@@ -312,35 +244,125 @@
             <input class="input" id="pctInput" type="number" placeholder="직접%" min="0" max="100" />
           </div>
           <div class="warn" id="warn"></div>
-          <div class="row" style="grid-template-columns:1fr;">
-            <button class="order-btn buy" id="orderBtn">매수</button>
+          <div class="row order-row">
+            <button class="order-btn" id="orderBtn">매수</button>
           </div>
         </div>
 
         <div class="seg">
           <div class="seg-title">보유 현황</div>
-          <div class="hold">
-            <div class="kv"><span>KRW</span><span id="holdKrw">-</span></div>
-            <div class="rule"></div>
-            <div class="kv"><span>BTC 수량</span><span id="holdBTCQty">-</span></div>
-            <div class="kv"><span>BTC 평균단가</span><span id="holdBTCAvg">-</span></div>
-            <div class="kv"><span>BTC 평가손익</span><span id="holdBTCPnL">-</span></div>
-            <div class="rule"></div>
-            <div class="kv"><span>XRP 수량</span><span id="holdXRPQty">-</span></div>
-            <div class="kv"><span>XRP 평균단가</span><span id="holdXRPAvg">-</span></div>
-            <div class="kv"><span>XRP 평가손익</span><span id="holdXRPPnL">-</span></div>
+          <div class="holdings-2col">
+            <div class="card">
+              <div style="font-weight:900;margin-bottom:6px">BTC</div>
+              <div class="kv"><span>수량</span><span id="holdBTCQty">-</span></div>
+              <div class="kv"><span>평균단가</span><span id="holdBTCAvg">-</span></div>
+              <div class="kv"><span>평가손익</span><span id="holdBTCPnL">-</span></div>
+            </div>
+            <div class="card">
+              <div style="font-weight:900;margin-bottom:6px">XRP</div>
+              <div class="kv"><span>수량</span><span id="holdXRPQty">-</span></div>
+              <div class="kv"><span>평균단가</span><span id="holdXRPAvg">-</span></div>
+              <div class="kv"><span>평가손익</span><span id="holdXRPPnL">-</span></div>
+            </div>
+          </div>
+          <div class="kv" style="margin-top:8px;"><span>KRW</span><span id="holdKrw">-</span></div>
+        </div>
+
+        <div class="footer-strip">
+          <span id="simStatus">시뮬레이션 대기중</span>
+          <span id="simCounter">- / - 일</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="grid-bottom"></div>
+  </div>
+
+  <!-- 뉴스 타임라인 팝업 -->
+  <div id="timelineModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="timelineTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="timelineTitle">뉴스 타임라인</div>
+        <button class="mbtn" id="timelineClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="newsTimeline" class="news-list" aria-live="polite"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="mbtn" id="timelineClose2">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 뉴스 상세 팝업 -->
+  <div id="newsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="newsTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="newsTitle">시장 뉴스</div>
+        <button class="mbtn" id="newsCloseBtn" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="newsHeadline">-</div>
+        <div id="newsBody" style="color:#cfd5e2;line-height:1.6">-</div>
+        <div class="hr"></div>
+
+        <div class="news-form">
+          <div class="row">
+            <div>
+              <div class="label">주문 구분</div>
+              <select class="input" id="newsSide">
+                <option value="">--선택--</option>
+                <option value="buy">매수</option>
+                <option value="sell">매도</option>
+                <option value="hold">유지</option>
+              </select>
+            </div>
+            <div>
+              <div class="label">자산 선택</div>
+              <div class="tabs" style="margin-bottom:0;">
+                <div class="tab active" id="newsTabBTC">BTC</div>
+                <div class="tab" id="newsTabXRP">XRP</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <div class="label">시장가</div>
+              <input class="input" id="newsPrice" placeholder="시장가" disabled />
+            </div>
+            <div>
+              <div class="label">총액 (KRW)</div>
+              <input class="input" id="newsTotal" type="text" placeholder="0" readonly />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <div class="label">수량</div>
+              <input class="input" id="newsAmount" type="number" step="0.00000001" placeholder="0" />
+            </div>
+            <div>
+              <div class="label">직접 %</div>
+              <input class="input" id="newsPctInput" type="number" placeholder="직접%" min="0" max="100" />
+            </div>
+          </div>
+
+          <div class="news-pcts">
+            <button class="pct" data-news-pct="25">25%</button>
+            <button class="pct" data-news-pct="50">50%</button>
+            <button class="pct" data-news-pct="75">75%</button>
+            <button class="pct" data-news-pct="100">MAX</button>
           </div>
         </div>
       </div>
-
-      <div style="padding:8px 10px; display:flex; justify-content:space-between; color:#a7a7a7; font-size:12px; border-top:1px solid var(--line);">
-        <span id="status">시뮬레이션 대기중</span>
-        <span id="progress">-</span>
+      <div class="modal-actions">
+        <button class="mbtn" id="newsConfirmBtn" disabled>확인</button>
       </div>
-    </aside>
+    </div>
   </div>
 
-  <!-- 안내 모달 -->
+  <!-- (추가) dd.html: 튜토리얼 안내 모달 -->
   <div id="noticeModal" class="notice-backdrop" role="dialog" aria-modal="true" aria-labelledby="noticeTitle">
     <div class="notice">
       <div class="notice-header" id="noticeTitle">📖 튜토리얼 진행 전 참고사항</div>
@@ -352,15 +374,15 @@
           <li>2020년에 제기된 소송은 2023년 7월 13일에 판결이 났습니다.</li>
         </ol>
         <p>이러한 사건들은 시장의 흐름을 바꾸며, 선택에 따라 결과가 달라집니다.<br/>
-           이제 이러한 흐름 속에서 어떻게 대응해야 최대의 이익을 낼 수 있는지 직접 경험해보세요.</p>
+        이제 이러한 흐름 속에서 어떻게 대응해야 최대의 이익을 낼 수 있는지 직접 경험해보세요.</p>
       </div>
       <div class="notice-actions">
-        <button class="mbtn primary" id="noticeOkBtn">시작하기</button>
+        <button class="mbtn" id="noticeOkBtn">시작하기</button>
       </div>
     </div>
   </div>
 
-  <!-- 요약 모달 -->
+  <!-- (추가) dd.html: 시뮬레이션 결과 요약 모달 -->
   <div id="summaryModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
     <div class="modal">
       <div class="modal-header">
@@ -368,48 +390,77 @@
         <button class="mbtn" id="summaryCloseBtn" aria-label="닫기">✕</button>
       </div>
       <div class="modal-body">
-        <div class="kv-row"><span>기간</span><strong id="sumRange">-</strong></div>
-        <div class="kv-row"><span>최종 총자산</span><strong id="sumTotal">-</strong></div>
-        <div class="kv-row"><span>총 수익률</span><strong id="sumPr">-</strong></div>
+        <div class="kv"><span>기간</span><strong id="sumRange">-</strong></div>
+        <div class="kv"><span>최종 총자산</span><strong id="sumTotal">-</strong></div>
+        <div class="kv"><span>총 수익률</span><strong id="sumPr">-</strong></div>
         <div class="hr"></div>
-        <div style="font-weight:800;">보유 내역</div>
-        <div class="kv-row"><span>보유 KRW</span><strong id="sumKrw">-</strong></div>
-        <div class="kv-row"><span>BTC 수량</span><strong id="sumBTCQty">-</strong></div>
-        <div class="kv-row"><span>BTC 평균단가</span><strong id="sumBTCAvg">-</strong></div>
-        <div class="kv-row"><span>BTC 평가손익</span><strong id="sumBTCPnL">-</strong></div>
-        <div class="kv-row"><span>XRP 수량</span><strong id="sumXRPQty">-</strong></div>
-        <div class="kv-row"><span>XRP 평균단가</span><strong id="sumXRPAvg">-</strong></div>
-        <div class="kv-row"><span>XRP 평가손익</span><strong id="sumXRPPnL">-</strong></div>
+        <div style="font-weight:700;">보유 내역</div>
+
+        <!-- 전폭 KRW -->
+        <div class="kv"><span>보유 KRW</span><strong id="sumKrw">-</strong></div>
+
+        <!-- 좌: BTC / 우: XRP -->
+        <div class="holdings-2col" style="margin-top:8px;">
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:6px">BTC</div>
+            <div class="kv"><span>수량</span><strong id="sumBTCQty">-</strong></div>
+            <div class="kv"><span>평균단가</span><strong id="sumBTCAvg">-</strong></div>
+            <div class="kv"><span>평가손익</span><strong id="sumBTCPnL">-</strong></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:6px">XRP</div>
+            <div class="kv"><span>수량</span><strong id="sumXRPQty">-</strong></div>
+            <div class="kv"><span>평균단가</span><strong id="sumXRPAvg">-</strong></div>
+            <div class="kv"><span>평가손익</span><strong id="sumXRPPnL">-</strong></div>
+          </div>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="mbtn" id="summaryOkBtn">닫기</button>
-        <button class="mbtn primary" id="summaryResetBtn">리셋하고 다시 시작</button>
+        <button class="mbtn" id="summaryResetBtn">리셋하고 다시 시작</button>
       </div>
     </div>
   </div>
 
   <script>
+    // ===== 상수/상태 =====
     const RANGE = { start:"2023-06-01", end:"2023-07-31" };
     const INITIAL_KRW = 100_000_000;
-    const TICK_MS = 1000;
+    const WINDOW_DAYS = 15;
     const DECIMALS = { btc:8, xrp:4 };
+    const VOL_SCALE = 0.35;
+    const EPS = 1e-9;
 
     const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-    const CANDLE_UP   = cssVar('--candle-up')   || 'rgba(228,232,240,.75)';
-    const CANDLE_DOWN = cssVar('--candle-down') || 'rgba(124,133,146,.75)';
-    const VOL_UP      = cssVar('--vol-up')      || 'rgba(228,232,240,.32)';
-    const VOL_DOWN    = cssVar('--vol-down')    || 'rgba(124,133,146,.32)';
+    const CANDLE_UP   = cssVar('--candle-up');
+    const CANDLE_DOWN = cssVar('--candle-down');
+    const VOL_UP      = cssVar('--vol-up');
+    const VOL_DOWN    = cssVar('--vol-down');
 
     const state = {
       activeAsset:'btc',
       running:false, idx:0, dates:[],
       data:{ btc:[], xrp:[] },
-      charts:{ btc:null, xrp:null, btcVol:null, xrpVol:null },
+      charts:{ btc:{price:null,vol:null}, xrp:{price:null,vol:null} },
       price:{ btc:0, xrp:0 }, prevPrice:{ btc:0, xrp:0 },
       portfolio:{ krw:INITIAL_KRW, btc:{qty:0,cost:0}, xrp:{qty:0,cost:0} },
-      timer:null
+      timer:null, speed:1,
+      news:[], newsMap:new Map(), newsShown:new Set()
     };
 
+    // ===== 유틸 =====
+    function normDay(t){ return new Date(new Date(t).toDateString()).getTime(); }
+    function findByDate(arr, dayTs){ return arr.find(d => normDay(d.ts) === dayTs); }
+    function kstDateOnly(ts){
+      const d = new Date(ts);
+      return d.toLocaleDateString('ko-KR',{ timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' });
+    }
+    function floorToDecimals(value, d){
+      const m = 10**d;
+      return Math.floor(value * m + EPS)/m;
+    }
+
+    // ===== 데이터 =====
     async function fetchDaily(asset){
       const res = await fetch(`/api/daily?asset=${asset}&start=${RANGE.start}&end=${RANGE.end}`);
       if(!res.ok) throw new Error(`${asset} 데이터 로딩 실패`);
@@ -421,70 +472,88 @@
         kst:r.candle_date_time_kst
       }));
     }
+    async function fetchNews(){
+      const res = await fetch('/api/scenario3/news');
+      if(!res.ok) throw new Error('뉴스 로딩 실패');
+      const raw = await res.json();
+      const list = raw.map(n => ({
+        date: n.time, headline: n.title, body: n.description, asset: (n.market || 'both')
+      })).sort((a,b)=> new Date(a.date) - new Date(b.date));
+      state.news = list;
+      state.newsMap.clear();
+      for(const n of list){
+        const dayTs = normDay(new Date(n.date).getTime());
+        const arr = state.newsMap.get(dayTs) || [];
+        arr.push(n);
+        state.newsMap.set(dayTs, arr);
+      }
+    }
 
-    function makeCandleChart(ctx){
+    // ===== 차트 =====
+    function makePriceChart(ctx){
       return new Chart(ctx,{
         type:'candlestick',
-        data:{ datasets:[{ label:'Price', data:[], color:{ up:CANDLE_UP, down:CANDLE_DOWN, unchanged:'#9aa0a6' } }] },
+        data:{datasets:[{label:'Price',data:[],yAxisID:'y',color:{up:CANDLE_UP,down:CANDLE_DOWN,unchanged:'#9aa0a6'}}]},
         options:{
-          animation:false, responsive:true, maintainAspectRatio:false, parsing:false,
+          animation:false,responsive:true,maintainAspectRatio:false,parsing:false,
           scales:{
-            x:{ type:'time', time:{ unit:'day', tooltipFormat:'yyyy-MM-dd' },
-                grid:{ color:'rgba(255,255,255,0.06)', borderColor:'rgba(255,255,255,0.10)' },
-                ticks:{ color:'#9aa0a6' } },
-            y:{ grid:{ color:'rgba(255,255,255,0.06)', borderColor:'rgba(255,255,255,0.10)' },
-                ticks:{ color:'#9aa0a6' } }
+            x:{type:'time',time:{unit:'day',tooltipFormat:'yyyy-MM-dd'},grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#9aa0a6'}},
+            y:{position:'left',grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#9aa0a6'}}
           },
-          plugins:{ legend:{ display:false }, tooltip:{ intersect:false, mode:'index' } }
+          plugins:{legend:{display:false},tooltip:{intersect:false,mode:'index'}}
         }
       });
     }
-
-    function makeVolumeChart(ctx){
+    function makeVolChart(ctx){
       return new Chart(ctx,{
         type:'bar',
-        data:{ datasets:[{ label:'Volume', data:[], backgroundColor:[] }] },
+        data:{datasets:[{label:'Volume',data:[],yAxisID:'y',backgroundColor:[],barPercentage:0.92,categoryPercentage:0.92}]},
         options:{
-          animation:false, parsing:false, responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{ display:false }, tooltip:{ mode:'index', intersect:false } },
+          animation:false,responsive:true,maintainAspectRatio:false,parsing:false,
           scales:{
-            x:{ type:'time', time:{ unit:'day' }, grid:{ display:false }, ticks:{ color:'#9aa0a6', maxRotation:0, autoSkip:true } },
-            y:{ grid:{ color:'rgba(255,255,255,0.06)' }, ticks:{ color:'#9aa0a6' } }
-          }
+            x:{type:'time',time:{unit:'day',tooltipFormat:'yyyy-MM-dd'},grid:{display:false},ticks:{display:false}},
+            y:{position:'left',beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#9aa0a6'}}
+          },
+          plugins:{legend:{display:false},tooltip:{intersect:false,mode:'index'}}
         }
       });
     }
-
-    function normDay(t){ return new Date(new Date(t).toDateString()).getTime(); }
-    function findByDate(arr, dayTs){ return arr.find(d => normDay(d.ts) === dayTs); }
 
     function redrawCharts(){
       const upto = state.dates.slice(0, state.idx+1);
+      const winDates = upto.slice(-WINDOW_DAYS);
 
       ['btc','xrp'].forEach(sym=>{
-        const series = upto.map(day=>{ const x = findByDate(state.data[sym], day); return x ? { x:x.ts, o:x.o, h:x.h, l:x.l, c:x.c } : null; }).filter(Boolean);
-        state.charts[sym].data.datasets[0].data = series; state.charts[sym].update('none');
+        const p = state.charts[sym].price;
+        const v = state.charts[sym].vol;
+
+        const priceSeries = winDates.map(day=>{
+          const x = findByDate(state.data[sym], day);
+          return x ? { x:x.ts, o:x.o, h:x.h, l:x.l, c:x.c } : null;
+        }).filter(Boolean);
+
+        const volSeries = winDates.map(day=>{
+          const x = findByDate(state.data[sym], day);
+          return x ? { x:x.ts, y:x.v, o:x.o, c:x.c } : null;
+        }).filter(Boolean);
+        const volColors = volSeries.map(d => (d.c >= d.o) ? VOL_UP : VOL_DOWN);
+
+        p.data.datasets[0].data = priceSeries;
+        v.data.datasets[0].data = volSeries.map(d=>({ x:d.x, y:d.y * VOL_SCALE }));
+        v.data.datasets[0].backgroundColor = volColors;
+
+        p.update('none'); v.update('none');
       });
 
-      ['btc','xrp'].forEach(sym=>{
-        const series = upto.map(day=>{ const x = findByDate(state.data[sym], day); return x ? { x:x.ts, y:x.v, o:x.o, c:x.c } : null; }).filter(Boolean);
-        const colors = series.map(d => (d.c >= d.o) ? VOL_UP : VOL_DOWN);
-        const key = sym + 'Vol';
-        state.charts[key].data.datasets[0].data = series.map(d=>({x:d.x, y:d.y}));
-        state.charts[key].data.datasets[0].backgroundColor = colors;
-        state.charts[key].update('none');
-      });
+      const firstTs = (state.idx>=0 && winDates.length) ? winDates[0] : state.dates[0];
+      const lastTs  = state.dates[state.idx];
+      if(firstTs && lastTs){
+        document.getElementById('btcRange').textContent = `일봉(${kstDateOnly(firstTs)} ~ ${kstDateOnly(lastTs)})`;
+        document.getElementById('xrpRange').textContent = `일봉(${kstDateOnly(firstTs)} ~ ${kstDateOnly(lastTs)})`;
+      }
     }
 
-    function setControlState(mode){
-      const play=document.getElementById('playBtn'), pause=document.getElementById('pauseBtn'), reset=document.getElementById('resetBtn');
-      [play,pause,reset].forEach(b=>{ b.classList.remove('is-active'); b.setAttribute('aria-pressed','false'); });
-      if(mode==='play'){ play.classList.add('is-active'); play.setAttribute('aria-pressed','true'); }
-      else if(mode==='pause'){ pause.classList.add('is-active'); pause.setAttribute('aria-pressed','true'); }
-    }
-
-    function kstLabel(ts){ const d=new Date(ts); return d.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}); }
-
+    // ===== 헤더/보유/진행 =====
     function updateHeader(){
       ['btc','xrp'].forEach(sym=>{
         const i=state.idx, day=state.dates[i], bar=findByDate(state.data[sym], day); if(!bar) return;
@@ -497,16 +566,15 @@
         chgEl.textContent = `${diff>=0?'+':''}${Math.round(diff).toLocaleString()} (${pct.toFixed(2)}%)`;
         chgEl.className = diff>=0 ? 'sub positive' : 'sub negative';
       });
-      document.getElementById('timebox').textContent = `시뮬레이션 일자: ${kstLabel(state.dates[state.idx])}`;
-      document.getElementById('price').value = Math.round(state.price[state.activeAsset]).toLocaleString();
+      document.getElementById('timebox').textContent = `시뮬레이션 일자: ${kstDateOnly(state.dates[state.idx])}`;
+      document.getElementById('price').value = Math.round(state.price[state.activeAsset]||0).toLocaleString();
       calcTotal();
     }
-
     function updatePortfolioBox(){
-      const krw = Math.floor(state.portfolio.krw);
+      const krw = Math.floor(state.portfolio.krw + EPS);
       const pvBTC = state.portfolio.btc.qty * (state.price.btc||0);
       const pvXRP = state.portfolio.xrp.qty * (state.price.xrp||0);
-      const total = Math.floor(krw + pvBTC + pvXRP);
+      const total = Math.floor(krw + pvBTC + pvXRP + EPS);
       const pr = ((total - INITIAL_KRW)/INITIAL_KRW)*100;
 
       document.getElementById('krwBalance').textContent = krw.toLocaleString();
@@ -514,198 +582,425 @@
       const prEl=document.getElementById('profitRate'); prEl.textContent=`${pr.toFixed(2)}%`; prEl.className=`b-value ${pr>=0?'positive':'negative'}`;
       document.getElementById('holdKrw').textContent = `${krw.toLocaleString()} 원`;
 
-      const btcAvg = state.portfolio.btc.qty>0 ? (state.portfolio.btc.cost/state.portfolio.btc.qty) : 0;
+      const btcAvg = state.portfolio.btc.qty>EPS ? (state.portfolio.btc.cost/state.portfolio.btc.qty) : 0;
       const btcPnL = state.portfolio.btc.qty*(state.price.btc||0) - state.portfolio.btc.cost;
       document.getElementById('holdBTCQty').textContent = state.portfolio.btc.qty.toFixed(DECIMALS.btc);
       document.getElementById('holdBTCAvg').textContent = Math.floor(btcAvg).toLocaleString();
       const btcPnLEl=document.getElementById('holdBTCPnL'); btcPnLEl.textContent=`${btcPnL>=0?'+':''}${Math.floor(btcPnL).toLocaleString()} 원`; btcPnLEl.className = btcPnL>=0?'positive':'negative';
 
-      const xrpAvg = state.portfolio.xrp.qty>0 ? (state.portfolio.xrp.cost/state.portfolio.xrp.qty) : 0;
+      const xrpAvg = state.portfolio.xrp.qty>EPS ? (state.portfolio.xrp.cost/state.portfolio.xrp.qty) : 0;
       const xrpPnL = state.portfolio.xrp.qty*(state.price.xrp||0) - state.portfolio.xrp.cost;
       document.getElementById('holdXRPQty').textContent = state.portfolio.xrp.qty.toFixed(DECIMALS.xrp);
       document.getElementById('holdXRPAvg').textContent = Math.floor(xrpAvg).toLocaleString();
       const xrpPnLEl=document.getElementById('holdXRPPnL'); xrpPnLEl.textContent=`${xrpPnL>=0?'+':''}${Math.floor(xrpPnL).toLocaleString()} 원`; xrpPnLEl.className = xrpPnL>=0?'positive':'negative';
     }
 
-    function updateProgress(){ document.getElementById('progress').textContent = `${state.idx+1} / ${state.dates.length} 일`; }
-    function updateTick(first=false){ updateHeader(); updatePortfolioBox(); if(!first) redrawCharts(); updateProgress(); }
+    function setSimStatus(text){ document.getElementById('simStatus').textContent = text; }
+    function updateCounter(){ document.getElementById('simCounter').textContent = `${state.idx+1} / ${state.dates.length} 일`; }
 
+    function updateTick(){
+      updateHeader();
+      updatePortfolioBox();
+      redrawCharts();
+      updateCounter();
+    }
+
+    // ===== 주문 =====
     function setActiveAsset(asset){
       state.activeAsset = asset;
       document.getElementById('badgeBTC').classList.toggle('active', asset==='btc');
       document.getElementById('badgeXRP').classList.toggle('active', asset==='xrp');
       document.getElementById('tabBTC').classList.toggle('active', asset==='btc');
       document.getElementById('tabXRP').classList.toggle('active', asset==='xrp');
-
       document.getElementById('price').value = Math.round(state.price[asset]||0).toLocaleString();
       const buy = document.getElementById('side').value==='buy';
-      const btn = document.getElementById('orderBtn');
-      btn.textContent = buy ? '매수' : '매도';
-      btn.classList.toggle('buy', buy);
-      btn.classList.toggle('sell', !buy);
+      document.getElementById('orderBtn').textContent = buy ? '매수' : '매도';
+      document.getElementById('amount').value='';
+      document.getElementById('total').value='0';
+      document.getElementById('pctInput').value='';
       calcTotal();
     }
-
     function calcTotal(){
       const amount = parseFloat(document.getElementById('amount').value || '0');
       const px = state.price[state.activeAsset] || 0;
       const total = amount * px;
       document.getElementById('total').value = (amount>0 && px>0) ? String(total) : '0';
     }
-
-    function applyPercent(pct){
-      const side=document.getElementById('side').value;
-      const px=state.price[state.activeAsset]||0; if(px<=0) return;
-      const d = DECIMALS[state.activeAsset];
-      if(side==='buy'){
-        const budget = state.portfolio.krw * (pct/100);
-        document.getElementById('amount').value = (budget/px).toFixed(d);
-      }else{
-        const lot = state.portfolio[state.activeAsset].qty * (pct/100);
-        document.getElementById('amount').value = lot.toFixed(d);
-      }
-      calcTotal();
+    function buyAmountForBudget(budget, px, d){
+      if(px<=0) return 0;
+      return floorToDecimals(budget/px, d);
     }
+    function applyPercent(pct, target='main'){
+      const pct01 = Math.max(0, Math.min(100, pct)) / 100;
 
-    function warn(msg){ const w=document.getElementById('warn'); w.textContent=msg||''; w.style.display = msg ? 'block' : 'none'; }
-
-    function placeOrder(){
-      warn('');
-      const side=document.getElementById('side').value;
-      const px=state.price[state.activeAsset]||0;
-      const amount=parseFloat(document.getElementById('amount').value||'0');
-      if(amount<=0 || px<=0){ warn('수량/가격이 올바르지 않습니다.'); return; }
-      const sym=state.activeAsset; const total=amount*px;
-      if(side==='buy'){
-        if(total > state.portfolio.krw + 1e-9){ warn('보유 KRW가 부족합니다.'); return; }
-        state.portfolio.krw -= total; const a=state.portfolio[sym]; a.cost += total; a.qty += amount;
+      if(target==='main'){
+        const side=document.getElementById('side').value;
+        const asset=state.activeAsset;
+        const px=state.price[asset]||0; const d=DECIMALS[asset];
+        if(side==='buy'){
+          const budget = (pct===100) ? Math.max(0, state.portfolio.krw - 1) : state.portfolio.krw * pct01;
+          document.getElementById('amount').value = buyAmountForBudget(budget, px, d);
+        }else{
+          const lot = state.portfolio[asset].qty * pct01;
+          document.getElementById('amount').value = floorToDecimals(lot, d);
+        }
+        calcTotal();
       }else{
-        const a=state.portfolio[sym]; if(amount > a.qty + 1e-12){ warn(`${sym.toUpperCase()} 보유 수량이 부족합니다.`); return; }
-        const avg = a.qty>0 ? (a.cost/a.qty) : 0; const costOut = avg * amount; a.qty -= amount; a.cost = Math.max(0, a.cost - costOut); state.portfolio.krw += total;
+        // 뉴스 모달
+        const side = document.getElementById('newsSide').value;
+        const asset=(document.getElementById('newsTabBTC').classList.contains('active')?'btc':'xrp');
+        const px=state.price[asset]||0; const d=DECIMALS[asset];
+
+        if(!side){ return; }
+
+        if(side==='buy'){
+          const budget = (pct===100) ? Math.max(0, state.portfolio.krw - 1) : state.portfolio.krw * pct01;
+          document.getElementById('newsAmount').value = buyAmountForBudget(budget, px, d);
+        }else if(side==='sell'){
+          const qty = state.portfolio[asset].qty * pct01;
+          document.getElementById('newsAmount').value = floorToDecimals(qty, d);
+        }
+        calcNewsTotal();
+      }
+    }
+    function warn(msg){
+      const w=document.getElementById('warn');
+      if(msg && msg.trim()){ w.textContent=msg; w.classList.add('show'); }
+      else{ w.textContent=''; w.classList.remove('show'); }
+    }
+    function placeOrder(sideOverride=null, assetOverride=null, amountOverride=null){
+      warn('');
+      const sym = assetOverride || state.activeAsset;
+      const side = sideOverride || document.getElementById('side').value;
+      const px = state.price[sym] || 0;
+      let amount = (amountOverride!==null && amountOverride!==undefined)
+          ? parseFloat(amountOverride)
+          : parseFloat(document.getElementById('amount').value||'0');
+      if(amount<=0 || px<=0){ warn('수량/가격이 올바르지 않습니다.'); return false; }
+      const total=amount*px;
+      if(side==='buy'){
+        if(total > state.portfolio.krw + EPS){ warn('보유 KRW가 부족합니다.'); return false; }
+        state.portfolio.krw = Math.max(0, state.portfolio.krw - total);
+        const a=state.portfolio[sym]; a.cost += total; a.qty += amount;
+      }else{
+        const a=state.portfolio[sym];
+        if(amount > a.qty + EPS){ warn(`${sym.toUpperCase()} 보유 수량이 부족합니다.`); return false; }
+        const avg = a.qty>EPS ? (a.cost/a.qty) : 0;
+        const costOut = avg * amount;
+        a.qty = Math.max(0, a.qty - amount);
+        a.cost = Math.max(0, a.cost - costOut);
+        state.portfolio.krw += total;
       }
       document.getElementById('amount').value=''; document.getElementById('pctInput').value='';
       calcTotal(); updatePortfolioBox();
-      document.getElementById('status').textContent = `${side==='buy'?'매수':'매도'} 체결: ${sym.toUpperCase()} ${amount}`;
-      setTimeout(()=>{ document.getElementById('status').textContent = state.running ? '시뮬레이션 실행중' : '시뮬레이션 일시정지'; }, 1200);
+      return true;
     }
 
-    function computeSummary(){
+    // ===== 타임라인 =====
+    function addTimelineNews(n){
+      const wrap = document.getElementById('newsTimeline'); if(!wrap) return;
+      const onlyDate = kstDateOnly(new Date(n.date).getTime());
+      const item = document.createElement('div');
+      item.className='news-item';
+      item.innerHTML = `
+        <div class="news-time">${onlyDate} · ${(n.asset||'both').toUpperCase()}</div>
+        <div class="news-title">${n.headline || '시장 소식'}</div>
+      `;
+      wrap.prepend(item);
+    }
+
+    // ===== 뉴스 모달 =====
+    function setNewsAsset(asset){
+      const btcTab = document.getElementById('newsTabBTC');
+      const xrpTab = document.getElementById('newsTabXRP');
+      btcTab.classList.toggle('active', asset==='btc');
+      xrpTab.classList.toggle('active', asset==='xrp');
+      const px = state.price[asset] || 0;
+      document.getElementById('newsPrice').value = px ? Math.round(px).toLocaleString() : '-';
+      calcNewsTotal();
+    }
+    function getNewsAsset(){
+      return document.getElementById('newsTabBTC').classList.contains('active') ? 'btc' : 'xrp';
+    }
+    function calcNewsTotal(){
+      const asset = getNewsAsset();
+      const amount = parseFloat(document.getElementById('newsAmount').value || '0');
+      const px = state.price[asset] || 0;
+      const total = amount * px;
+      document.getElementById('newsTotal').value = (amount>0 && px>0) ? String(total) : '0';
+    }
+    function resetNewsInputs(){
+      document.getElementById('newsAmount').value='';
+      document.getElementById('newsTotal').value='0';
+      document.getElementById('newsPctInput').value='';
+    }
+    function wireNewsModalBasics(){
+      document.getElementById('newsTabBTC').onclick = ()=>setNewsAsset('btc');
+      document.getElementById('newsTabXRP').onclick = ()=>setNewsAsset('xrp');
+
+      const sideSel = document.getElementById('newsSide');
+      const confirmBtn = document.getElementById('newsConfirmBtn');
+      sideSel.addEventListener('change', ()=>{
+        resetNewsInputs();
+        confirmBtn.disabled = !sideSel.value;
+      });
+
+      document.getElementById('newsAmount').oninput = calcNewsTotal;
+      document.querySelectorAll('[data-news-pct]').forEach(btn=>{
+        btn.onclick = ()=>applyPercent(parseInt(btn.dataset.newsPct,10),'news');
+      });
+      document.getElementById('newsPctInput').oninput = (e)=>{
+        const v = Math.max(0, Math.min(100, parseFloat(e.target.value||'0'))); applyPercent(v,'news');
+      };
+    }
+    function closeNewsModal(){ document.getElementById('newsModal').style.display = 'none'; }
+    function openNewsModal(n){
+      // 뉴스 뜨면 시뮬레이션 정지
+      pause();
+
+      const key = `${normDay(new Date(n.date))}:${n.headline||n.title}`;
+      if(!state.newsShown.has(key)){ state.newsShown.add(key); addTimelineNews(n); }
+
+      document.getElementById('newsHeadline').textContent = n.headline || n.title || '시장 소식';
+      document.getElementById('newsBody').innerHTML = (n.body || n.text || '').replace(/\n/g,'<br/>');
+
+      document.getElementById('newsSide').value = '';
+      document.getElementById('newsConfirmBtn').disabled = true;
+      resetNewsInputs();
+      setNewsAsset((n.asset==='btc'||n.asset==='xrp')? n.asset : 'btc');
+
+      document.getElementById('newsConfirmBtn').onclick = ()=>{
+        const side = document.getElementById('newsSide').value;
+        if(!side) return;
+        const asset = getNewsAsset();
+        const d = DECIMALS[asset];
+        const px = state.price[asset]||0;
+
+        let amount = parseFloat(document.getElementById('newsAmount').value||'0');
+        const pctVal = parseFloat(document.getElementById('newsPctInput').value||'');
+
+        if(side==='sell'){
+          if((isNaN(amount) || amount<=0) && !isNaN(pctVal)){
+            amount = floorToDecimals(state.portfolio[asset].qty * Math.max(0,Math.min(100,pctVal))/100, d);
+          }
+          if(amount<=0) amount = floorToDecimals(state.portfolio[asset].qty, d);
+        }else if(side==='buy'){
+          if((isNaN(amount) || amount<=0) && !isNaN(pctVal)){
+            const budget = (pctVal>=100) ? Math.max(0, state.portfolio.krw - 1) : state.portfolio.krw * (Math.max(0,Math.min(100,pctVal))/100);
+            amount = buyAmountForBudget(budget, px, d);
+          }
+        }else{ // hold
+          closeNewsModal(); return;
+        }
+
+        if(amount<=0){ alert('수량 또는 %를 입력하세요.'); return; }
+
+        const ok = placeOrder(side, asset, amount);
+        if(ok){
+          setActiveAsset(asset);
+          document.getElementById('side').value = side;
+          document.getElementById('orderBtn').textContent = (side==='buy'?'매수':'매도');
+          updateTick();
+          closeNewsModal();
+        }
+      };
+
+      document.getElementById('newsCloseBtn').onclick = closeNewsModal;
+      document.getElementById('newsModal').style.display = 'flex';
+    }
+
+    function maybeShowNewsForToday(){
+      const dayTs = state.dates[state.idx];
+      const items = state.newsMap.get(dayTs) || [];
+      for(const n of items){
+        const k = `${normDay(new Date(n.date))}:${n.headline||n.title}`;
+        if(!state.newsShown.has(k)){ openNewsModal(n); break; }
+      }
+    }
+
+    // ===== 재생/정지/타이머 =====
+    function startTimer(){
+      if(state.timer) clearInterval(state.timer);
+      const base = 1500;                   // 원래 로직 유지
+      const delay = Math.max(80, base / state.speed);
+      state.timer = setInterval(tickStep, delay);
+    }
+    function play(){
+      if(state.idx < state.dates.length-1){
+        state.running=true;
+        setSimStatus('시뮬레이션 진행중');
+        startTimer();
+        document.getElementById('playBtn').classList.add('is-active');
+        document.getElementById('pauseBtn').classList.remove('is-active');
+      }
+    }
+    function pause(){
+      state.running=false;
+      setSimStatus('시뮬레이션 일시정지');
+      if(state.timer){clearInterval(state.timer); state.timer=null;}
+      document.getElementById('pauseBtn').classList.add('is-active');
+      document.getElementById('playBtn').classList.remove('is-active');
+    }
+    function resetSim(){
+      pause();
+      state.idx=0;
+      state.portfolio = { krw:INITIAL_KRW, btc:{qty:0, cost:0}, xrp:{qty:0, cost:0} };
+      state.newsShown.clear();
+      const tl=document.getElementById('newsTimeline'); if(tl) tl.innerHTML='';
+      setSimStatus('시뮬레이션 대기중');
+      updateTick();
+    }
+    function tickStep(){
+      if(state.idx >= state.dates.length-1){
+        pause();               // 원래 종료동작
+        openSummary();         // (추가) 종료 시 결과 요약 오픈
+        return;
+      }
+      state.idx++;
+      updateTick();
+      maybeShowNewsForToday();
+    }
+
+    // ===== 타임라인 모달 =====
+    function openTimeline(){ document.getElementById('timelineModal').style.display = 'flex'; }
+    function closeTimeline(){ document.getElementById('timelineModal').style.display = 'none'; }
+
+    // ===== (추가) dd.html 모달 로직 =====
+    function openNotice(){ document.getElementById('noticeModal').style.display = 'flex'; }
+    function closeNotice(){ document.getElementById('noticeModal').style.display = 'none'; }
+
+    function openSummary(){
+      const first = state.dates[0], last = state.dates[state.dates.length-1];
       const krw = Math.floor(state.portfolio.krw);
-      const pvBTC = state.portfolio.btc.qty * (state.price.btc || 0);
-      const pvXRP = state.portfolio.xrp.qty * (state.price.xrp || 0);
+      const pvBTC = state.portfolio.btc.qty * (state.price.btc||0);
+      const pvXRP = state.portfolio.xrp.qty * (state.price.xrp||0);
       const total = Math.floor(krw + pvBTC + pvXRP);
-      const pr = ((total - INITIAL_KRW) / INITIAL_KRW) * 100;
-      const btcAvg = state.portfolio.btc.qty>0 ? (state.portfolio.btc.cost/state.portfolio.btc.qty) : 0;
-      const btcPnL = state.portfolio.btc.qty*(state.price.btc||0) - state.portfolio.btc.cost;
-      const xrpAvg = state.portfolio.xrp.qty>0 ? (state.portfolio.xrp.cost/state.portfolio.xrp.qty) : 0;
-      const xrpPnL = state.portfolio.xrp.qty*(state.price.xrp||0) - state.portfolio.xrp.cost;
-      return { total, pr, krw, btcQty:state.portfolio.btc.qty, btcAvg, btcPnL, xrpQty:state.portfolio.xrp.qty, xrpAvg, xrpPnL };
-    }
+      const pr = ((total - INITIAL_KRW)/INITIAL_KRW)*100;
 
-    function openSummaryModal(){
-      const s = computeSummary();
-      document.getElementById('sumRange').textContent = `${RANGE.start} ~ ${RANGE.end}`;
-      document.getElementById('sumTotal').textContent = s.total.toLocaleString() + ' 원';
-      const prEl=document.getElementById('sumPr'); prEl.textContent = `${s.pr.toFixed(2)}%`; prEl.className = s.pr>=0 ? 'positive' : 'negative';
-      document.getElementById('sumKrw').textContent = s.krw.toLocaleString() + ' 원';
-      document.getElementById('sumBTCQty').textContent = s.btcQty.toFixed(DECIMALS.btc);
-      document.getElementById('sumBTCAvg').textContent = Math.floor(s.btcAvg).toLocaleString();
-      const btcPnLEl=document.getElementById('sumBTCPnL'); btcPnLEl.textContent = `${s.btcPnL>=0?'+':''}${Math.floor(s.btcPnL).toLocaleString()} 원`; btcPnLEl.className = s.btcPnL>=0 ? 'positive' : 'negative';
-      document.getElementById('sumXRPQty').textContent = s.xrpQty.toFixed(DECIMALS.xrp);
-      document.getElementById('sumXRPAvg').textContent = Math.floor(s.xrpAvg).toLocaleString();
-      const xrpPnLEl=document.getElementById('sumXRPPnL'); xrpPnLEl.textContent = `${s.xrpPnL>=0?'+':''}${Math.floor(s.xrpPnL).toLocaleString()} 원`; xrpPnLEl.className = s.xrpPnL>=0 ? 'positive' : 'negative';
+      const btcAvg = state.portfolio.btc.qty>0 ? (state.portfolio.btc.cost/state.portfolio.btc.qty):0;
+      const btcPnL = state.portfolio.btc.qty*(state.price.btc||0) - state.portfolio.btc.cost;
+      const xrpAvg = state.portfolio.xrp.qty>0 ? (state.portfolio.xrp.cost/state.portfolio.xrp.qty):0;
+      const xrpPnL = state.portfolio.xrp.qty*(state.price.xrp||0) - state.portfolio.xrp.cost;
+
+      document.getElementById('sumRange').textContent = `${kstDateOnly(first)} ~ ${kstDateOnly(last)}`;
+      document.getElementById('sumTotal').textContent = total.toLocaleString();
+      document.getElementById('sumPr').textContent = `${pr.toFixed(2)}%`;
+      document.getElementById('sumKrw').textContent = `${krw.toLocaleString()} 원`;
+
+      document.getElementById('sumBTCQty').textContent = state.portfolio.btc.qty.toFixed(DECIMALS.btc);
+      document.getElementById('sumBTCAvg').textContent = Math.floor(btcAvg).toLocaleString();
+      const btcPnLEl = document.getElementById('sumBTCPnL');
+      btcPnLEl.textContent = `${btcPnL>=0?'+':''}${Math.floor(btcPnL).toLocaleString()} 원`;
+      btcPnLEl.className = btcPnL>=0?'positive':'negative';
+
+      document.getElementById('sumXRPQty').textContent = state.portfolio.xrp.qty.toFixed(DECIMALS.xrp);
+      document.getElementById('sumXRPAvg').textContent = Math.floor(xrpAvg).toLocaleString();
+      const xrpPnLEl = document.getElementById('sumXRPPnL');
+      xrpPnLEl.textContent = `${xrpPnL>=0?'+':''}${Math.floor(xrpPnL).toLocaleString()} 원`;
+      xrpPnLEl.className = xrpPnL>=0?'positive':'negative';
+
       document.getElementById('summaryModal').style.display = 'flex';
     }
-    function closeSummaryModal(){ document.getElementById('summaryModal').style.display='none'; }
-    function finishSim(){ pause(); document.getElementById('status').textContent='시뮬레이션 완료'; openSummaryModal(); }
+    function closeSummary(){ document.getElementById('summaryModal').style.display = 'none'; }
 
-    function openNotice(){ document.getElementById('noticeModal').style.display='flex'; }
-    function closeNotice(){ document.getElementById('noticeModal').style.display='none'; }
-
-    function play(){
-      if(state.running) return; state.running = true; document.getElementById('status').textContent = '시뮬레이션 실행중'; setControlState('play');
-      state.charts.btcVol.data.datasets[0].hidden = false;
-      state.charts.xrpVol.data.datasets[0].hidden = false;
-      state.charts.btcVol.update('none');
-      state.charts.xrpVol.update('none');
-      state.timer = setInterval(()=>{ if(state.idx >= state.dates.length-1){ finishSim(); return; } state.idx += 1; updateTick(); }, TICK_MS);
-    }
-    function pause(){ state.running=false; if(state.timer) clearInterval(state.timer); document.getElementById('status').textContent = '시뮬레이션 일시정지'; setControlState('pause'); }
-    function resetSim(){
-      pause(); state.idx=0; state.portfolio = { krw:INITIAL_KRW, btc:{qty:0, cost:0}, xrp:{qty:0, cost:0} };
-      redrawCharts(); updateTick(true); document.getElementById('status').textContent='리셋 완료';
-      state.charts.btcVol.data.datasets[0].hidden = true; state.charts.btcVol.update('none');
-      state.charts.xrpVol.data.datasets[0].hidden = true; state.charts.xrpVol.update('none');
-    }
-
+    // ===== 이벤트 =====
     function wireEvents(){
       document.getElementById('leftCol').addEventListener('click', ()=>setActiveAsset('btc'));
       document.getElementById('rightCol').addEventListener('click', ()=>setActiveAsset('xrp'));
       document.getElementById('tabBTC').addEventListener('click', ()=>setActiveAsset('btc'));
       document.getElementById('tabXRP').addEventListener('click', ()=>setActiveAsset('xrp'));
 
+      document.getElementById('newsToggle').addEventListener('click', openTimeline);
+      document.getElementById('timelineClose').addEventListener('click', closeTimeline);
+      document.getElementById('timelineClose2').addEventListener('click', closeTimeline);
+
+      // 메인 주문구분 변경 시 초기화
       document.getElementById('side').addEventListener('change',()=>{
         const buy = document.getElementById('side').value==='buy';
-        const btn = document.getElementById('orderBtn');
-        btn.textContent = buy ? '매수' : '매도';
-        btn.classList.toggle('buy', buy);
-        btn.classList.toggle('sell', !buy);
+        document.getElementById('orderBtn').textContent = buy ? '매수' : '매도';
+        document.getElementById('amount').value='';
+        document.getElementById('total').value='0';
+        document.getElementById('pctInput').value='';
         calcTotal();
       });
 
       document.getElementById('amount').addEventListener('input',calcTotal);
       document.getElementById('pctInput').addEventListener('input',e=>{
-        const v = Math.max(0, Math.min(100, parseFloat(e.target.value||'0'))); applyPercent(v);
+        const v = Math.max(0, Math.min(100, parseFloat(e.target.value||'0'))); applyPercent(v,'main');
       });
-      document.querySelectorAll('.pct').forEach(b=>b.addEventListener('click',()=>applyPercent(parseInt(b.dataset.pct,10))));
-      document.getElementById('orderBtn').addEventListener('click',placeOrder);
+      document.querySelectorAll('.pct').forEach(b=>{
+        if(b.hasAttribute('data-pct')) b.addEventListener('click',()=>applyPercent(parseInt(b.dataset.pct,10),'main'));
+      });
+      document.getElementById('orderBtn').addEventListener('click',()=>{
+        const ok = placeOrder();
+        if(!ok) return;
+        updateTick();
+      });
+
       document.getElementById('playBtn').addEventListener('click',play);
       document.getElementById('pauseBtn').addEventListener('click',pause);
       document.getElementById('resetBtn').addEventListener('click',resetSim);
 
-      document.getElementById('summaryCloseBtn').addEventListener('click',closeSummaryModal);
-      document.getElementById('summaryOkBtn').addEventListener('click',closeSummaryModal);
-      document.getElementById('summaryResetBtn').addEventListener('click',()=>{ closeSummaryModal(); resetSim(); });
+      const speedEl=document.getElementById('speedSlider'), speedVal=document.getElementById('speedVal');
+      speedEl.addEventListener('input', e=>{
+        state.speed = Math.max(1, parseInt(e.target.value,10)||1);
+        speedVal.textContent = `${state.speed}x`;
+        if(state.running){ startTimer(); }
+      });
 
-      document.getElementById('noticeOkBtn').addEventListener('click',closeNotice);
-      document.getElementById('helpBtn').addEventListener('click',openNotice);
+      wireNewsModalBasics();
+
+      // (추가) 📖 버튼: 안내 모달 열기
+      document.getElementById('helpBtn').addEventListener('click', openNotice);
+      document.getElementById('noticeOkBtn').addEventListener('click', closeNotice);
+
+      // (추가) 요약 모달 버튼
+      document.getElementById('summaryCloseBtn').addEventListener('click', closeSummary);
+      document.getElementById('summaryOkBtn').addEventListener('click', closeSummary);
+      document.getElementById('summaryResetBtn').addEventListener('click', ()=>{
+        closeSummary();
+        resetSim();
+      });
     }
 
+    // ===== 초기화 =====
     async function init(){
       try{
-        document.getElementById('status').textContent = '데이터 로딩 중…';
         document.getElementById('btcRange').textContent = `일봉(${RANGE.start} ~ ${RANGE.end})`;
         document.getElementById('xrpRange').textContent = `일봉(${RANGE.start} ~ ${RANGE.end})`;
 
         const [btc, xrp] = await Promise.all([fetchDaily('btc'), fetchDaily('xrp')]);
+        await fetchNews();
+
         state.data.btc = btc; state.data.xrp = xrp;
 
         const btcDays = new Set(btc.map(d=>normDay(d.ts)));
         const xrpDays = new Set(xrp.map(d=>normDay(d.ts)));
         const common = [...btcDays].filter(x=>xrpDays.has(x)).sort((a,b)=>a-b);
-        if(!common.length) throw new Error('공통 일자가 없습니다. DB 일자 범위를 확인하세요.');
+        if(!common.length) throw new Error('공통 일자가 없습니다.');
         state.dates = common;
 
-        state.charts.btc    = makeCandleChart(document.getElementById('btcChart').getContext('2d'));
-        state.charts.xrp    = makeCandleChart(document.getElementById('xrpChart').getContext('2d'));
-        state.charts.btcVol = makeVolumeChart(document.getElementById('btcVol').getContext('2d'));
-        state.charts.xrpVol = makeVolumeChart(document.getElementById('xrpVol').getContext('2d'));
+        // 차트 생성
+        state.charts.btc.price = makePriceChart(document.getElementById('btcPriceChart').getContext('2d'));
+        state.charts.btc.vol   = makeVolChart  (document.getElementById('btcVolChart').getContext('2d'));
+        state.charts.xrp.price = makePriceChart(document.getElementById('xrpPriceChart').getContext('2d'));
+        state.charts.xrp.vol   = makeVolChart  (document.getElementById('xrpVolChart').getContext('2d'));
 
-        state.charts.btcVol.data.datasets[0].hidden = true; state.charts.btcVol.update('none');
-        state.charts.xrpVol.data.datasets[0].hidden = true; state.charts.xrpVol.update('none');
+        document.getElementById('newsTimeline').innerHTML = '';
 
-        redrawCharts();
-        updateTick(true); updatePortfolioBox(); updateHeader(); updateProgress();
-        wireEvents();
-        document.getElementById('status').textContent = '시뮬레이션 대기중';
+        setSimStatus('시뮬레이션 대기중');
+        updateCounter();
+
+        redrawCharts(); updateTick(); wireEvents();
+
+        // (추가) 페이지 진입 시 튜토리얼 팝업 자동 표시
+        openNotice();
       }catch(e){
-        document.getElementById('status').textContent = '로딩 오류';
-        console.error(e); alert(e.message);
+        console.error(e); alert(e.message || '로딩 오류');
       }
     }
     init();
-
-    window.addEventListener('load', ()=>{ document.getElementById('noticeModal').style.display='flex'; });
   </script>
 </body>
 </html>
+

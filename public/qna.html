@@ -9,137 +9,89 @@
       color-scheme: dark;
       --bg:#1a1a1a; --txt:#e8e8e8;
       --card-bg:#242424; --border:#3a3a3a; --muted:#9aa0a6;
-      --pill-bg:#111; --pill-border:#2a2a2a;
-      --ok:#2e7d32; --warn:#f5a623; --danger:#c82333; --accent:#4f7cff;
+      --pill-bg:#111; --pill-border:#2a2a2a; --accent:#4f7cff;
     }
     *{ box-sizing:border-box; }
-    body{
-      margin:0; background:var(--bg); color:var(--txt);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    }
+    body{ margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
 
-    /* 헤더 */
-    header{
-      position:fixed; inset:16px 16px auto 16px; z-index:10;
-      display:flex; align-items:center; justify-content:space-between;
-    }
-    .brand{ text-decoration:none; color:inherit; font-weight:800; font-size:18px; }
-    .navbtn{
-      display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px;
-      border-radius:10px; background:#121212; border:1px solid #262626; color:#e8e8e8;
-      text-decoration:none; font-weight:700; cursor:pointer;
-    }
+    header{ position:fixed; inset:16px 16px auto 16px; z-index:10; display:flex; align-items:center; justify-content:space-between; }
+    .brand img{ width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none; filter:drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
+    .navbtn{ display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px; border-radius:10px; background:#121212; border:1px solid #262626; color:#e8e8e8; text-decoration:none; font-weight:700; cursor:pointer; }
     .navbtn:hover{ background:#191919; }
 
-    /* 메인 */
-    main{
-      width:min(1100px, 92vw);
-      margin:100px auto 80px;
-      display:flex; flex-direction:column; gap:18px;
-    }
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between; gap:16px;
-    }
+    main{ width:min(1100px, 92vw); margin:100px auto 80px; display:flex; flex-direction:column; gap:18px; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
     h1{ margin:0; font-size:clamp(22px,4vw,28px); font-weight:800; }
 
-    .ask-btn{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:10px 14px; border-radius:12px; border:1px solid var(--border);
-      background:#173154; color:#e8f0ff; text-decoration:none; font-weight:700;
-      transition:transform .12s ease, background-color .12s ease;
-      cursor:pointer;
-    }
+    .ask-btn{ display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:#173154; color:#e8f0ff; text-decoration:none; font-weight:700; transition:transform .12s ease, background-color .12s ease; cursor:pointer; }
     .ask-btn:hover{ transform:translateY(-2px); background:#1d3c66; }
 
-    /* 툴바 */
-    .toolbar{
-      display:grid; grid-template-columns: 1fr 160px 220px 160px; gap:10px;
-    }
-    .toolbar input, .toolbar select{
-      height:40px; padding:0 12px; border-radius:10px; background:#121212; color:#e8e8e8;
-      border:1px solid #2a2a2a; outline:none;
-    }
+    .toolbar{ display:grid; grid-template-columns: 1fr 220px 160px; gap:10px; }
+    .toolbar input, .toolbar select{ height:40px; padding:0 12px; border-radius:10px; background:#121212; color:#e8e8e8; border:1px solid #2a2a2a; outline:none; }
     .toolbar input::placeholder{ color:#6f767d; }
-    @media (max-width:860px){
-      .toolbar{ grid-template-columns: 1fr 1fr; }
-    }
+    @media (max-width:860px){ .toolbar{ grid-template-columns: 1fr; } }
 
-    /* 리스트 */
     .list{ display:flex; flex-direction:column; gap:10px; }
-    .card{
-      display:grid; grid-template-columns:120px 1fr 120px; gap:14px;
-      padding:16px; background:var(--card-bg); border:1px solid var(--border); border-radius:14px;
-    }
-    .stats{
-      display:grid; grid-template-columns:repeat(2,1fr); gap:8px; align-content:start;
-    }
-    .stat{
-      border:1px solid var(--pill-border); background:var(--pill-bg); border-radius:10px; padding:8px; text-align:center;
-    }
+    .card{ display:grid; grid-template-columns:120px 1fr 120px; gap:14px; padding:16px; background:var(--card-bg); border:1px solid var(--border); border-radius:14px; }
+    .stats{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; align-content:start; }
+    .stat{ border:1px solid var(--pill-border); background:var(--pill-bg); border-radius:10px; padding:8px; text-align:center; }
     .stat .num{ font-size:18px; font-weight:800; }
     .stat .label{ font-size:12px; color:var(--muted); margin-top:2px; }
 
     .content h3{ margin:0 0 6px 0; font-size:18px; line-height:1.35; }
     .content h3 a{ color:#e8e8e8; text-decoration:none; }
     .content h3 a:hover{ text-decoration:underline; }
+    .content h3 a.lock{ display:inline-flex; align-items:center; gap:8px; }
+    .lock-badge{ font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#0f0f0f; color:#cbd5e1; }
 
-    .meta{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:13px; color:var(--muted);
-    }
-    .badge{
-      display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px;
-      border-radius:999px; border:1px solid var(--pill-border); background:var(--pill-bg); font-weight:600; font-size:12px;
-    }
-    .badge.ok{ border-color:#2d4; color:#bff4c7; background:#0f2413; }
-    .badge.pending{ border-color:#e7a; color:#ffd4ea; background:#2b1123; }
-    .tags{ display:flex; flex-wrap:wrap; gap:6px; }
-    .tag{
-      display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px;
-      background:#0f0f0f; border:1px solid #2a2a2a; font-size:12px; color:#cbd5e1;
-    }
+    .meta{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:13px; color:var(--muted); }
+    .badge{ display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px; border-radius:999px; border:1px solid #2a2a2a; background:#0f0f0f; font-weight:600; font-size:12px; }
 
-    .right{
-      display:flex; align-items:flex-start; justify-content:flex-end; gap:8px;
-      color:var(--muted); font-size:13px;
-    }
+    .right{ display:flex; align-items:flex-start; justify-content:flex-end; gap:8px; color:var(--muted); font-size:13px; }
 
-    /* 페이지네이션 */
-    .pagination{
-      display:flex; justify-content:center; gap:8px; margin-top:10px;
-    }
-    .page-btn{
-      min-width:36px; height:36px; border-radius:8px; border:1px solid var(--pill-border);
-      background:#121212; color:#e8e8e8; cursor:pointer;
-    }
+    .pagination{ display:flex; justify-content:center; gap:8px; margin-top:10px; }
+    .page-btn{ min-width:36px; height:36px; border-radius:8px; border:1px solid var(--pill-border); background:#121212; color:#e8e8e8; cursor:pointer; }
     .page-btn[aria-current="true"]{ background:#1f2937; font-weight:800; }
 
     /* 모달 */
-    .modal{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,.7); z-index:1000; }
+    .modal{ position:fixed; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,.7); z-index:1000; padding:16px; }
     .modal.on{ display:flex; }
-    .modal .sheet{
-      width:min(680px, 92vw); background:#2b2b2b; border:1px solid var(--border); border-radius:14px; padding:18px;
-    }
-    .sheet h2{ margin:0 0 12px; font-size:20px; }
-    .form-grid{ display:grid; gap:10px; }
-    .form-grid input, .form-grid select, .form-grid textarea{
+    .modal .sheet{ width:min(720px, 96vw); background:#2b2b2b; border:1px solid var(--border); border-radius:14px; padding:22px; }
+    .sheet h2{ margin:0 0 16px; font-size:20px; }
+    .sheet-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .sheet-header .actions{ display:flex; gap:8px; }
+    .form-grid{ display:grid; gap:14px; grid-template-columns: 1fr; }
+
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .label-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .label{ font-size:13px; color:#cbd5e1; font-weight:600; }
+    .hint-inline{ font-size:12px; color:#aab2bd; white-space:nowrap; }
+    .field input, .field select, .field textarea{
       width:100%; border-radius:10px; border:1px solid #555; background:#1a1a1a; color:#e8e8e8; padding:10px 12px; outline:none;
     }
-    .form-grid textarea{ min-height:160px; resize:vertical; }
-    .sheet .actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
-    .btn{ height:40px; padding:0 14px; border-radius:10px; border:1px solid var(--border); background:#121212; color:#e8e8e8; cursor:pointer; }
+    .field textarea{ min-height:220px; }
+
+    .vis-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .seg{ display:inline-flex; align-items:center; gap:6px; background:#1a1a1a; border:1px solid #555; border-radius:10px; padding:2px; }
+    .seg button{ border:0; background:transparent; color:#e8e8e8; cursor:pointer; padding:6px 10px; border-radius:8px; font-weight:700; font-size:13px; }
+    .seg button[aria-pressed="true"]{ background:#173154; }
+
+    .pw-inline{ display:none; align-items:center; gap:8px; }
+    .pw-inline input{ width:160px; padding:8px 10px; border-radius:10px; border:1px solid #555; background:#1a1a1a; color:#e8e8e8; outline:none; }
+
+    .sheet .actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
+    .btn{ height:40px; padding:0 16px; border-radius:10px; border:1px solid var(--border); background:#121212; color:#e8e8e8; cursor:pointer; }
     .btn.primary{ background:#173154; color:#e8f0ff; border-color:#173154; }
     .btn.primary:hover{ background:#1d3c66; }
     .btn.ghost{ background:#2a2a2a; }
+
     .error{ color:#ffb3b3; font-size:13px; display:none; }
-    .hint{ font-size:12px; color:#b5b5b5; }
-    .hidden{ display:none !important; }
   </style>
 </head>
 <body>
-  <!-- 헤더 -->
   <header>
-    <a class="brand" href="index.html">ITC</a>
-    <a href="javascript:history.back()" class="navbtn">← 뒤로가기</a>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <a href="mypage.html" class="navbtn">← 뒤로가기</a>
   </header>
 
   <main>
@@ -148,99 +100,109 @@
       <button id="openAsk" class="ask-btn" type="button">질문하기</button>
     </div>
 
-    <!-- 검색/필터/정렬 -->
     <div class="toolbar">
-      <input id="qSearch" type="search" placeholder="검색: 제목, 태그..." />
-      <select id="qCategory">
-        <option value="">전체 카테고리</option>
-      </select>
-      <select id="qStatus">
-        <option value="">상태(전체)</option>
-        <option value="pending">답변대기</option>
-        <option value="answered">답변완료</option>
-      </select>
+      <input id="qSearch" type="search" placeholder="검색: 제목..." />
+      <select id="qCategory"><option value="">전체 카테고리</option></select>
       <select id="qSort">
         <option value="recent">최신순</option>
         <option value="votes">추천순</option>
         <option value="views">조회수순</option>
-        <option value="answers">답변많은순</option>
       </select>
     </div>
 
-    <!-- 목록 -->
     <div id="list" class="list"></div>
-
-    <!-- 페이지네이션 -->
     <nav id="pagi" class="pagination" aria-label="페이지 이동"></nav>
   </main>
 
-  <!-- 질문하기 모달 -->
+  <!-- 질문 등록 모달 -->
   <div id="askModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="askTitle">
     <div class="sheet">
-      <h2 id="askTitle">질문 등록</h2>
+      <div class="sheet-header">
+        <h2 id="askTitle">질문 등록</h2>
+        <div class="actions">
+          <button class="btn ghost" type="button" id="askClose">닫기</button>
+          <button class="btn primary" type="button" id="askSubmit">등록</button>
+        </div>
+      </div>
+
       <div class="form-grid">
-        <input id="askSubject" type="text" placeholder="제목을 입력하세요" />
-        <select id="askCat">
-          <option value="" disabled selected>카테고리 선택</option>
-        </select>
-
-        <!-- 공개/비공개 -->
-        <select id="askVisibility">
-          <option value="public">공개</option>
-          <option value="private">비공개</option>
-        </select>
-
-        <!-- 비공개 비밀번호 -->
-        <div id="pwWrap" class="hidden">
-          <input id="askSecretPw" type="password" placeholder="비공개 비밀번호 (4자 이상)" />
-          <div class="hint">* 비공개 게시글 조회/댓글에 사용할 비밀번호입니다.</div>
+        <div class="field">
+          <div class="label-row"><div class="label">제목</div></div>
+          <input id="askSubject" type="text" placeholder="예) 로그인 후 마이페이지가 열리지 않아요" />
         </div>
 
-        <!-- 알림 이메일 -->
-        <input id="askNotify" type="email" placeholder="알림 받을 이메일 (ex. you@example.com)" />
+        <div class="field">
+          <div class="label-row"><div class="label">카테고리</div></div>
+          <select id="askCat"><option value="" disabled selected>카테고리 선택</option></select>
+        </div>
 
-        <textarea id="askBody" placeholder="내용을 자세히 작성해주세요. 스크린샷/에러메시지/재현 절차 등 포함하면 좋아요."></textarea>
+        <div class="field">
+          <label class="label-inline">알림 이메일 <span class="hint-inline">* 답변 알림을 받을 이메일 주소</span></label>
+          <input id="askNotify" type="email" placeholder="you@example.com" />
+        </div>
+
+        <div class="field">
+          <label class="label-inline">비공개 비밀번호 <span class="hint-inline">* 비공개 글 접근/댓글에 사용할 비밀번호 (4자 이상)</span></label>
+        </div>
+
+        <div class="vis-row">
+          <div id="visSeg" class="seg" role="group" aria-label="공개 범위">
+            <button type="button" id="btnPublic"  aria-pressed="true">공개</button>
+            <button type="button" id="btnPrivate" aria-pressed="false">비공개</button>
+          </div>
+          <div id="pwInline" class="pw-inline">
+            <input id="askSecretPw" type="password" placeholder="4자 이상" disabled />
+            <span class="hint-inline">* 비공개 글만 필요</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label-row"><div class="label">내용</div></div>
+          <textarea id="askBody" placeholder="현상, 재현 방법, 기대/실제 동작 등을 적어주세요."></textarea>
+        </div>
+
         <div class="error" id="askError">제목/내용/이메일은 필수입니다. (비공개는 비밀번호 4자 이상)</div>
       </div>
+    </div>
+  </div>
+
+  <!-- 비공개 인증 모달 -->
+  <div id="privModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="privTitle">
+    <div class="sheet" style="width:min(460px, 92vw);">
+      <h2 id="privTitle">비공개 글 비밀번호 입력</h2>
+      <div class="form-grid" style="grid-template-columns:1fr;">
+        <div class="field"><input id="privPw" type="password" placeholder="비밀번호" /></div>
+        <div class="error" id="privErr">비밀번호가 올바르지 않습니다.</div>
+      </div>
       <div class="actions">
-        <button class="btn ghost" type="button" id="askClose">닫기</button>
-        <button class="btn primary" type="button" id="askSubmit">등록</button>
+        <button class="btn ghost" type="button" id="privCancel">취소</button>
+        <button class="btn primary" type="button" id="privOk">확인</button>
       </div>
     </div>
   </div>
 
   <script>
-    /* ---------------------------- 상태/유틸 ---------------------------- */
-    const state = { items: [], filtered: [], page: 1, perPage: 8, q: '', cat: '', status: '', sort: 'recent' };
-    const $ = (sel, el=document) => el.querySelector(sel);
+    const state = { items: [], filtered: [], page: 1, perPage: 8, q: '', cat: '', sort: 'recent' };
+    const $  = (sel, el=document) => el.querySelector(sel);
     const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
     const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('ko-KR', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'}); };
     function maskAuthor(s='user'){ if(!s) return 'user'; if(s.includes('@')) s = s.split('@')[0]; return s.length<=1 ? s+'*' : s[0]+'****'; }
     function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-    /* ---------------------- 카테고리 로딩/매핑 --------------------- */
-    // 서버는 [{id, label}] 반환. value=ID 로 사용(안전).
-    let CATS = []; // [{id, label}]
+    let CATS = [];
     async function loadCategories(){
-      try {
-        const res = await fetch('/api/qna/categories');
-        CATS = res.ok ? await res.json() : [];
-      } catch { CATS = []; }
-
-      const qSel = $('#qCategory'), aSel = $('#askCat');
-      qSel.innerHTML = '<option value="">전체 카테고리</option>' + CATS.map(c=>`<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
-      aSel.innerHTML = '<option value="" disabled selected>카테고리 선택</option>' + CATS.map(c=>`<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
+      try { const res = await fetch('/api/qna/categories'); CATS = res.ok ? await res.json() : []; }
+      catch { CATS = []; }
+      $('#qCategory').innerHTML = '<option value="">전체 카테고리</option>' + CATS.map(c=>`<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
+      $('#askCat').innerHTML   = '<option value="" disabled selected>카테고리 선택</option>' + CATS.map(c=>`<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
     }
     const catLabelById = id => (CATS.find(c=>String(c.id)===String(id))||{}).label || String(id);
-
-    /* --------------------------- 서버 연동 ------------------------- */
-    const sortMap = { recent:'recent', votes:'upvotes', views:'views', answers:'recent' };
+    const sortMap = { recent:'recent', votes:'upvotes', views:'views' };
 
     async function fetchListFromServer(){
       const params = new URLSearchParams();
       params.set('sort', sortMap[state.sort] || 'recent');
-      if(state.status) params.set('status', state.status);
-      if(state.cat) params.set('category_id', state.cat); // cat은 id
+      if(state.cat) params.set('category_id', state.cat);
 
       const res = await fetch('/api/qna/questions?' + params.toString());
       if(!res.ok) throw new Error('list fail');
@@ -251,13 +213,10 @@
         title: r.title,
         category_id: r.category_id,
         category: catLabelById(r.category_id),
-        status: r.status,
         votes: r.upvotes || 0,
-        answers: r.answers_count || 0,
         views: r.views || 0,
         author: maskAuthor(r.author_name || r.author_email),
         created_at: r.created_at,
-        tags: [],
         visibility: r.visibility || 'public'
       }));
     }
@@ -265,17 +224,12 @@
     async function createQuestion({title, body, category_id, notify_email, visibility, secret_password}){
       const payload = { title, body, category_id, visibility, notify_email };
       if (visibility === 'private' && secret_password) payload.secret_password = secret_password;
-
-      const res = await fetch('/api/qna/questions', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
+      const res = await fetch('/api/qna/questions', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       const out = await res.json().catch(()=>null);
       if(!res.ok) throw new Error(out?.error || '질문 등록 실패');
       return out;
     }
 
-    /* --------------------- 리스트 렌더/필터/페이지 ------------------ */
     function renderList(){
       const root = $('#list'); root.innerHTML = '';
       const start = (state.page-1)*state.perPage;
@@ -292,28 +246,42 @@
       for(const q of pageItems){
         const li = document.createElement('article');
         li.className = 'card';
+        const isPrivate = q.visibility === 'private';
         li.innerHTML = `
           <div class="stats">
             <div class="stat"><div class="num">${q.votes}</div><div class="label">추천</div></div>
-            <div class="stat"><div class="num">${q.answers}</div><div class="label">답변</div></div>
+            <div class="stat"><div class="num">${Number(q.views||0).toLocaleString('ko-KR')}</div><div class="label">조회</div></div>
           </div>
 
           <div class="content">
-            <h3><a href="qna-detail.html?id=${q.id}">${escapeHtml(q.title)}</a></h3>
+            <h3>
+              <a href="qna-detail.html?id=${q.id}" data-id="${q.id}" data-private="${isPrivate ? '1' : '0'}" class="${isPrivate ? 'lock' : ''}">
+                ${isPrivate ? `<span class="lock-badge">🔒 비공개</span>` : ''} ${escapeHtml(q.title)}
+              </a>
+            </h3>
             <div class="meta">
-              <span class="badge ${q.status === 'answered' ? 'ok' : 'pending'}">${q.status === 'answered' ? '답변완료' : '답변대기'}</span>
               <span class="badge">${escapeHtml(q.category || '')}</span>
-              <span class="badge" title="${q.visibility==='private' ? '비공개' : '공개'}">${q.visibility==='private' ? '비공개' : '공개'}</span>
+              <span class="badge" title="${isPrivate ? '비공개' : '공개'}">${isPrivate ? '비공개' : '공개'}</span>
               <span>작성자 ${escapeHtml(q.author || '')}</span>
               <span>· ${fmtDate(q.created_at)}</span>
-              <span class="tags">${(q.tags||[]).map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join('')}</span>
             </div>
           </div>
 
-          <div class="right">
-            <span>조회 ${Number(q.views||0).toLocaleString('ko-KR')}</span>
-          </div>
+          <div class="right"></div>
         `;
+
+        const a = li.querySelector('a');
+        // ✅ 항상 마지막 클릭 id 저장 (기본 이동은 그대로 둠)
+        a.addEventListener('click', ()=> sessionStorage.setItem('qna:lastId', String(a.dataset.id)));
+
+        // ✅ 비공개면 모달로 전환 (이동 막고 인증)
+        a.addEventListener('click', (ev)=>{
+          if (a.dataset.private === '1') {
+            ev.preventDefault();
+            openPrivateModal(Number(a.dataset.id));
+          }
+        });
+
         root.appendChild(li);
       }
       renderPagi();
@@ -334,48 +302,54 @@
     function applyFilters(){
       const q = state.q.toLowerCase().trim();
       state.filtered = state.items.filter(it=>{
-        const matchQ = !q || (it.title + ' ' + (it.tags||[]).join(' ')).toLowerCase().includes(q);
+        const matchQ = !q || (it.title).toLowerCase().includes(q);
         const matchCat = !state.cat || String(it.category_id) === String(state.cat);
-        const matchStatus = !state.status || it.status === state.status;
-        return matchQ && matchCat && matchStatus;
+        return matchQ && matchCat;
       });
-
       switch(state.sort){
         case 'votes':   state.filtered.sort((a,b)=>b.votes-a.votes); break;
         case 'views':   state.filtered.sort((a,b)=>b.views-a.views); break;
-        case 'answers': state.filtered.sort((a,b)=>b.answers-a.answers); break;
         default:        state.filtered.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at)); break;
       }
       state.page = 1; renderList();
     }
 
-    /* ---------------------------- 이벤트 --------------------------- */
+    // 검색/필터/정렬
     $('#qSearch').addEventListener('input', (e)=>{ state.q = e.target.value; applyFilters(); });
     $('#qCategory').addEventListener('change', (e)=>{ state.cat = e.target.value; applyFilters(); });
-    $('#qStatus').addEventListener('change', (e)=>{ state.status = e.target.value; applyFilters(); });
     $('#qSort').addEventListener('change', (e)=>{ state.sort = e.target.value; applyFilters(); });
 
+    // 질문 등록 모달
     const askModal = $('#askModal');
     $('#openAsk').addEventListener('click', ()=> askModal.classList.add('on'));
     $('#askClose').addEventListener('click', ()=> askModal.classList.remove('on'));
-    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') askModal.classList.remove('on'); });
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') { askModal.classList.remove('on'); privModal.classList.remove('on'); }});
     askModal.addEventListener('click', (e)=>{ if(e.target===askModal) askModal.classList.remove('on'); });
 
     // 공개/비공개 토글
-    const askVisibility = $('#askVisibility'), pwWrap = $('#pwWrap');
-    askVisibility.addEventListener('change', (e)=>{
-      if (e.target.value === 'private') pwWrap.classList.remove('hidden');
-      else pwWrap.classList.add('hidden');
-    });
+    const btnPublic = $('#btnPublic'), btnPrivate = $('#btnPrivate');
+    const pwInline = $('#pwInline'), askSecretPw = $('#askSecretPw');
+    let visibility = 'public';
+    function setVisibility(val){
+      visibility = (val === 'private') ? 'private' : 'public';
+      btnPublic.setAttribute('aria-pressed', String(visibility==='public'));
+      btnPrivate.setAttribute('aria-pressed', String(visibility==='private'));
+      const isPrivate = visibility==='private';
+      pwInline.style.display = isPrivate ? 'inline-flex' : 'none';
+      askSecretPw.disabled = !isPrivate;
+      if(!isPrivate) askSecretPw.value = '';
+    }
+    btnPublic.addEventListener('click', ()=> setVisibility('public'));
+    btnPrivate.addEventListener('click', ()=> setVisibility('private'));
+    setVisibility('public');
 
-    // 질문 등록
+    // 등록
     $('#askSubmit').addEventListener('click', async ()=>{
       const subject = $('#askSubject').value.trim();
-      const catId = $('#askCat').value.trim();               // ← 기본은 '' (카테고리 선택)
+      const catId = $('#askCat').value.trim();
       const body = $('#askBody').value.trim();
       const notify = $('#askNotify').value.trim();
-      const visibility = $('#askVisibility').value;
-      const secretPw = $('#askSecretPw').value.trim();
+      const secretPw = askSecretPw.value.trim();
       const err = $('#askError');
 
       if(!subject || !body || !notify){
@@ -385,39 +359,77 @@
         err.style.display = 'block'; err.textContent = '카테고리를 선택하세요.'; return;
       }
       if(visibility === 'private' && secretPw.length < 4){
-        err.style.display = 'block'; err.textContent = '비공개 글은 비밀번호(4자 이상)가 필요합니다.'; return;
+        err.style.display = 'block'; err.textContent = '비공개는 비밀번호 4자 이상이 필요합니다.'; return;
       }
       err.style.display = 'none';
 
       try{
-        await createQuestion({
-          title: subject,
-          body,
-          category_id: Number(catId),    // 서버가 유효성 재확인
+        const out = await createQuestion({
+          title: subject, body,
+          category_id: Number(catId),
           notify_email: notify,
           visibility,
           secret_password: visibility === 'private' ? secretPw : undefined
         });
         alert('질문이 등록되었습니다.');
+        // 방금 등록한 글 id 저장 → 상세로 바로 이동
+        if(out?.id){
+          sessionStorage.setItem('qna:lastId', String(out.id));
+          location.href = `qna-detail.html?id=${out.id}`;
+          return;
+        }
         askModal.classList.remove('on');
-        // 폼 초기화: 카테고리는 다시 "카테고리 선택"
-        $('#askSubject').value = '';
-        $('#askBody').value = '';
-        $('#askNotify').value = '';
-        $('#askCat').value = '';
-        $('#askVisibility').value = 'public';
-        $('#askSecretPw').value = '';
-        pwWrap.classList.add('hidden');
-        // 목록 갱신
+        // 초기화 후 목록 갱신
+        $('#askSubject').value = ''; $('#askBody').value = ''; $('#askNotify').value = ''; $('#askCat').value = '';
+        setVisibility('public');
         await refreshList();
-      }catch(e){
-        alert(e.message || '서버 오류');
+      }catch(e){ alert(e.message || '서버 오류'); }
+    });
+
+    // 비공개 인증 모달
+    const privModal = $('#privModal');
+    const privPw = $('#privPw');
+    const privErr = $('#privErr');
+    let privTargetId = null;
+
+    function openPrivateModal(id){
+      privTargetId = Number(id)||null;
+      privPw.value=''; privErr.style.display='none';
+      privModal.classList.add('on');
+      setTimeout(()=>privPw.focus(), 50);
+    }
+    $('#privCancel').addEventListener('click', ()=> privModal.classList.remove('on'));
+    $('#privOk').addEventListener('click', async ()=>{
+      if(!privTargetId){ privErr.style.display='block'; privErr.textContent='잘못된 대상'; return; }
+      const pw = privPw.value.trim();
+      if(pw.length<1){ privErr.style.display='block'; privErr.textContent='비밀번호를 입력하세요.'; return; }
+      try{
+        // 서버 인증 → 세션 플래그 세팅
+        const res = await fetch(`/api/qna/questions/${privTargetId}/authorize`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ secret_password: pw })
+        });
+        const out = await res.json().catch(()=>null);
+        if(!res.ok || !out?.ok){ throw new Error(out?.error || '인증 실패'); }
+        privModal.classList.remove('on');
+        // ✅ 인증 성공: 마지막 ID 저장 후 이동
+        sessionStorage.setItem('qna:lastId', String(privTargetId));
+        location.href = `qna-detail.html?id=${privTargetId}`;
+      }catch(err){
+        privErr.style.display='block'; privErr.textContent = err.message || '비밀번호가 올바르지 않습니다.';
       }
     });
 
-    /* ---------------------------- 초기 로드 ------------------------- */
-    async function refreshList(){ try{ state.items = await fetchListFromServer(); }catch{ state.items = []; } applyFilters(); }
-    (async function init(){ await loadCategories(); await refreshList(); })();
+    // 초기 로드
+    async function refreshList(){
+      const rows = await fetchListFromServer();
+      state.items = rows; applyFilters();
+    }
+
+    (async function init(){
+      await loadCategories();
+      await refreshList();
+    })();
   </script>
 </body>
 </html>

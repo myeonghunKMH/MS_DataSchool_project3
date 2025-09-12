@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ITC | 암호화폐 뉴스</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    :root{
+      color-scheme: dark;
+      --accent:#ffd166;
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
+
+      --read-font: 18px;
+      --read-line: 1.8;
+      --container-max: 1100px;
+      --read-max: 1400px;
+
+      --muted:#cfd3db; --dim:#a9afbb;
+      --chip:#ffffff1a; --chip-border:#ffffff40;
+      --card-top: rgba(255,255,255,.08); --card-mid: rgba(255,255,255,.04);
+      --focus: 0 0 0 3px rgba(255,255,255,.28), 0 0 0 1px rgba(255,255,255,.6) inset;
+      --link:#eaf0ff; --menu-bg: rgba(28,28,28,.96); --menu-border:#3b3b3b; --menu-hover: rgba(255,255,255,.06);
+
+      --control-h: 40px; /* 모든 컨트롤 공통 높이 */
+      --radius: 12px;
+    }
+
+    html,body{ height:90%; }
+    body{
+      margin:0; color:#eceff4;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.14), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.10), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#171717, #0b0b0b);
+      background-attachment: fixed;
+      font-size: var(--read-font);
+      line-height: var(--read-line);
+      text-rendering: optimizeLegibility;
+    }
+    *{ box-sizing:border-box; }
+
+    /* Header (index와 동일) */
+    header{
+      position:fixed; inset:0 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
+      width:120px; height:auto;
+      padding-top:12px;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn:hover{ border-color:rgba(var(--glow),.32); box-shadow:0 0 12px rgba(var(--glow),.22); transform:translateY(-1px); color:#fff; }
+
+    /* Layout */
+    main{
+      width:min(var(--container-max), 95vw);
+      margin:130px auto 56px;
+      display:flex; flex-direction:column; gap:24px; align-items:center;
+    }
+    .pagetitle{ width:100%; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+    .pagetitle h1{
+      margin:0; font-size:clamp(24px,3.2vw,32px); font-weight:900; letter-spacing:.2px;
+      background:linear-gradient(95deg, #fff 0%, rgba(240,240,240,.92) 18%, rgba(255,255,255,.98) 45%, rgba(210,210,210,.70) 65%, #fff 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow),.22)) drop-shadow(0 0 24px rgba(var(--glow),.18));
+    }
+
+    /* Toolbar (모든 컨트롤 동일 높이) */
+    .toolbar{
+      width:min(var(--read-max),100%);
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+      background:linear-gradient(180deg, var(--card-top), var(--card-mid) 40%, rgba(255,255,255,0));
+      border:1px solid var(--stroke); border-radius:14px; padding:12px;
+      box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .field{
+      position:relative; display:flex; align-items:center; gap:8px;
+      background:rgba(255,255,255,.08); border:1px solid #3b3b3b; border-radius:var(--radius);
+      padding:0 10px; height:var(--control-h);
+    }
+    .field label{ color:#f0f2f7; font-weight:800; font-size:.95rem; white-space:nowrap; }
+
+    /* 검색 입력 */
+    .field input[type="text"]{
+      background:transparent; border:none; color:#ffffff; font:inherit; height:calc(var(--control-h) - 0px);
+      min-width:200px;
+    }
+    .field input::placeholder{ color:#e5e8ef; opacity:.8; }
+    .field input:focus{ outline:none; }
+
+    /* 커스텀 셀렉트/날짜 트리거 */
+    .select .sel{ display:flex; align-items:center; gap:8px; height:var(--control-h); }
+    .sel-trigger{
+      display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+      background:transparent; border:none; color:#fff; font-weight:800; padding:0; height:calc(var(--control-h) - 0px);
+    }
+    .sel-trigger:focus-visible{ outline:none; box-shadow: var(--focus); border-radius:8px; }
+    .caret{ width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:7px solid #eaeaea; opacity:.85; }
+
+    .menu{
+      position:absolute; top:calc(100% + 8px); left:0; z-index:20;
+      min-width:220px; max-height:320px; overflow:auto;
+      background: var(--menu-bg); border:1px solid var(--menu-border); border-radius:14px; padding:8px;
+      box-shadow:0 18px 44px rgba(0,0,0,.55), 0 0 24px rgba(var(--glow),.16), inset 0 1px 0 rgba(255,255,255,.06);
+      display:none;
+    }
+    .menu.open{ display:block; }
+    .option{ width:100%; text-align:left; background:transparent; border:none; color:#f2f2f2; font-weight:800; padding:10px; border-radius:10px; cursor:pointer; }
+    .option:hover{ background:var(--menu-hover); }
+    .option.active{ background:rgba(255,255,255,.12); }
+    .date-panel{ display:flex; flex-direction:column; gap:8px; }
+    .date-row{ display:flex; gap:8px; }
+    .date-row .quick{ flex:1; }
+    #dateInput{ flex:1; background:transparent; border:1px solid #4a4a4a; color:#fff; padding:10px; border-radius:10px; height:var(--control-h); }
+
+    /* Toolbar buttons (동일 높이) */
+    .toolbar .btn{
+      background:rgba(255,255,255,.04); border:1px solid var(--stroke); color:#f2f2f2;
+      border-radius:11px; height:var(--control-h); padding:0 14px; text-decoration:none; font-weight:800;
+      display:inline-flex; align-items:center; gap:10px; transition:.24s; cursor:pointer;
+    }
+    .toolbar .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,0,0,.28); }
+    .toolbar .btn:focus-visible{ outline:none; box-shadow: var(--focus); }
+
+    /* Stats */
+    .stats{
+      width:min(var(--read-max),100%);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      color:#e7eaf1; font-weight:700;
+    }
+
+    /* News List */
+    .list{ width:min(var(--read-max), 100%); display:flex; flex-direction:column; gap:18px; }
+    .item{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04) 45%, rgba(255,255,255,.00));
+      border:1px solid #3b3b3b; border-radius:16px;
+      box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+      padding:20px; transition:.22s;
+    }
+    .item:hover{ transform: translateY(-2px); border-color: rgba(var(--glow),.32); box-shadow:0 12px 26px rgba(0,0,0,.45), 0 0 18px rgba(var(--glow),.14); }
+
+    .head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:8px; }
+    .title{ font-weight:900; font-size:1.22rem; line-height:1.55; color:#fff; text-decoration:none; text-shadow: 0 1px 0 rgba(0,0,0,.22); }
+    .title:hover{ text-decoration:underline; text-underline-offset:3px; }
+    .date-mini{ color:var(--dim); font-size:.86rem; white-space:nowrap; }
+
+    .sentiment{
+      display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-weight:900; font-size:.82rem;
+      border:1px solid var(--chip-border); background:var(--chip); margin-top:4px;
+    }
+    .pos{ color:#10b981; border-color:#10b98170; background:#10b9812a; }
+    .neg{ color:#ef4444; border-color:#ef444470; background:#ef44442a; }
+    .neu{ color:#f59e0b; border-color:#f59e0b70; background:#f59e0b2a; }
+
+    .desc{ color:var(--muted); margin: 6px 0 12px; font-size:1.05rem; }
+
+    .meta{
+      display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+      color:var(--dim); font-size:.96rem; padding-top:12px; border-top:1px solid rgba(255,255,255,.12);
+    }
+    .chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--chip-border); background:var(--chip); }
+
+    /* Pager */
+    .pager{
+      width:min(var(--read-max),100%); display:flex; align-items:center; justify-content:center; gap:8px; padding: 20px 0 32px;
+    }
+    .page-btn{
+      min-width:48px; height:var(--control-h); padding:0 16px; border-radius:11px; cursor:pointer;
+      background:rgba(255,255,255,.04); border:1px solid var(--stroke); color:#f2f2f2; font-weight:900; transition:.2s;
+    }
+    .page-btn:hover:not([disabled]){ transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,0,0,.28); }
+    .page-btn:focus-visible{ outline:none; box-shadow: var(--focus); }
+    .page-btn[disabled]{ opacity:.55; cursor:not-allowed; }
+    .active{ background:#2a2a2a; color:#fff; border-color:#666; }
+
+    .centerbox{ width:min(var(--read-max),100%); text-align:center; color:#e7eaf1; padding:28px 0; }
+    .spinner{ display:inline-block; width:22px; height:22px; margin-left:8px; border:3px solid #cfd0d3; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin{to{transform:rotate(360deg);} }
+    .error{ border:1px solid #ef444470; background:#ef444428; color:#ffd0d0; padding:14px; border-radius:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="realtime.html">💹 모의투자</a>
+      <a class="navbtn" href="index.html">🏠 메인페이지</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="pagetitle">
+      <h1>암호화폐 뉴스</h1>
+    </div>
+
+    <!-- Filters -->
+    <section class="toolbar" aria-label="뉴스 필터">
+      <div class="field" style="flex:1 1 360px; min-width:260px;">
+        <label for="q">검색</label>
+        <input id="q" type="text" placeholder="제목·본문에서 검색…" />
+      </div>
+
+      <!-- 키워드 -->
+      <div class="field select" id="kwWrap">
+        <div class="sel">
+          <label>키워드</label>
+          <button class="sel-trigger" type="button" data-menu="kwMenu" aria-haspopup="listbox" aria-expanded="false">
+            <span id="kwText">전체</span><span class="caret" aria-hidden="true"></span>
+          </button>
+        </div>
+        <input type="hidden" id="kwVal" value="">
+        <div class="menu" id="kwMenu" role="listbox" aria-label="키워드 선택">
+          <button class="option active" data-value="">전체</button>
+          <button class="option" data-value="비트코인">비트코인</button>
+          <button class="option" data-value="이더리움">이더리움</button>
+          <button class="option" data-value="리플">리플</button>
+          <button class="option" data-value="암호화">암호화</button>
+        </div>
+      </div>
+
+      <!-- 감성 -->
+      <div class="field select" id="sentWrap">
+        <div class="sel">
+          <label>감성</label>
+          <button class="sel-trigger" type="button" data-menu="sentMenu" aria-haspopup="listbox" aria-expanded="false">
+            <span id="sentText">전체</span><span class="caret" aria-hidden="true"></span>
+          </button>
+        </div>
+        <input type="hidden" id="sentVal" value="">
+        <div class="menu" id="sentMenu" role="listbox" aria-label="감성 선택">
+          <button class="option active" data-value="">전체</button>
+          <button class="option" data-value="positive">긍정</button>
+          <button class="option" data-value="negative">부정</button>
+          <button class="option" data-value="neutral">중립</button>
+        </div>
+      </div>
+
+      <!-- 날짜 -->
+      <div class="field select" id="dateWrap">
+        <div class="sel">
+          <label>날짜</label>
+          <button class="sel-trigger" type="button" data-menu="dateMenu" aria-haspopup="dialog" aria-expanded="false">
+            <span id="dateText">전체</span><span class="caret" aria-hidden="true"></span>
+          </button>
+        </div>
+        <input type="hidden" id="dateVal" value="">
+        <div class="menu" id="dateMenu" role="dialog" aria-label="날짜 선택">
+          <div class="date-panel">
+            <div class="date-row">
+              <button class="option quick" data-date="today">오늘</button>
+              <button class="option quick" data-date="yesterday">어제</button>
+              <button class="option quick" data-date="thisweek">이번 주</button>
+            </div>
+            <div class="date-row">
+              <input id="dateInput" type="date">
+              <button class="option" id="applyDate" style="flex:0 0 auto;">적용</button>
+            </div>
+            <button class="option" id="clearDate">전체로 보기</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" id="btnSearch">검색</button>
+      <button class="btn" id="btnReset">초기화</button>
+    </section>
+
+    <!-- Stats -->
+    <div class="stats" aria-live="polite">
+      <div>전체 <strong id="statTotal">0</strong>건</div>
+      <div>페이지 <strong id="statPage">1</strong></div>
+    </div>
+
+    <!-- List -->
+    <section id="list" class="list" aria-busy="true">
+      <div class="centerbox">데이터를 불러오는 중입니다<span class="spinner" aria-hidden="true"></span></div>
+    </section>
+
+    <!-- Pager -->
+    <nav id="pager" class="pager" aria-label="페이지 이동"></nav>
+  </main>
+
+  <script>
+    let currentPage = 1, totalPages = 1, limit = 20;
+    let searchParams = {};
+    const $ = (s)=>document.querySelector(s);
+
+    /* ===== 커스텀 셀렉트/날짜 ===== */
+    function closeAllMenus(exceptId){
+      document.querySelectorAll('.menu.open').forEach(m=>{
+        if(m.id!==exceptId){ m.classList.remove('open'); const btn = document.querySelector('.sel-trigger[data-menu="'+m.id+'"]'); if(btn) btn.setAttribute('aria-expanded','false'); }
+      });
+    }
+    function bindSelect(menuId, textId, valId){
+      const menu = $('#'+menuId);
+      const text = $('#'+textId);
+      const hidden = $('#'+valId);
+      menu.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.option');
+        if(!btn || btn.classList.contains('quick')) return;
+        menu.querySelectorAll('.option').forEach(o=>o.classList.remove('active'));
+        btn.classList.add('active');
+        hidden.value = btn.dataset.value;
+        text.textContent = btn.textContent.trim();
+        menu.classList.remove('open');
+        const trigger = document.querySelector('.sel-trigger[data-menu="'+menuId+'"]');
+        if(trigger) trigger.setAttribute('aria-expanded','false');
+      });
+    }
+    function bindTrigger(){
+      document.querySelectorAll('.sel-trigger').forEach(tr=>{
+        tr.addEventListener('click', ()=>{
+          const id = tr.dataset.menu;
+          const menu = $('#'+id);
+          const isOpen = menu.classList.contains('open');
+          closeAllMenus(id);
+          menu.classList.toggle('open', !isOpen);
+          tr.setAttribute('aria-expanded', String(!isOpen));
+        });
+      });
+      document.addEventListener('click', (e)=>{ if(!e.target.closest('.select')) closeAllMenus(); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeAllMenus(); });
+    }
+
+    // 날짜 퀵선택/적용/초기화
+    function pad(n){ return n<10 ? '0'+n : n; }
+    function fmt(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function bindDate(){
+      const menu = $('#dateMenu'), txt = $('#dateText'), hidden = $('#dateVal'), input = $('#dateInput');
+      menu.addEventListener('click', (e)=>{
+        const q = e.target.closest('.quick');
+        if(q){
+          const now = new Date();
+          if(q.dataset.date==='today'){
+            const s = fmt(now); hidden.value = s; txt.textContent = s; input.value = s;
+          }else if(q.dataset.date==='yesterday'){
+            const y = new Date(now); y.setDate(now.getDate()-1);
+            const s = fmt(y); hidden.value = s; txt.textContent = s; input.value = s;
+          }else if(q.dataset.date==='thisweek'){
+            const day = (new Date().getDay()+6)%7; const start = new Date(); start.setDate(start.getDate()-day);
+            const end = new Date(start); end.setDate(start.getDate()+6);
+            hidden.value = `${fmt(start)}|${fmt(end)}`; txt.textContent = `${fmt(start)}~${fmt(end)}`; input.value = '';
+          }
+        }
+      });
+      $('#applyDate').addEventListener('click', ()=>{
+        if(input.value){ hidden.value = input.value; txt.textContent = input.value; }
+        menu.classList.remove('open'); document.querySelector('.sel-trigger[data-menu="dateMenu"]').setAttribute('aria-expanded','false');
+      });
+      $('#clearDate').addEventListener('click', ()=>{
+        hidden.value = ''; txt.textContent = '전체'; input.value = '';
+        menu.classList.remove('open'); document.querySelector('.sel-trigger[data-menu="dateMenu"]').setAttribute('aria-expanded','false');
+      });
+    }
+
+    bindTrigger();
+    bindSelect('kwMenu','kwText','kwVal');
+    bindSelect('sentMenu','sentText','sentVal');
+    bindDate();
+
+    /* ===== 데이터 로딩 ===== */
+    window.addEventListener('DOMContentLoaded', ()=> load());
+
+    async function load(page=1){
+      currentPage = page;
+      const list = $('#list'), pager = $('#pager');
+      list.setAttribute('aria-busy','true');
+      list.innerHTML = `<div class="centerbox">데이터를 불러오는 중입니다<span class="spinner"></span></div>`;
+      pager.innerHTML = '';
+
+      try{
+        const params = new URLSearchParams({ page: currentPage, limit, ...searchParams });
+        const endpoint = Object.keys(searchParams).length ? `/api/crypto-news/search?${params}` : `/api/crypto-news?${params}`;
+        const res = await fetch(endpoint);
+
+        const ctype = res.headers.get('content-type') || '';
+        if(!ctype.includes('application/json')){
+          const txt = await res.text();
+          throw new Error('서버에서 JSON 형태가 아닙니다.\n' + txt.slice(0,260));
+        }
+        const out = await res.json();
+        if(!out.success) throw new Error(out.error || '데이터 로드 실패');
+
+        renderList(out.data);
+        renderPager(out.pagination);
+        renderStats(out.pagination);
+      }catch(err){
+        list.innerHTML = `<div class="centerbox"><div class="error">오류: ${err.message}</div></div>`;
+      }finally{
+        list.removeAttribute('aria-busy');
+      }
+    }
+
+    /* ====== 여기만 변경: 기사별 해당 태그만 노출 ====== */
+    function renderList(rows){
+      const list = $('#list');
+      if(!rows.length){
+        list.innerHTML = `<div class="centerbox">검색 결과가 없습니다.</div>`;
+        return;
+      }
+      list.innerHTML = rows.map(row=>{
+        const sentClass = row.sentiment==='positive' ? 'pos' : row.sentiment==='negative' ? 'neg' : 'neu';
+        const sentText  = row.sentiment==='positive' ? '긍정' : row.sentiment==='negative' ? '부정' : '중립';
+        const when = formatDate(row.pubDate);
+
+        // --- 기사 텍스트에서 관련 태그 감지 ---
+        const text = `${row.title||''} ${row.description||''} ${row.keyword||''}`.toLowerCase();
+        const tagDefs = [
+          { key:'비트코인', alias: ['비트코인','bitcoin','btc'] },
+          { key:'이더리움', alias: ['이더리움','ethereum','eth'] },
+          { key:'리플',   alias: ['리플','ripple','xrp'] },
+          { key:'암호화폐', alias: ['암호화','crypto','가상자산','가상 자산','가상화폐','디지털 자산'] },
+        ];
+        let tags = tagDefs.filter(t => t.alias.some(a => text.includes(a.toLowerCase()))).map(t=>t.key);
+        if(tags.length===0) tags = ['암호화']; // 아무 것도 없으면 기본
+
+        return `
+          <article class="item">
+            <div class="head">
+              <div>
+                <a class="title" href="${row.link || '#'}" target="_blank" rel="noopener noreferrer">${row.title}</a>
+                <div class="sentiment ${sentClass}" aria-label="감성">${sentText}</div>
+              </div>
+              <time class="date-mini">${when}</time>
+            </div>
+            <p class="desc">${row.description || ''}</p>
+            <div class="meta">
+              ${tags.map(t=>`<span class="chip">${t}</span>`).join('')}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderPager(p){
+      totalPages = p.totalPages;
+      const pg = $('#pager');
+      const btn = (label, target, disabled=false, isActive=false)=>`
+        <button class="page-btn ${isActive?'active':''}" ${disabled?'disabled':''}
+                aria-label="${label}" onclick="load(${target})">${label}</button>`;
+      pg.innerHTML =
+        btn('처음', 1, currentPage===1) +
+        btn('이전', Math.max(1,currentPage-1), currentPage===1) +
+        pageWindow(currentPage, totalPages).map(i=>btn(String(i), i, false, i===currentPage)).join('') +
+        btn('다음', Math.min(totalPages,currentPage+1), currentPage===totalPages) +
+        btn('마지막', totalPages, currentPage===totalPages);
+    }
+    function renderStats(p){
+      $('#statTotal').textContent = p.totalCount;
+      $('#statPage').textContent  = `${p.page} / ${p.totalPages}`;
+    }
+    function formatDate(s){
+      if(!s) return '—';
+      const d = new Date(s);
+      return d.toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }
+    function pageWindow(cur, total){
+      const span = 2;
+      const start = Math.max(1, cur - span);
+      const end   = Math.min(total, start + span*2);
+      const realStart = Math.max(1, end - span*2);
+      const arr=[]; for(let i=realStart;i<=end;i++) arr.push(i); return arr;
+    }
+
+    // Search / Reset
+    $('#btnSearch').addEventListener('click', ()=>{
+      const q = $('#q').value.trim();
+      const kw = $('#kwVal').value;
+      const sent = $('#sentVal').value;
+      const dval = $('#dateVal').value;
+
+      searchParams = {};
+      if(q) searchParams.keyword = q;
+      else if(kw) searchParams.keyword = kw;
+      if(sent) searchParams.sentiment = sent;
+
+      if(dval){
+        if(dval.includes('|')){ const [s,e] = dval.split('|'); searchParams.startDate = s; searchParams.endDate = e; }
+        else{ searchParams.startDate = dval; searchParams.endDate = dval; }
+      }
+      load(1);
+    });
+
+    $('#btnReset').addEventListener('click', ()=>{
+      $('#q').value = '';
+      $('#kwVal').value=''; $('#kwText').textContent='전체';
+      $('#sentVal').value=''; $('#sentText').textContent='전체';
+      $('#dateVal').value=''; $('#dateText').textContent='전체'; $('#dateInput').value='';
+      document.querySelectorAll('.menu .option.active').forEach(o=>o.classList.remove('active'));
+      document.querySelector('#kwMenu .option[data-value=""]').classList.add('active');
+      document.querySelector('#sentMenu .option[data-value=""]').classList.add('active');
+      searchParams = {}; load(1);
+    });
+
+    $('#q').addEventListener('keypress', (e)=>{ if(e.key==='Enter') $('#btnSearch').click(); });
+  </script>
+</body>
+</html>

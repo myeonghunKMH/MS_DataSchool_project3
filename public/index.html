@@ -6,88 +6,173 @@
   <title>ITC | 암호화폐 모의 투자</title>
   <link rel="stylesheet" href="/style.css" />
   <style>
-    :root { color-scheme: dark; }
-    body{
-      margin:0;
-      background:#1a1a1a;
-      color:#e8e8e8;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    :root{
+      color-scheme: dark;
+      --accent:#ffd166;          /* 포인트 컬러 */
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
     }
 
-    /* 헤더 */
+    /* ===== Global ===== */
+    html,body{ height:90%; }
+    body{
+      margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      /* 어두운 톤 유지 (이전 버전) */
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
+    }
+    *{ box-sizing:border-box; }
+
+    /* ===== Header ===== */
     header{
-      position:fixed;
-      inset:16px 16px auto 16px;
-      z-index:10;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
     }
     .brand img{
-      width:120px;
-      height:auto;
-      filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
     }
-    nav{ display:flex; gap:10px; }
+    nav{ display:flex; gap:8px; }
     .navbtn{
-      display:inline-flex; align-items:center; gap:10px;
-      height:38px; padding:0 12px; border-radius:10px;
-      background:#121212; border:1px solid #262626; color:#e8e8e8;
-      text-decoration:none; font-weight:700;
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
     }
-    .navbtn img{ width:16px; height:16px; }
+    .navbtn img{ width:18px; height:18px; object-fit:contain; display:block; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
 
-    /* 레이아웃 */
+    /* ===== Layout (세로 길이 단축) ===== */
     main{
       width:min(1100px,92vw);
-      margin:180px auto 60px; /* ⬅️ 원래 120px → 180px로 내려줌 */
-      display:flex;
-      flex-direction:column;
-      gap:22px;
+      margin:130px auto 48px;              /* 180 → 150 (상단 간격 축소) */
+      display:flex; flex-direction:column; gap:22px; /* 28 → 22 */
     }
 
-    /* 타이핑 효과 영역 */
+    /* ===== Typewriter / Hero (고정 높이로 레이아웃 불변) ===== */
     #typewriter{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      text-align:center;
-      margin-bottom:20px;
-      gap:10px;
+      display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;
+      height:clamp(110px,16vw,140px);      /* 고정 높이 → 카드 레이아웃 안 움직임 */
+      justify-content:center;
     }
-    #line1, #line2{ min-height:1.4em; white-space:pre-wrap; }
-    #line1{ font-size:clamp(22px,3.5vw,34px); font-weight:700; }
-    #line2{ font-size:clamp(15px,2.5vw,20px); font-weight:400; color:#cfcfcf; }
-    .cursor{ display:inline-block; margin-left:2px; animation:caret 0.9s steps(1) infinite; }
+    #line1{
+      font-size:clamp(24px,3.6vw,40px); font-weight:900; letter-spacing:.3px;
+      /* 더 밝은 메탈릭 그라데이션 */
+      background:linear-gradient(95deg,
+        rgba(255,255,255,1) 0%,
+        rgba(240,240,240,.85) 18%,
+        rgba(255,255,255,.98) 45%,
+        rgba(210,210,210,.65) 65%,
+        rgba(255,255,255,1) 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow),.22))
+              drop-shadow(0 0 24px rgba(var(--glow),.20));
+      white-space:nowrap;
+    }
+    #line2{
+      font-size:clamp(14px,2.2vw,19px); color:#cfcfcf; font-weight:500;
+      white-space:nowrap;
+    }
+    .cursor{ display:inline-block; margin-left:2px; animation:caret .9s steps(1) infinite; }
     .cursor.complete{ animation:blink 1s step-end infinite; }
-    @keyframes caret{50%{opacity:0;}}
-    @keyframes blink{50%{opacity:0;}}
+    @keyframes caret{50%{opacity:0;}} @keyframes blink{50%{opacity:0;}}
 
-    /* 카드 */
-    .grid{ display:grid; gap:16px; grid-template-columns: repeat(3, minmax(0,1fr)); }
-    @media (max-width:980px){ .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
-    @media (max-width:640px){ .grid{ grid-template-columns: 1fr; } }
-    .card{ background:#141414; border:1px solid #262626; border-radius:16px; box-shadow:0 10px 26px rgba(0,0,0,.20); display:flex; flex-direction:column; }
-    .thumb{ aspect-ratio:16/9; background:#0f0f0f; border-bottom:1px solid #262626; display:flex; align-items:center; justify-content:center; color:#b8c7ff; font-weight:800; font-size:clamp(18px, 2.6vw, 28px); }
-    .body{ padding:16px; }
-    .desc{ color:#c9c9c9; font-size:14px; line-height:1.55; }
-    .actions{ display:flex; justify-content:flex-end; padding:0 16px 16px; }
-    .btn{ background:#1b1b1b; border:1px solid #2a2a2a; color:#eaeaea; border-radius:12px; height:42px; padding:0 16px; text-decoration:none; font-weight:800; display:inline-flex; align-items:center; gap:10px; }
+    /* ===== Cards ===== */
+    .grid{ display:grid; gap:16px; grid-template-columns:repeat(3,minmax(0,1fr)); }
+    @media (max-width:980px){ .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
 
-    footer{ display:flex; justify-content:center; margin:20px 0 40px; color:#7f7f7f; font-size:12px; }
+    .card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,.00));
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+      display:grid; flex-direction:column; overflow:hidden;
+      grid-template-rows: auto 1fr auto;
+      transition:.28s;
+    }
+    /* 하단만 살짝 밝아지게 */
+    .card::after{
+      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .card:hover{
+      transform:translateY(-5px);
+      box-shadow:0 12px 26px rgba(0,0,0,.45), 0 0 18px rgba(var(--glow),.16);
+      border-color:rgba(var(--glow),.22);
+    }
+
+    .thumb{
+      aspect-ratio:10/9;
+      background:
+        linear-gradient(170deg, rgba(255,255,255,.14), rgba(255,255,255,0) 60%),
+        linear-gradient(to right, #303030, #121212);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:900; font-size:clamp(18px,2.4vw,26px); letter-spacing:.4px; text-transform:uppercase;
+      text-shadow:0 0 22px rgba(var(--glow),.38), 0 4px 18px rgba(var(--glow),.12);
+      border-bottom:1px solid var(--stroke);
+    }
+    .body{ padding:14px; }                 /* 18 → 14 */
+    .body h3{ margin:0 0 4px; font-weight:800; }
+    .desc{ color:#b0b0b0; font-size:14px; line-height:1.55; }
+    .actions{ display:flex; justify-content:flex-end; padding:0 14px 14px; margin-top:auto;}
+    .btn{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--stroke); color:#f2f2f2;
+      border-radius:11px; height:40px; padding:0 14px; text-decoration:none; font-weight:800;
+      display:inline-flex; align-items:center; gap:10px; transition:.24s;
+    }
+    .btn:hover{
+      border-color:rgba(var(--glow),.30);
+      box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35);
+      color:#fff; transform:translateY(-1px);
+    }
+
+    /* ===== Footer (면책 문구) ===== */
+    footer{
+      display:flex; justify-content:center; margin:16px 0 36px;
+      color:#9a9a9a; font-size:12px; text-align:center; line-height:1.4;
+      padding:0 16px;
+    }
+
+    /* ===== Tutorial Badge ===== */
+    .bubble-btn{
+      position:fixed; right:22px; bottom:22px; z-index:99;
+      height:44px; padding:0 18px; border-radius:9999px;
+      background:linear-gradient(135deg,#ffffff,#e7e7e7);
+      color:#111; font-weight:900; font-size:14px; text-decoration:none;
+      display:inline-flex; align-items:center; gap:10px;
+      box-shadow:0 14px 38px rgba(0,0,0,.50), 0 0 28px rgba(var(--glow),.45), inset 0 1px 0 rgba(255,255,255,.9);
+      transition:.22s; border:1px solid rgba(255,255,255,.75);
+    }
+    .bubble-btn:hover{ transform:translateY(-2px); }
+    .bubble-dot{ width:8px; height:8px; border-radius:50%; background:#111; opacity:.7; }
   </style>
 </head>
 <body>
   <header>
     <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
     <nav>
-      <a class="navbtn" href="guide.html"><img src="/images/Document.png">가이드</a>
-      <a class="navbtn" href="mypage.html">🏠 마이페이지</a>
+      <a class="navbtn" href="guide.html"><img src="/images/Document.png" alt="">가이드</a>
+      <a class="navbtn" href="mypage.html">🪙 마이페이지</a>
     </nav>
   </header>
 
   <main>
-    <!-- 타이핑 효과 -->
+    <!-- Hero / Typewriter (높이 고정) -->
     <div id="typewriter">
       <div id="line1"></div>
       <div id="line2"></div>
@@ -95,32 +180,62 @@
 
     <!-- 기능 카드 -->
     <section class="grid">
-      <article class="card"><div class="thumb">Tutorial</div><div class="body"><h3>과거 시나리오 튜토리얼</h3><p class="desc">급락/급등, 과열·침체 구간 등 실제 사건 직후 장면을 재현합니다.</p></div><div class="actions"><a class="btn" href="historical.html">들어가기</a></div></article>
-      <article class="card"><div class="thumb">Realtime</div><div class="body"><h3>BTC·ETH·XRP로 연습</h3><p class="desc">가상 자금으로 주문·체결·잔고 UI를 체험하며 규칙 기반 트레이딩을 익힙니다.</p></div><div class="actions"><a class="btn" href="realtime.html">들어가기</a></div></article>
-      <article class="card"><div class="thumb">Basics</div><div class="body"><h3>암호화폐 기초 빠르게 훑기</h3><p class="desc">암호화폐/주식 비교, 대표 코인, 스테이블 코인까지 핵심만 요약합니다.</p></div><div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div></article>
+      <article class="card">
+        <div class="thumb">Realtime</div>
+        <div class="body">
+          <h3>실시간 모의 투자 연습</h3>
+          <p class="desc">BTC·ETH·XRP 종목으로 주문·체결·잔고 UI를 체험하며 트레이딩을 연습하세요.</p>
+        </div>
+        <div class="actions"><a class="btn" href="realtime.html">들어가기</a></div>
+      </article>
+
+      <article class="card">
+        <div class="thumb">News</div>
+        <div class="body">
+          <h3>뉴스 한눈에 보기</h3>
+          <p class="desc">암호화폐 관련 뉴스를 모아서 빠르게 확인할 수 있습니다.</p>
+        </div>
+        <div class="actions"><a class="btn" href="news.html">들어가기</a></div>
+      </article>
+
+      <article class="card">
+        <div class="thumb">Crypto</div>
+        <div class="body">
+          <h3>암호화폐 백과사전</h3>
+          <p class="desc">대표 코인과 개념들을 정리한 백과사전을 살펴보세요.</p>
+        </div>
+        <div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div>
+      </article>
     </section>
   </main>
 
-  <footer>© ITC · HOME</footer>
+  <!-- 면책성 문구 -->
+  <footer>
+    제공되는 정보는 학습/연습을 위한 참고 자료이며, 실제 투자 결과와 손실에 대한 책임을 지지 않습니다.
+  </footer>
 
+  <!-- 튜토리얼 배지 -->
+  <a href="historical.html" class="bubble-btn" aria-label="튜토리얼 열기">
+    <span class="bubble-dot" aria-hidden="true"></span> 튜토리얼
+  </a>
+
+  <!-- Typewriter JS (line 높이 고정이라도 여전히 타이핑 효과 유지) -->
   <script>
     (() => {
       const texts = [
-        { el: "line1", text: "안녕하세요, ITC입니다👋" },
-        { el: "line2", text: "과거의 실제 데이터를 불러와 사건 직후의 시장을 체험하거나, 실시간 가격 흐름으로 모의 매매를 연습해 보세요." }
+        { el: "line1", text: "안녕하세요, ITC입니다." },
+        { el: "line2", text: "실시간 가격 흐름으로 연습하거나 뉴스와 백과사전으로 정보를 확인하세요." }
       ];
-
       function typeWriter({ el, text }, done) {
         const target = document.getElementById(el);
-        let charIdx = 0;
-        function type() {
-          target.innerHTML = text.slice(0, charIdx) + '<span class="cursor">|</span>';
-          if (charIdx < text.length) { charIdx++; setTimeout(type, 40); }
-          else { const c = target.querySelector(".cursor"); if (c) c.classList.add("complete"); done && done(); }
-        }
-        type();
+        let i = 0;
+        (function type(){
+          target.innerHTML = text.slice(0,i) + '<span class="cursor">|</span>';
+          if(i < text.length){ i++; setTimeout(type, 38); }
+          else { const c = target.querySelector(".cursor"); if(c) c.classList.add("complete"); done && done(); }
+        })();
       }
-      typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 400));
+      typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 320));
     })();
   </script>
 </body>

@@ -2,30 +2,106 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>실시간 암호화폐 모의투자 (Node.js)</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <title>실시간 암호화폐 모의투자</title>
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/realtime.css" />
+    <!-- TradingView Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   </head>
+
   <body>
+    <!-- 🔧 새로 추가: 사용자 정보 표시 헤더 -->
+    <div class="user-header">
+      <div class="user-info">
+        <span id="user-name">로딩 중...</span>
+        <span class="user-status">로그인됨</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="window.location.href='/mypage.html'">
+          마이페이지
+        </button>
+        <button class="header-btn" onclick="window.location.href='/logout'">
+          로그아웃
+        </button>
+      </div>
+    </div>
+
     <div class="container">
       <div class="header-summary" id="coin-summary"></div>
 
       <div class="top-chart-section">
         <div class="chart-controls">
           <div class="coin-tabs" id="coin-tabs"></div>
-          <div class="time-tabs" id="time-tabs">
-            <button class="time-tab" data-unit="5">5분</button>
-            <button class="time-tab" data-unit="15">15분</button>
-            <button class="time-tab active" data-unit="60">1시간</button>
-            <button class="time-tab" data-unit="240">4시간</button>
-            <button class="time-tab" data-unit="1D">1일</button>
+
+          <!-- 지표 및 차트 설정 드롭다운들 -->
+          <div class="indicator-controls">
+            <div class="dropdown-container">
+              <button class="indicator-btn" id="ma-toggle">이동평균선 ▼</button>
+              <div class="indicator-panel hidden" id="ma-panel">
+                <label><input type="checkbox" data-ma="5" /> MA5</label>
+                <label><input type="checkbox" data-ma="10" /> MA10</label>
+                <label><input type="checkbox" data-ma="20" /> MA20</label>
+                <label><input type="checkbox" data-ma="50" /> MA50</label>
+                <label><input type="checkbox" data-ma="100" /> MA100</label>
+                <label><input type="checkbox" data-ma="200" /> MA200</label>
+              </div>
+            </div>
+
+            <div class="dropdown-container">
+              <button class="indicator-btn" id="technical-toggle">
+                보조지표 ▼
+              </button>
+              <div class="indicator-panel hidden" id="technical-panel">
+                <label
+                  ><input type="checkbox" data-indicator="RSI" /> RSI</label
+                >
+                <label
+                  ><input type="checkbox" data-indicator="MACD" /> MACD</label
+                >
+                <label
+                  ><input type="checkbox" data-indicator="BB" />
+                  볼린저밴드</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- 시간단위를 드롭다운으로 변경 -->
+          <div class="time-controls">
+            <select id="timeframe-select" class="timeframe-dropdown">
+              <option value="1">1분</option>
+              <option value="5">5분</option>
+              <option value="15">15분</option>
+              <option value="30">30분</option>
+              <option value="60" selected>1시간</option>
+              <option value="240">4시간</option>
+              <option value="1D">1일</option>
+            </select>
           </div>
         </div>
-        <div class="chart-container-wrapper">
-          <canvas id="coinChart"></canvas>
+        <div class="chart-container">
+          <div id="priceChart" class="chart-section price-chart"></div>
+          
+          <!-- RSI 차트 (초기 숨김) -->
+          <div id="rsiChart" class="chart-section indicator-chart hidden" data-indicator="RSI">
+            <div class="indicator-header">
+              <span class="indicator-title">RSI (14)</span>
+              <button class="indicator-close" data-target="rsiChart">×</button>
+            </div>
+            <div class="chart-content"></div>
+          </div>
+          
+          <!-- MACD 차트 (초기 숨김) -->
+          <div id="macdChart" class="chart-section indicator-chart hidden" data-indicator="MACD">
+            <div class="indicator-header">
+              <span class="indicator-title">MACD (12, 26, 9)</span>
+              <button class="indicator-close" data-target="macdChart">×</button>
+            </div>
+            <div class="chart-content"></div>
+          </div>
+          
+          <div id="volumeChart" class="chart-section volume-chart"></div>
         </div>
       </div>
 
@@ -63,437 +139,148 @@
 
         <div class="trading-panel">
           <div class="trading-tabs">
-            <button class="trading-tab active">매수</button>
-            <button class="trading-tab">매도</button>
+            <button class="trading-tab active" data-side="bid">매수</button>
+            <button class="trading-tab" data-side="ask">매도</button>
           </div>
+
           <div class="trading-content">
-            <div class="trading-type">
-              <button class="trading-type-btn active">지정가</button>
-              <button class="trading-type-btn">시장가</button>
-              <button class="trading-type-btn">예약</button>
-            </div>
-            <div class="trading-input-group">
-              <label for="order-price">주문가</label>
-              <input type="text" id="order-price" placeholder="KRW" disabled />
-              <button class="price-btn">-</button>
-              <button class="price-btn">+</button>
-            </div>
-            <div class="trading-input-group">
-              <label for="order-quantity">주문수량</label>
-              <input
-                type="text"
-                id="order-quantity"
-                placeholder="BTC"
-                disabled
-              />
-              <div class="quantity-btns">
-                <button>10%</button>
-                <button>25%</button>
-                <button>50%</button>
-                <button>100%</button>
+            <div class="balance-and-type">
+              <div class="available-balance">
+                <span>주문가능</span>
+                <span id="available-amount" class="available-amount-value"
+                  >0 KRW</span
+                >
+              </div>
+
+              <div class="trading-type">
+                <button class="trading-type-btn active" data-type="limit">
+                  지정가
+                </button>
+                <button class="trading-type-btn" data-type="market">
+                  시장가
+                </button>
+                <button class="trading-type-btn disabled">예약</button>
               </div>
             </div>
-            <div class="trading-total-group">
-              <label for="order-total">주문총액</label>
-              <input type="text" id="order-total" placeholder="KRW" disabled />
+
+            <div class="trading-input-group price-input-group">
+              <label for="order-price">주문가</label>
+              <input type="text" id="order-price" placeholder="0" />
+              <div class="price-controls">
+                <select id="price-percentage-dropdown"></select>
+                <button class="price-btn minus">-</button>
+                <button class="price-btn plus">+</button>
+              </div>
             </div>
-            <button class="buy-button" disabled>매수 (미구현)</button>
-            <button class="sell-button" disabled>매도 (미구현)</button>
+
+            <div class="trading-input-group quantity-input-group">
+              <label for="order-quantity">주문수량</label>
+              <input type="text" id="order-quantity" placeholder="0" />
+              <div class="quantity-btns">
+                <button data-percent="10">10%</button>
+                <button data-percent="25">25%</button>
+                <button data-percent="50">50%</button>
+                <button data-percent="100">최대</button>
+              </div>
+            </div>
+
+            <div class="trading-input-group total-input-group">
+              <label for="order-total">주문총액</label>
+              <input type="text" id="order-total" placeholder="0" />
+            </div>
+
+            <div class="trading-input-group market-total-group hidden">
+              <label for="order-total-market">주문총액</label>
+              <input type="text" id="order-total-market" placeholder="0" />
+              <div class="quantity-btns">
+                <button data-percent="10">10%</button>
+                <button data-percent="25">25%</button>
+                <button data-percent="50">50%</button>
+                <button data-percent="100">최대</button>
+              </div>
+            </div>
+
+            <button class="trade-button bid-button">매수</button>
+            <button class="trade-button ask-button hidden">매도</button>
+          </div>
+
+          <div class="trade-history-container">
+            <div class="tabs">
+              <button id="pending-orders-tab" class="tab-button active">
+                대기 주문
+              </button>
+              <button id="filled-orders-tab" class="tab-button">
+                체결 내역
+              </button>
+              <button
+                id="refresh-all-orders"
+                class="tab-button refresh-tab"
+                title="전체 새로고침"
+              >
+                🔄
+              </button>
+            </div>
+            <div id="pending-orders-section" class="tab-content">
+              <div id="pending-orders-list" class="order-list"></div>
+            </div>
+            <div id="filled-orders-section" class="tab-content hidden">
+              <div id="filled-orders-list" class="order-list"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- 🔧 새로 추가: 사용자 정보 로딩 스크립트 -->
     <script>
-      const marketCodes = ["KRW-BTC", "KRW-ETH", "KRW-XRP"];
-      const coinNames = {
-        "KRW-BTC": "비트코인",
-        "KRW-ETH": "이더리움",
-        "KRW-XRP": "리플",
-      };
-
-      let latestTickerData = {};
-      let latestOrderbookData = {};
-      let activeCoin = "KRW-BTC";
-      let activeUnit = "60";
-      let lastUpdateTime = null;
-      let activeOrderbookType = "general"; // 'general' 또는 'grouped'
-
-      marketCodes.forEach((code) => {
-        latestTickerData[code] = {
-          trade_price: 0,
-          change_rate: 0,
-          signed_change_price: 0,
-          acc_trade_price_24h: 0,
-          high_price: 0,
-          low_price: 0,
-          prev_closing_price: 0,
-        };
-        latestOrderbookData[code] = {
-          general: null,
-          grouped: null,
-        };
-      });
-
-      const ctx = document.getElementById("coinChart").getContext("2d");
-      let mainChart = null;
-
-      async function fetchAndRenderChart() {
-        if (!activeCoin || !activeUnit) return;
+      // 사용자 정보 로딩
+      async function loadUserInfo() {
         try {
-          const response = await fetch(
-            `/api/candles?unit=${activeUnit}&market=${activeCoin}`
-          );
-          const data = await response.json();
-          const sortedData = data.reverse();
-          const chartData = sortedData.map((d) => ({
-            x: new Date(d.candle_date_time_kst).getTime(),
-            o: d.opening_price,
-            h: d.high_price,
-            l: d.low_price,
-            c: d.trade_price,
-          }));
-
-          const dataset = [
-            {
-              label: `${coinNames[activeCoin]} ${activeUnit} 캔들`,
-              data: chartData,
-              borderColor: "rgb(75, 192, 192)",
-              tension: 0.1,
-            },
-          ];
-
-          let unitForChart;
-          if (activeUnit === "1D") {
-            unitForChart = "day";
-          } else if (parseInt(activeUnit) >= 60) {
-            unitForChart = "hour";
-          } else {
-            unitForChart = "minute";
+          const response = await fetch('/api/user');
+          if (response.ok) {
+            const user = await response.json();
+            document.getElementById('user-name').textContent = 
+              user.preferred_username || user.name || user.email || '사용자';
+            
+            // 삭제 예약 사용자 알림
+            if (user.deletion_cancelled) {
+              alert('계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다.');
+            }
           }
-
-          const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                mode: "index",
-                intersect: false,
-              },
-            },
-            scales: {
-              x: {
-                type: "time",
-                time: {
-                  unit: unitForChart,
-                  displayFormats: {
-                    minute: "HH:mm",
-                    hour: "HH:mm",
-                    day: "MM-DD",
-                  },
-                },
-                title: { display: true, text: "시간", color: "white" },
-                grid: { color: "rgba(255, 255, 255, 0.1)" },
-                ticks: { color: "white" },
-              },
-              y: {
-                title: { display: true, text: "가격(KRW)", color: "white" },
-                grid: { color: "rgba(255, 255, 255, 0.1)" },
-                ticks: { color: "white" },
-              },
-            },
-          };
-
-          if (mainChart) {
-            mainChart.destroy();
-          }
-
-          mainChart = new Chart(ctx, {
-            type: "candlestick",
-            data: {
-              datasets: dataset,
-            },
-            options: chartOptions,
-          });
         } catch (error) {
-          console.error("캔들 데이터 로딩 오류:", error);
+          console.error('사용자 정보 로딩 실패:', error);
+          document.getElementById('user-name').textContent = '사용자';
         }
       }
 
-      function updateUI(code) {
-        const tabsContainer = document.getElementById("coin-tabs");
-        if (tabsContainer.children.length === 0) {
-          marketCodes.forEach((c) => {
-            const tab = document.createElement("div");
-            tab.className = `coin-tab ${c === activeCoin ? "active" : ""}`;
-            tab.innerText = coinNames[c];
-            tab.onclick = () => switchCoin(c);
-            tabsContainer.appendChild(tab);
-          });
-        }
-        document.querySelectorAll(".coin-tab").forEach((tab) => {
-          if (tab.innerText === coinNames[code]) {
-            tab.classList.add("active");
-          } else {
-            tab.classList.remove("active");
-          }
-        });
+      // 페이지 로드 시 사용자 정보 로딩
+      document.addEventListener('DOMContentLoaded', loadUserInfo);
 
-        const summaryContainer = document.getElementById("coin-summary");
-        const data = latestTickerData[code];
-        if (data) {
-          const priceChange = data.trade_price - data.prev_closing_price;
-          const changePriceClass = priceChange >= 0 ? "positive" : "negative";
-          const changeRateClass = priceChange >= 0 ? "positive" : "negative";
+      // 전역 함수로 지표 관리
+      let currentIndicators = [];
 
-          summaryContainer.innerHTML = `
-            <div class="summary-left">
-              <div class="summary-main">
-                <span class="summary-name">${coinNames[code]}</span>
-                <span class="summary-price ${changePriceClass}">${data.trade_price.toLocaleString()} KRW</span>
-              </div>
-              <div class="summary-sub">
-                <span class="${changePriceClass}">${priceChange.toLocaleString()} KRW</span>
-                <span class="${changeRateClass}">${(
-            data.change_rate * 100
-          ).toFixed(2)}%</span>
-              </div>
-            </div>
-            <div class="summary-right">
-              <div class="summary-item">
-                <span class="summary-label">고가</span>
-                <span class="summary-value">${data.high_price.toLocaleString()}</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">저가</span>
-                <span class="summary-value">${data.low_price.toLocaleString()}</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">거래대금(24H)</span>
-                <span class="summary-value">${Math.floor(
-                  data.acc_trade_price_24h
-                ).toLocaleString()}</span>
-              </div>
-            </div>
-          `;
-        }
-      }
-
-      function updateOrderbookUI(orderbook, askListId, bidListId) {
-        if (!orderbook || !orderbook.orderbook_units) return;
-        const askList = document.getElementById(askListId);
-        const bidList = document.getElementById(bidListId);
-
-        askList.innerHTML = "";
-        bidList.innerHTML = "";
-
-        const asks = orderbook.orderbook_units.sort(
-          (a, b) => b.ask_price - a.ask_price
-        );
-        const bids = orderbook.orderbook_units.sort(
-          (a, b) => b.bid_price - a.bid_price
-        );
-
-        // 상위 10개만 렌더링
-        asks.slice(0, 10).forEach((unit) => {
-          const div = document.createElement("div");
-          div.className = "orderbook-unit ask";
-          div.innerHTML = `
-            <span class="orderbook-price ask">${unit.ask_price.toLocaleString()}</span>
-            <span class="orderbook-size">${unit.ask_size.toFixed(4)}</span>
-          `;
-          askList.appendChild(div);
-        });
-
-        // 상위 10개만 렌더링
-        bids.slice(0, 10).forEach((unit) => {
-          const div = document.createElement("div");
-          div.className = "orderbook-unit bid";
-          div.innerHTML = `
-            <span class="orderbook-price bid">${unit.bid_price.toLocaleString()}</span>
-            <span class="orderbook-size">${unit.bid_size.toFixed(4)}</span>
-          `;
-          bidList.appendChild(div);
-        });
-      }
-
-      function switchCoin(code) {
-        if (activeCoin !== code) {
-          activeCoin = code;
-          updateUI(activeCoin);
-          if (activeOrderbookType === "general") {
-            updateOrderbookUI(
-              latestOrderbookData[activeCoin].general,
-              "general-ask-list",
-              "general-bid-list"
-            );
-          } else {
-            updateOrderbookUI(
-              latestOrderbookData[activeCoin].grouped,
-              "grouped-ask-list",
-              "grouped-bid-list"
-            );
-          }
-          fetchAndRenderChart();
-        }
-      }
-
-      // 호가창 타입 토글 기능
-      document
-        .getElementById("toggle-general")
-        .addEventListener("click", () => {
-          activeOrderbookType = "general";
-          document.getElementById("toggle-general").classList.add("active");
-          document.getElementById("toggle-grouped").classList.remove("active");
-          document
-            .getElementById("general-orderbook-container")
-            .classList.remove("hidden");
-          document
-            .getElementById("grouped-orderbook-container")
-            .classList.add("hidden");
-          updateOrderbookUI(
-            latestOrderbookData[activeCoin].general,
-            "general-ask-list",
-            "general-bid-list"
-          );
-        });
-
-      document
-        .getElementById("toggle-grouped")
-        .addEventListener("click", () => {
-          activeOrderbookType = "grouped";
-          document.getElementById("toggle-general").classList.remove("active");
-          document.getElementById("toggle-grouped").classList.add("active");
-          document
-            .getElementById("general-orderbook-container")
-            .classList.add("hidden");
-          document
-            .getElementById("grouped-orderbook-container")
-            .classList.remove("hidden");
-          updateOrderbookUI(
-            latestOrderbookData[activeCoin].grouped,
-            "grouped-ask-list",
-            "grouped-bid-list"
-          );
-        });
-
-      document.getElementById("time-tabs").addEventListener("click", (e) => {
-        if (e.target.tagName === "BUTTON") {
-          document
-            .querySelectorAll(".time-tab")
-            .forEach((btn) => btn.classList.remove("active"));
-          e.target.classList.add("active");
-          activeUnit = e.target.dataset.unit;
-          fetchAndRenderChart();
-        }
-      });
-
-      const ws = new WebSocket("ws://localhost:3000");
-
-      ws.onmessage = (event) => {
-        if (event.data instanceof Blob) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            handleWebSocketMessage(reader.result);
-          };
-          reader.readAsText(event.data);
-        } else {
-          handleWebSocketMessage(event.data);
-        }
-      };
-
-      function handleWebSocketMessage(data) {
-        try {
-          const upbitData = JSON.parse(data);
-
-          if (upbitData.type === "ticker") {
-            const code = upbitData.code;
-            if (marketCodes.includes(code)) {
-              latestTickerData[code] = {
-                trade_price: upbitData.trade_price,
-                change_rate: upbitData.change_rate || 0,
-                signed_change_price: upbitData.signed_change_price || 0,
-                acc_trade_price_24h: upbitData.acc_trade_price_24h || 0,
-                trade_timestamp: upbitData.trade_timestamp,
-                high_price: upbitData.high_price,
-                low_price: upbitData.low_price,
-                prev_closing_price: upbitData.prev_closing_price,
-              };
-              if (code === activeCoin) updateUI(activeCoin);
-            }
-          } else if (upbitData.type === "orderbook") {
-            const code = upbitData.code;
-            if (marketCodes.includes(code)) {
-              if (upbitData.level === 0) {
-                latestOrderbookData[code].general = upbitData;
-                if (code === activeCoin && activeOrderbookType === "general") {
-                  updateOrderbookUI(
-                    latestOrderbookData[activeCoin].general,
-                    "general-ask-list",
-                    "general-bid-list"
-                  );
-                }
-              } else {
-                latestOrderbookData[code].grouped = upbitData;
-                if (code === activeCoin && activeOrderbookType === "grouped") {
-                  updateOrderbookUI(
-                    latestOrderbookData[activeCoin].grouped,
-                    "grouped-ask-list",
-                    "grouped-bid-list"
-                  );
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.error("웹소켓 메시지 파싱 오류:", e);
-        }
-      }
-
-      function checkAndAutoUpdateChart() {
-        const now = new Date();
-        const currentMinute = now.getMinutes();
-        const currentHour = now.getHours();
-        let unitInMinutes = parseInt(activeUnit);
-
-        if (activeUnit === "1D") {
-          if (
-            currentHour === 0 &&
-            currentMinute === 0 &&
-            lastUpdateTime !== "1D-updated"
-          ) {
-            fetchAndRenderChart();
-            lastUpdateTime = "1D-updated";
-          } else if (currentHour !== 0 || currentMinute !== 0) {
-            lastUpdateTime = null;
-          }
-        } else if (unitInMinutes) {
-          const isUpdateMinute = currentMinute % unitInMinutes === 0;
-          const lastUpdateString = `${activeUnit}-${currentHour}:${currentMinute}`;
-          if (
-            isUpdateMinute &&
-            now.getSeconds() === 0 &&
-            lastUpdateTime !== lastUpdateString
-          ) {
-            fetchAndRenderChart();
-            lastUpdateTime = lastUpdateString;
-          } else if (!isUpdateMinute) {
-            lastUpdateTime = null;
+      function addIndicator(type) {
+        const app = window.TradingApp?.app();
+        if (app?.chartManager) {
+          const indicator = app.chartManager.addIndicator(type);
+          if (indicator) {
+            currentIndicators.push({ type, series: indicator });
+            console.log(`${type} 지표가 추가되었습니다.`);
           }
         }
       }
 
-      // 페이지 로드 시 초기 렌더링
-      updateUI(activeCoin);
-      fetchAndRenderChart();
-      updateOrderbookUI(
-        latestOrderbookData[activeCoin].general,
-        "general-ask-list",
-        "general-bid-list"
-      );
-
-      setInterval(checkAndAutoUpdateChart, 5000);
+      function clearIndicators() {
+        currentIndicators.forEach(({ series }) => {
+          if (series && typeof series.remove === "function") {
+            series.remove();
+          }
+        });
+        currentIndicators = [];
+        console.log("모든 지표가 제거되었습니다.");
+      }
     </script>
+
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>
