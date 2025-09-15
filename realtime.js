@@ -1,4 +1,4 @@
-// realtime.js - 통합된 실시간 거래 기능
+// realtime.js - 실시간 웹소켓 연결 및 데이터 브로드캐스팅
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
@@ -13,17 +13,12 @@ const CONFIG = {
   DEFAULT_USER: process.env.DEFAULT_USER || "testuser",
 };
 
-// KRW 유틸리티 (database.js와 동일)
+// KRW 유틸리티 사용
 const KRWUtils = db.KRWUtils;
 
-// 올바른 주문 매칭 엔진 import
-const OrderMatchingEngine = require("./trading/services/order-matching-engine");
-
-// WebSocket 매니저 클래스에서만 OrderMatchingEngine 사용
-// 중복된 클래스 정의 제거됨
 
 
-// 웹소켓 매니저 클래스
+// 실시간 데이터 웹소켓 매니저
 class WebSocketManager {
   constructor(clientWebSocketServer) {
     this.upbitWs = null;
@@ -35,9 +30,6 @@ class WebSocketManager {
     this.maxReconnectAttempts = 10;
     this.heartbeatInterval = null;
 
-    // 주문 매칭 엔진 초기화
-    this.matchingEngine = new OrderMatchingEngine(db);
-    this.matchingEngine.setWebSocketManager(this);
   }
 
   connect() {
@@ -155,17 +147,6 @@ class WebSocketManager {
       lastUpdated: Date.now(),
     };
 
-    if (data.level === 0) {
-      // 🔧 주문 매칭은 trading/managers/websocket-manager.js에서 처리됨
-      // realtime.js에서는 중복 처리 방지를 위해 비활성화
-      // setImmediate(async () => {
-      //   try {
-      //     await this.matchingEngine.processOrderbook(code, data);
-      //   } catch (error) {
-      //     console.error(`주문 매칭 처리 오류 (${code}):`, error);
-      //   }
-      // });
-    }
   }
 
   broadcastToClients(data) {
@@ -249,190 +230,13 @@ class WebSocketManager {
   }
 }
 
-// 거래 서비스 클래스
-class TradingService {
-  constructor(wsManager) {
-    this.ws = wsManager;
-  }
 
-  calculateTradeAmounts(
-    market,
-    side,
-    type,
-    normalizedPrice,
-    normalizedQuantity
-  ) {
-    let finalPrice, finalQuantity, totalAmount;
-
-    if (type === "market") {
-      const currentPrice = this.ws.getCurrentPrice(market);
-      if (!currentPrice) {
-        throw new Error("현재 시장가를 가져올 수 없습니다.");
-      }
-
-      if (side === "bid") {
-        totalAmount = KRWUtils.toInteger(normalizedPrice);
-        finalPrice = KRWUtils.toInteger(currentPrice);
-        finalQuantity = totalAmount / finalPrice;
-      } else {
-        finalQuantity = normalizedQuantity;
-        finalPrice = KRWUtils.toInteger(currentPrice);
-        totalAmount = KRWUtils.calculateTotal(finalPrice, finalQuantity);
-      }
-    } else {
-      finalPrice = KRWUtils.toInteger(normalizedPrice);
-      finalQuantity = normalizedQuantity;
-      totalAmount = KRWUtils.calculateTotal(finalPrice, finalQuantity);
-    }
-
-    return { finalPrice, finalQuantity, totalAmount };
-  }
-
-  async executeOrder(
-    market,
-    side,
-    type,
-    normalizedPrice,
-    normalizedQuantity,
-    username
-  ) {
-    const userId = await db.getUserByUsername(username);
-    if (!userId) {
-      throw new Error("사용자를 찾을 수 없습니다.");
-    }
-
-    const { finalPrice, finalQuantity, totalAmount } =
-      this.calculateTradeAmounts(
-        market,
-        side,
-        type,
-        normalizedPrice,
-        normalizedQuantity
-      );
-
-    if (type === "limit") {
-      await this.reserveBalanceForLimitOrder(
-        userId,
-        market,
-        side,
-        finalPrice,
-        finalQuantity,
-        totalAmount
-      );
-      return await db.createPendingOrder(
-        userId,
-        market,
-        side,
-        finalPrice,
-        finalQuantity,
-        totalAmount,
-        type
-      );
-    } else {
-      await db.executeTradeTransaction(
-        userId,
-        market,
-        side,
-        finalPrice,
-        finalQuantity,
-        totalAmount,
-        type
-      );
-      return {
-        market,
-        side,
-        type,
-        price: KRWUtils.toInteger(finalPrice),
-        quantity: finalQuantity,
-        totalAmount: KRWUtils.toInteger(totalAmount),
-      };
-    }
-  }
-
-  async reserveBalanceForLimitOrder(
-    userId,
-    market,
-    side,
-    price,
-    quantity,
-    totalAmount
-  ) {
-    const connection = await db.pool.getConnection();
-    try {
-      await connection.beginTransaction();
-
-      if (side === "bid") {
-        const requiredAmount = KRWUtils.toInteger(totalAmount);
-        const [balanceResult] = await connection.execute(
-          `
-          SELECT krw_balance FROM users WHERE id = ? FOR UPDATE
-        `,
-          [userId]
-        );
-
-        const currentBalance = KRWUtils.toInteger(
-          balanceResult[0]?.krw_balance || 0
-        );
-        if (currentBalance < requiredAmount) {
-          throw new Error("잔액이 부족합니다.");
-        }
-
-        const newBalance = currentBalance - requiredAmount;
-        await connection.execute(
-          `
-          UPDATE users SET krw_balance = ? WHERE id = ?
-        `,
-          [newBalance, userId]
-        );
-
-        console.log(
-          `💰 매수 주문 잔고 예약: ${requiredAmount.toLocaleString()}원 차감`
-        );
-      } else {
-        const coinName = market.split("-")[1].toLowerCase();
-        const [balanceResult] = await connection.execute(
-          `
-          SELECT ${coinName}_balance FROM users WHERE id = ? FOR UPDATE
-        `,
-          [userId]
-        );
-
-        const currentCoinBalance =
-          balanceResult[0]?.[`${coinName}_balance`] || 0;
-        if (currentCoinBalance < quantity) {
-          throw new Error("보유 코인이 부족합니다.");
-        }
-
-        const newCoinBalance = currentCoinBalance - quantity;
-        await connection.execute(
-          `
-          UPDATE users SET ${coinName}_balance = ? WHERE id = ?
-        `,
-          [newCoinBalance, userId]
-        );
-
-        console.log(
-          `🪙 매도 주문 잔고 예약: ${quantity}개 ${coinName.toUpperCase()} 차감`
-        );
-      }
-
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
-  }
-}
-
-// 메인 등록 함수
+// 실시간 시스템 등록 함수
 function registerRealtime(app, wss) {
   console.log("🚀 실시간 거래 시스템 초기화 중...");
 
   // 웹소켓 매니저 초기화
   const wsManager = new WebSocketManager(wss);
-  const tradingService = new TradingService(wsManager);
 
   // 웹소켓 연결 시작
   wsManager.connect();
@@ -461,8 +265,7 @@ function registerRealtime(app, wss) {
     });
   });
 
-  // 거래 관련 API 라우트 추가
-  setupTradingRoutes(app, tradingService);
+  // 거래 관련 API 라우트는 trading 모듈에서 처리
 
   console.log("✅ 실시간 거래 시스템 초기화 완료");
 
@@ -474,9 +277,5 @@ function registerRealtime(app, wss) {
   };
 }
 
-// 거래 관련 API 라우트 설정 - 중복 제거됨, trading 모듈에서 처리
-function setupTradingRoutes(app, tradingService) {
-  console.log("📊 거래 관련 API 라우트는 trading 모듈에서 처리됩니다.");
-}
 
 module.exports = registerRealtime;
