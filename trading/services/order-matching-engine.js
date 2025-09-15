@@ -172,29 +172,14 @@ class OrderMatchingEngine {
     }
 
     try {
-      // 🔧 매수 주문의 경우 가격 차이만큼 환불 처리
+      // 매수 주문의 경우 가격 차이만큼 환불 처리
       if (order.side === "bid" && remainingQuantity > 0) {
-        const originalOrderAmount = KRWUtils.calculateTotal(
-          order.price,
-          order.quantity
-        );
-        const executedAmount = totalAmount;
-        const remainingOrderAmount = KRWUtils.calculateTotal(
-          order.price,
-          remainingQuantity
-        );
-
-        // 부분 체결 시 남은 주문에 대한 실제 필요 금액과 예약된 금액의 차이 계산
         const priceDifference = order.price - executionPrice;
         if (priceDifference > 0) {
           const refundAmount = KRWUtils.calculateTotal(
             priceDifference,
             executedQuantity
           );
-          console.log(
-            `💰 매수 가격차이 환불: ${refundAmount.toLocaleString()}원 (주문가: ${order.price.toLocaleString()}, 체결가: ${executionPrice.toLocaleString()})`
-          );
-
           // 환불 금액을 잔고에 추가
           await this.db.adjustUserBalance(
             order.user_id,
@@ -218,24 +203,23 @@ class OrderMatchingEngine {
 
       const status = remainingQuantity <= 0 ? "filled" : "partial";
 
-      console.log(
-        `✅ 체결 완료 - 주문ID: ${
-          order.id
-        }, 체결가: ${executionPrice.toLocaleString()}, 체결량: ${executedQuantity}, 잔여량: ${remainingQuantity}, 상태: ${status}`
-      );
+      // 최종 체결시에만 로그 출력 및 알림 전송
+      if (status === "filled") {
+        console.log(`✅ [완료] ${order.market} ${order.side === 'bid' ? '매수' : '매도'} 체결 - 주문ID: ${order.id}, 체결가: ${executionPrice.toLocaleString()}원`);
 
-      // 🔧 클라이언트에게 체결 알림 전송 (WebSocket 매니저를 통해)
-      this.notifyOrderFill({
-        userId: order.user_id,
-        orderId: order.id,
-        market: order.market,
-        side: order.side,
-        executionPrice: executionPrice,
-        executedQuantity: executedQuantity,
-        remainingQuantity: remainingQuantity,
-        totalAmount: totalAmount,
-        status: status,
-      });
+        // 체결 알림 전송
+        this.notifyOrderFill({
+          userId: order.user_id,
+          orderId: order.id,
+          market: order.market,
+          side: order.side,
+          executionPrice: executionPrice,
+          executedQuantity: order.quantity, // 전체 주문 수량
+          remainingQuantity: remainingQuantity,
+          totalAmount: KRWUtils.calculateTotal(order.price, order.quantity), // 전체 주문 금액
+          status: status,
+        });
+      }
     } catch (error) {
       console.error(`❌ 거래 체결 처리 실패 (주문ID: ${order.id}):`, error);
       throw error;

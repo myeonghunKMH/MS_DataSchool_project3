@@ -6,7 +6,9 @@ const db = require("./services/database.js");
 
 // 설정값 - 통합된 설정 사용
 const CONFIG = {
-  MARKET_CODES: process.env.MARKET_CODES ? process.env.MARKET_CODES.split(',') : ["KRW-BTC", "KRW-ETH", "KRW-XRP"],
+  MARKET_CODES: process.env.MARKET_CODES
+    ? process.env.MARKET_CODES.split(",")
+    : ["KRW-BTC", "KRW-ETH", "KRW-XRP"],
   UPBIT_WS_URL: process.env.UPBIT_WS_URL || "wss://api.upbit.com/websocket/v1",
   DEFAULT_USER: process.env.DEFAULT_USER || "testuser",
 };
@@ -14,234 +16,12 @@ const CONFIG = {
 // KRW 유틸리티 (database.js와 동일)
 const KRWUtils = db.KRWUtils;
 
-// 주문 매칭 엔진 클래스
-class OrderMatchingEngine {
-  constructor(dbManager) {
-    this.db = dbManager;
-    this.isProcessing = false;
-    this.processingMarkets = new Set();
-  }
+// 올바른 주문 매칭 엔진 import
+const OrderMatchingEngine = require("./trading/services/order-matching-engine");
 
-  async processOrderbook(market, orderbookData) {
-    if (this.processingMarkets.has(market) || !orderbookData?.orderbook_units) {
-      return;
-    }
+// WebSocket 매니저 클래스에서만 OrderMatchingEngine 사용
+// 중복된 클래스 정의 제거됨
 
-    this.processingMarkets.add(market);
-
-    try {
-      const pendingOrders = await this.db.getMarketPendingOrders(market);
-      if (pendingOrders.length === 0) return;
-
-      const buyOrders = pendingOrders.filter((order) => order.side === "bid");
-      const sellOrders = pendingOrders.filter((order) => order.side === "ask");
-
-      const asks = orderbookData.orderbook_units
-        .map((unit) => ({
-          price: KRWUtils.toInteger(unit.ask_price),
-          size: unit.ask_size,
-        }))
-        .filter((ask) => ask.price > 0 && ask.size > 0);
-
-      const bids = orderbookData.orderbook_units
-        .map((unit) => ({
-          price: KRWUtils.toInteger(unit.bid_price),
-          size: unit.bid_size,
-        }))
-        .filter((bid) => bid.price > 0 && bid.size > 0);
-
-      for (const buyOrder of buyOrders) {
-        await this.matchBuyOrder(buyOrder, asks);
-      }
-
-      for (const sellOrder of sellOrders) {
-        await this.matchSellOrder(sellOrder, bids);
-      }
-    } catch (error) {
-      console.error(`❌ 주문 매칭 처리 오류 (${market}):`, error);
-    } finally {
-      this.processingMarkets.delete(market);
-    }
-  }
-
-  async matchBuyOrder(buyOrder, asks) {
-    const orderPrice = KRWUtils.toInteger(buyOrder.price);
-    const matchableAsks = asks
-      .filter((ask) => ask.price <= orderPrice)
-      .sort((a, b) => a.price - b.price);
-
-    if (matchableAsks.length === 0) return;
-
-    let remainingQuantity = buyOrder.remaining_quantity;
-
-    for (const ask of matchableAsks) {
-      if (remainingQuantity <= 0.00000001) break;
-
-      const executableQuantity = Math.min(remainingQuantity, ask.size);
-      const executionPrice = ask.price;
-
-      if (executableQuantity > 0.00000001) {
-        console.log(`💰 매수 체결: ${buyOrder.market} - 가격: ${executionPrice.toLocaleString()}, 수량: ${executableQuantity}`);
-
-        await this.executeTrade(
-          buyOrder,
-          executionPrice,
-          executableQuantity,
-          remainingQuantity - executableQuantity
-        );
-
-        remainingQuantity -= executableQuantity;
-        ask.size -= executableQuantity;
-      }
-    }
-  }
-
-  async matchSellOrder(sellOrder, bids) {
-    const orderPrice = KRWUtils.toInteger(sellOrder.price);
-    const matchableBids = bids
-      .filter((bid) => bid.price >= orderPrice)
-      .sort((a, b) => b.price - a.price);
-
-    if (matchableBids.length === 0) return;
-
-    let remainingQuantity = sellOrder.remaining_quantity;
-
-    for (const bid of matchableBids) {
-      if (remainingQuantity <= 0.00000001) break;
-
-      const executableQuantity = Math.min(remainingQuantity, bid.size);
-      const executionPrice = bid.price;
-
-      if (executableQuantity > 0.00000001) {
-        console.log(`💸 매도 체결: ${sellOrder.market} - 가격: ${executionPrice.toLocaleString()}, 수량: ${executableQuantity}`);
-
-        await this.executeTrade(
-          sellOrder,
-          executionPrice,
-          executableQuantity,
-          remainingQuantity - executableQuantity
-        );
-
-        remainingQuantity -= executableQuantity;
-        bid.size -= executableQuantity;
-      }
-    }
-  }
-
-  async executeTrade(order, executionPrice, executedQuantity, remainingQuantity) {
-    const totalAmount = KRWUtils.calculateTotal(executionPrice, executedQuantity);
-
-    if (remainingQuantity < 0.00000001) {
-      remainingQuantity = 0;
-    }
-
-    try {
-      await this.executeOrderFillTransaction(
-        order.user_id,
-        order.id,
-        order.market,
-        order.side,
-        executionPrice,
-        executedQuantity,
-        totalAmount,
-        remainingQuantity
-      );
-
-      const status = remainingQuantity <= 0 ? "filled" : "partial";
-      
-      // 체결 알림 전송
-      if (this.wsManager) {
-        this.wsManager.broadcastOrderFillNotification(order.user_id, {
-          userId: order.user_id,
-          orderId: order.id,
-          market: order.market,
-          side: order.side,
-          executionPrice: executionPrice,
-          executedQuantity: executedQuantity,
-          remainingQuantity: remainingQuantity,
-          totalAmount: totalAmount,
-          status: status,
-        });
-      }
-
-      console.log(`✅ 체결 완료 - 주문ID: ${order.id}, 체결가: ${executionPrice.toLocaleString()}, 상태: ${status}`);
-    } catch (error) {
-      console.error(`❌ 거래 체결 처리 실패 (주문ID: ${order.id}):`, error);
-      throw error;
-    }
-  }
-
-  async executeOrderFillTransaction(userId, orderId, market, side, executionPrice, executedQuantity, totalAmount, remainingQuantity) {
-    const connection = await db.pool.getConnection();
-    try {
-      await connection.beginTransaction();
-
-      const coinName = market.split("-")[1].toLowerCase();
-
-      if (side === "bid") {
-        await connection.execute(`
-          UPDATE users 
-          SET ${coinName}_balance = ${coinName}_balance + ?
-          WHERE id = ?
-        `, [executedQuantity, userId]);
-
-        // 가격 차이 환불 처리
-        const priceDifference = await this.getPriceDifference(connection, orderId, executionPrice);
-        if (priceDifference > 0) {
-          const refundAmount = KRWUtils.calculateTotal(priceDifference, executedQuantity);
-          await connection.execute(`
-            UPDATE users 
-            SET krw_balance = krw_balance + ?
-            WHERE id = ?
-          `, [refundAmount, userId]);
-          console.log(`💰 매수 가격차이 환불: ${refundAmount.toLocaleString()}원`);
-        }
-      } else {
-        await connection.execute(`
-          UPDATE users 
-          SET krw_balance = krw_balance + ?
-          WHERE id = ?
-        `, [KRWUtils.toInteger(totalAmount), userId]);
-      }
-
-      await connection.execute(`
-        INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type) 
-        VALUES (?, ?, ?, ?, ?, ?, 'limit')
-      `, [userId, market, side, KRWUtils.toInteger(executionPrice), executedQuantity, KRWUtils.toInteger(totalAmount)]);
-
-      const newStatus = remainingQuantity <= 0.00000001 ? "filled" : "partial";
-
-      await connection.execute(`
-        UPDATE pending_orders 
-        SET remaining_quantity = ?, status = ?, updated_at = NOW()
-        WHERE id = ?
-      `, [remainingQuantity, newStatus, orderId]);
-
-      await connection.commit();
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
-  }
-
-  async getPriceDifference(connection, orderId, executionPrice) {
-    const [rows] = await connection.execute(`
-      SELECT price FROM pending_orders WHERE id = ?
-    `, [orderId]);
-    
-    if (rows.length > 0) {
-      const orderPrice = rows[0].price;
-      return Math.max(0, orderPrice - executionPrice);
-    }
-    return 0;
-  }
-
-  setWebSocketManager(wsManager) {
-    this.wsManager = wsManager;
-  }
-}
 
 // 웹소켓 매니저 클래스
 class WebSocketManager {
@@ -276,7 +56,9 @@ class WebSocketManager {
     };
 
     this.upbitWs.onclose = (event) => {
-      console.log(`⚠️ 업비트 웹소켓 연결이 끊어졌습니다. 코드: ${event.code}, 이유: ${event.reason}`);
+      console.log(
+        `⚠️ 업비트 웹소켓 연결이 끊어졌습니다. 코드: ${event.code}, 이유: ${event.reason}`
+      );
       this.isConnected = false;
       this.stopHeartbeat();
       this.handleReconnection();
@@ -293,7 +75,11 @@ class WebSocketManager {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
 
-      console.log(`재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts} (${delay / 1000}초 후)`);
+      console.log(
+        `재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts} (${
+          delay / 1000
+        }초 후)`
+      );
 
       setTimeout(() => this.connect(), delay);
     } else {
@@ -370,13 +156,15 @@ class WebSocketManager {
     };
 
     if (data.level === 0) {
-      setImmediate(async () => {
-        try {
-          await this.matchingEngine.processOrderbook(code, data);
-        } catch (error) {
-          console.error(`주문 매칭 처리 오류 (${code}):`, error);
-        }
-      });
+      // 🔧 주문 매칭은 trading/managers/websocket-manager.js에서 처리됨
+      // realtime.js에서는 중복 처리 방지를 위해 비활성화
+      // setImmediate(async () => {
+      //   try {
+      //     await this.matchingEngine.processOrderbook(code, data);
+      //   } catch (error) {
+      //     console.error(`주문 매칭 처리 오류 (${code}):`, error);
+      //   }
+      // });
     }
   }
 
@@ -408,7 +196,9 @@ class WebSocketManager {
       },
     };
 
-    console.log(`📢 체결 알림 브로드캐스트: 사용자 ${userId}, ${orderDetails.market} ${orderDetails.side}`);
+    console.log(
+      `📢 체결 알림 브로드캐스트: 사용자 ${userId}, ${orderDetails.market} ${orderDetails.side}`
+    );
 
     this.clientWss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
@@ -433,7 +223,9 @@ class WebSocketManager {
   getIntegerPrices() {
     const integerPrices = {};
     Object.keys(this.currentMarketPrices).forEach((market) => {
-      integerPrices[market] = KRWUtils.toInteger(this.currentMarketPrices[market]);
+      integerPrices[market] = KRWUtils.toInteger(
+        this.currentMarketPrices[market]
+      );
     });
     return integerPrices;
   }
@@ -463,7 +255,13 @@ class TradingService {
     this.ws = wsManager;
   }
 
-  calculateTradeAmounts(market, side, type, normalizedPrice, normalizedQuantity) {
+  calculateTradeAmounts(
+    market,
+    side,
+    type,
+    normalizedPrice,
+    normalizedQuantity
+  ) {
     let finalPrice, finalQuantity, totalAmount;
 
     if (type === "market") {
@@ -490,23 +288,60 @@ class TradingService {
     return { finalPrice, finalQuantity, totalAmount };
   }
 
-  async executeOrder(market, side, type, normalizedPrice, normalizedQuantity, username) {
+  async executeOrder(
+    market,
+    side,
+    type,
+    normalizedPrice,
+    normalizedQuantity,
+    username
+  ) {
     const userId = await db.getUserByUsername(username);
     if (!userId) {
       throw new Error("사용자를 찾을 수 없습니다.");
     }
 
-    const { finalPrice, finalQuantity, totalAmount } = this.calculateTradeAmounts(
-      market, side, type, normalizedPrice, normalizedQuantity
-    );
+    const { finalPrice, finalQuantity, totalAmount } =
+      this.calculateTradeAmounts(
+        market,
+        side,
+        type,
+        normalizedPrice,
+        normalizedQuantity
+      );
 
     if (type === "limit") {
-      await this.reserveBalanceForLimitOrder(userId, market, side, finalPrice, finalQuantity, totalAmount);
-      return await db.createPendingOrder(userId, market, side, finalPrice, finalQuantity, totalAmount, type);
+      await this.reserveBalanceForLimitOrder(
+        userId,
+        market,
+        side,
+        finalPrice,
+        finalQuantity,
+        totalAmount
+      );
+      return await db.createPendingOrder(
+        userId,
+        market,
+        side,
+        finalPrice,
+        finalQuantity,
+        totalAmount,
+        type
+      );
     } else {
-      await db.executeTradeTransaction(userId, market, side, finalPrice, finalQuantity, totalAmount, type);
+      await db.executeTradeTransaction(
+        userId,
+        market,
+        side,
+        finalPrice,
+        finalQuantity,
+        totalAmount,
+        type
+      );
       return {
-        market, side, type,
+        market,
+        side,
+        type,
         price: KRWUtils.toInteger(finalPrice),
         quantity: finalQuantity,
         totalAmount: KRWUtils.toInteger(totalAmount),
@@ -514,45 +349,71 @@ class TradingService {
     }
   }
 
-  async reserveBalanceForLimitOrder(userId, market, side, price, quantity, totalAmount) {
+  async reserveBalanceForLimitOrder(
+    userId,
+    market,
+    side,
+    price,
+    quantity,
+    totalAmount
+  ) {
     const connection = await db.pool.getConnection();
     try {
       await connection.beginTransaction();
 
       if (side === "bid") {
         const requiredAmount = KRWUtils.toInteger(totalAmount);
-        const [balanceResult] = await connection.execute(`
+        const [balanceResult] = await connection.execute(
+          `
           SELECT krw_balance FROM users WHERE id = ? FOR UPDATE
-        `, [userId]);
+        `,
+          [userId]
+        );
 
-        const currentBalance = KRWUtils.toInteger(balanceResult[0]?.krw_balance || 0);
+        const currentBalance = KRWUtils.toInteger(
+          balanceResult[0]?.krw_balance || 0
+        );
         if (currentBalance < requiredAmount) {
           throw new Error("잔액이 부족합니다.");
         }
 
         const newBalance = currentBalance - requiredAmount;
-        await connection.execute(`
+        await connection.execute(
+          `
           UPDATE users SET krw_balance = ? WHERE id = ?
-        `, [newBalance, userId]);
+        `,
+          [newBalance, userId]
+        );
 
-        console.log(`💰 매수 주문 잔고 예약: ${requiredAmount.toLocaleString()}원 차감`);
+        console.log(
+          `💰 매수 주문 잔고 예약: ${requiredAmount.toLocaleString()}원 차감`
+        );
       } else {
         const coinName = market.split("-")[1].toLowerCase();
-        const [balanceResult] = await connection.execute(`
+        const [balanceResult] = await connection.execute(
+          `
           SELECT ${coinName}_balance FROM users WHERE id = ? FOR UPDATE
-        `, [userId]);
+        `,
+          [userId]
+        );
 
-        const currentCoinBalance = balanceResult[0]?.[`${coinName}_balance`] || 0;
+        const currentCoinBalance =
+          balanceResult[0]?.[`${coinName}_balance`] || 0;
         if (currentCoinBalance < quantity) {
           throw new Error("보유 코인이 부족합니다.");
         }
 
         const newCoinBalance = currentCoinBalance - quantity;
-        await connection.execute(`
+        await connection.execute(
+          `
           UPDATE users SET ${coinName}_balance = ? WHERE id = ?
-        `, [newCoinBalance, userId]);
+        `,
+          [newCoinBalance, userId]
+        );
 
-        console.log(`🪙 매도 주문 잔고 예약: ${quantity}개 ${coinName.toUpperCase()} 차감`);
+        console.log(
+          `🪙 매도 주문 잔고 예약: ${quantity}개 ${coinName.toUpperCase()} 차감`
+        );
       }
 
       await connection.commit();
@@ -583,10 +444,12 @@ function registerRealtime(app, wss) {
 
     const prices = wsManager.getIntegerPrices();
     if (Object.keys(prices).length > 0) {
-      ws.send(JSON.stringify({
-        type: "initial_prices",
-        data: prices,
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "initial_prices",
+          data: prices,
+        })
+      );
     }
 
     ws.on("close", () => {
@@ -607,7 +470,7 @@ function registerRealtime(app, wss) {
   return {
     close: () => {
       wsManager.close();
-    }
+    },
   };
 }
 
