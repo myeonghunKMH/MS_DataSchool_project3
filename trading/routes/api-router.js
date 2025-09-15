@@ -27,7 +27,7 @@ class APIRouter {
 
   async getBalance(req, res) {
     try {
-      const balance = await this.db.getUserBalance(CONFIG.DEFAULT_USER);
+      const balance = await this.db.getUserBalance(req.user.username);
 
       if (!balance) {
         return res.status(404).json({
@@ -68,6 +68,7 @@ class APIRouter {
 
     try {
       const orderDetails = await this.trading.executeOrder(
+        req.user.id,
         market,
         side,
         type,
@@ -161,13 +162,7 @@ class APIRouter {
     const { limit = 50, offset = 0 } = req.query;
 
     try {
-      const userId = await this.db.getUserById(CONFIG.DEFAULT_USER);
-      if (!userId) {
-        return res.status(404).json({
-          error: "사용자를 찾을 수 없습니다.",
-          code: "USER_NOT_FOUND",
-        });
-      }
+      const userId = req.user.id;
 
       const transactions = await this.db.getUserTransactions(
         userId,
@@ -190,13 +185,7 @@ class APIRouter {
   }
   async getPendingOrders(req, res) {
     try {
-      const userId = await this.db.getUserById(CONFIG.DEFAULT_USER);
-      if (!userId) {
-        return res.status(404).json({
-          error: "사용자를 찾을 수 없습니다.",
-          code: "USER_NOT_FOUND",
-        });
-      }
+      const userId = req.user.id;
 
       const orders = await this.db.getUserPendingOrders(userId);
       res.json(orders);
@@ -219,13 +208,7 @@ class APIRouter {
         });
       }
 
-      const userId = await this.db.getUserById(CONFIG.DEFAULT_USER);
-      if (!userId) {
-        return res.status(404).json({
-          error: "사용자를 찾을 수 없습니다.",
-          code: "USER_NOT_FOUND",
-        });
-      }
+      const userId = req.user.id;
 
       const result = await this.db.cancelPendingOrder(
         userId,

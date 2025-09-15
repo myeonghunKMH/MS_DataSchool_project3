@@ -1,0 +1,19 @@
+{
+  "sqltools.connections": [
+    {
+      "mysqlOptions": {
+        "authProtocol": "default",
+        "enableSsl": "Disabled"
+      },
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "39.117.10.117",
+      "port": 33306,
+      "driver": "MariaDB",
+      "username": "remoteuser",
+      "database": "RT_trading_db",
+      "name": "MariaDB",
+      "askForPassword": true
+    }
+  ]
+}

@@ -115,6 +115,7 @@ export class TradingManager {
       const response = await fetch("/api/trade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify(orderData),
       });
 
@@ -334,7 +335,9 @@ export class TradingManager {
 
   async fetchUserBalance() {
     try {
-      const response = await fetch("/api/balance");
+      const response = await fetch("/api/balance", {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error("잔고 정보를 가져오는 데 실패했습니다.");
       }
@@ -356,7 +359,9 @@ export class TradingManager {
 
   async fetchFilledOrders() {
     try {
-      const response = await fetch("/api/transactions");
+      const response = await fetch("/api/transactions", {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error("거래 내역을 가져오는 데 실패했습니다.");
       }
@@ -374,7 +379,9 @@ export class TradingManager {
 
   async fetchPendingOrders() {
     try {
-      const response = await fetch("/api/pending-orders");
+      const response = await fetch("/api/pending-orders", {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error("대기 주문을 가져오는 데 실패했습니다.");
       }

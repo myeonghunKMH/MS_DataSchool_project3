@@ -99,7 +99,7 @@ async function initializeUserTradingBalance(user) {
     await db.pool.execute(`
       UPDATE users 
       SET 
-        krw_balance = COALESCE(krw_balance, 1000000),
+        krw_balance = COALESCE(krw_balance, 10000000),
         btc_balance = COALESCE(btc_balance, 0.00000000),
         eth_balance = COALESCE(eth_balance, 0.00000000),
         xrp_balance = COALESCE(xrp_balance, 0.00000000)
@@ -188,18 +188,34 @@ registerQnaRoutes(app);
 
 // ===== 실시간 거래 모듈 연결 (trading 통합) =====
 let tradingWebSocketManager = null;
+let tradingService = null;
 try {
   const APIRouter = require('./trading/routes/api-router');
   const TradingService = require('./trading/services/trading-service');
-  
+
   // DB 매니저와 서비스 초기화
-  const tradingService = new TradingService(db, null); // WebSocket 매니저는 나중에 설정
+  tradingService = new TradingService(db, null); // WebSocket 매니저는 나중에 설정
   const apiRouter = new APIRouter(db, tradingService);
   
-  // API 라우터 등록
-  app.use('/api', apiRouter.router);
+  // API 라우터 등록 (키클락 인증 적용)
+  app.use('/api', keycloak.protect(), apiRouter.router);
   
   console.log('✅ Trading 모듈이 성공적으로 통합되었습니다.');
+
+  // 키클락 사용자 동기화 실행 (서버 시작 시)
+  db.syncKeycloakUsers()
+    .then(() => console.log('✅ 키클락 사용자 동기화 완료'))
+    .catch(syncError => console.error('⚠️ 키클락 사용자 동기화 실패:', syncError.message));
+
+  // 키클락 사용자 정기 동기화 (30분마다)
+  setInterval(async () => {
+    try {
+      console.log('🔄 정기 키클락 사용자 동기화 실행...');
+      await db.syncKeycloakUsers();
+    } catch (syncError) {
+      console.error('⚠️ 정기 키클락 사용자 동기화 실패:', syncError.message);
+    }
+  }, 30 * 60 * 1000); // 30분
 } catch (error) {
   console.error('❌ Trading 모듈 통합 실패:', error.message);
   console.log('⚠️ 기본 realtime.js 모듈로 대체합니다.');
@@ -222,6 +238,13 @@ if (tradingWebSocketManager === null) {
     const WebSocketManager = require('./trading/managers/websocket-manager');
     tradingWebSocketManager = new WebSocketManager(wss, db);
     tradingWebSocketManager.connect();
+
+    // TradingService에 WebSocket 매니저 연결
+    if (tradingService) {
+      tradingService.setWebSocketManager(tradingWebSocketManager);
+      console.log('✅ TradingService에 WebSocket 매니저가 연결되었습니다.');
+    }
+
     console.log('✅ Trading WebSocket 매니저가 초기화되었습니다.');
   } catch (error) {
     console.error('❌ Trading WebSocket 매니저 초기화 실패:', error.message);
@@ -247,7 +270,7 @@ async function initializeUserTradingBalance(user) {
     await db.pool.execute(`
       UPDATE users 
       SET 
-        krw_balance = COALESCE(krw_balance, 1000000),
+        krw_balance = COALESCE(krw_balance, 10000000),
         btc_balance = COALESCE(btc_balance, 0.00000000),
         eth_balance = COALESCE(eth_balance, 0.00000000),
         xrp_balance = COALESCE(xrp_balance, 0.00000000)
