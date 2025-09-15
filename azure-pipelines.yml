@@ -107,7 +107,12 @@ stages:
                   --from-literal=SMTP_FROM_EMAIL='$(SMTP-FROM-EMAIL)' \
                   --from-literal=DEFAULT_USER='$(DEFAULT-USER)' \
                   --from-literal=UPBIT_WS_URL='$(UPBIT-WS-URL)' \
-                  --from-literal=MARKET_CODES='$(MARKET-CODES)'
+                  --from-literal=MARKET_CODES='$(MARKET-CODES)' \
+                  --from-literal=AZURE_MYSQL_HOST='$(AZURE-MYSQL-HOST)' \
+                  --from-literal=AZURE_MYSQL_PORT='$(AZURE-MYSQL-PORT)' \
+                  --from-literal=AZURE_MYSQL_USER='$(AZURE-MYSQL-USER)' \
+                  --from-literal=AZURE_MYSQL_PASSWORD='$(AZURE-MYSQL-PASSWORD)' \
+                  --from-literal=AZURE_MYSQL_DATABASE='$(AZURE-MYSQL-DATABASE)'
 
                 echo "Replacing image token in deployment.yaml"...
                 sed -i "s#__imageFullName__#$(imageFullName)#g" $(Pipeline.Workspace)/manifests/deployment.yaml
