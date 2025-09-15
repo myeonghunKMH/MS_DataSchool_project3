@@ -5,7 +5,35 @@ class TradingService {
   constructor(dbManager, wsManager) {
     this.db = dbManager;
     this.ws = wsManager;
+
+    console.log('🔍 TradingService 초기화 중...');
+    console.log('  dbManager:', !!dbManager);
+    console.log('  dbManager.KRWUtils:', !!dbManager?.KRWUtils);
+
     this.KRWUtils = dbManager.KRWUtils; // 데이터베이스의 KRWUtils 사용
+
+    if (!this.KRWUtils) {
+      console.error('❌ KRWUtils가 dbManager에서 사용할 수 없습니다!');
+      // 임시로 로컬 KRWUtils 생성
+      this.KRWUtils = {
+        toInteger(amount) {
+          const num = Number(amount) || 0;
+          return Math.floor(Math.abs(num)) * Math.sign(num);
+        },
+        calculateTotal(price, quantity) {
+          const total = Number(price) * Number(quantity);
+          return this.toInteger(total);
+        }
+      };
+      console.log('✅ 임시 KRWUtils 생성됨');
+    } else {
+      console.log('✅ KRWUtils 초기화 성공');
+    }
+  }
+
+  // WebSocket 매니저 설정 (나중에 초기화된 후 호출)
+  setWebSocketManager(wsManager) {
+    this.ws = wsManager;
   }
 
   calculateTradeAmounts(
@@ -48,11 +76,7 @@ class TradingService {
     return { finalPrice, finalQuantity, totalAmount };
   }
 
-  async executeOrder(market, side, type, normalizedPrice, normalizedQuantity) {
-    const userId = await this.db.getUserById(CONFIG.DEFAULT_USER);
-    if (!userId) {
-      throw new Error("사용자를 찾을 수 없습니다.");
-    }
+  async executeOrder(userId, market, side, type, normalizedPrice, normalizedQuantity) {
 
     const { finalPrice, finalQuantity, totalAmount } =
       this.calculateTradeAmounts(
@@ -99,9 +123,9 @@ class TradingService {
         market,
         side,
         type,
-        price: KRWUtils.toInteger(finalPrice),
+        price: this.KRWUtils.toInteger(finalPrice),
         quantity: finalQuantity,
-        totalAmount: KRWUtils.toInteger(totalAmount),
+        totalAmount: this.KRWUtils.toInteger(totalAmount),
       };
     }
   }
@@ -117,33 +141,38 @@ class TradingService {
     quantity,
     totalAmount
   ) {
-    const sql = require("mssql");
-    const request = new sql.Request(this.db.pool);
+    const connection = await this.db.pool.getConnection();
 
-    request.input("userId", sql.Int, userId);
+    try {
+      await connection.beginTransaction();
 
     if (side === "bid") {
       // 매수 주문: KRW 잔고에서 총액만큼 차감
-      const requiredAmount = KRWUtils.toInteger(totalAmount);
+      const requiredAmount = this.KRWUtils.toInteger(totalAmount);
 
       // 현재 잔고 확인
-      const balanceResult = await request.query(`
-        SELECT krw_balance FROM users WITH (UPDLOCK) WHERE id = @userId
-      `);
+      const [balanceRows] = await connection.execute(`
+        SELECT krw_balance FROM users WHERE id = ? FOR UPDATE
+      `, [userId]);
 
-      const currentBalance = KRWUtils.toInteger(
-        balanceResult.recordset[0]?.krw_balance || 0
+      const currentBalance = this.KRWUtils.toInteger(
+        balanceRows[0]?.krw_balance || 0
       );
 
+      console.log(`💰 잔고 확인 - 사용자 ID: ${userId}`);
+      console.log(`💰 현재 잔고: ${currentBalance.toLocaleString()}원`);
+      console.log(`💰 필요 금액: ${requiredAmount.toLocaleString()}원`);
+      console.log(`💰 잔고 데이터:`, balanceRows[0]);
+
       if (currentBalance < requiredAmount) {
-        throw new Error("잔액이 부족합니다.");
+        throw new Error(`잔액이 부족합니다. 현재 잔고: ${currentBalance.toLocaleString()}원, 필요 금액: ${requiredAmount.toLocaleString()}원`);
       }
 
       const newBalance = currentBalance - requiredAmount;
 
-      await request.input("newBalance", sql.Decimal(18, 0), newBalance).query(`
-          UPDATE users SET krw_balance = @newBalance WHERE id = @userId
-        `);
+      await connection.execute(`
+        UPDATE users SET krw_balance = ? WHERE id = ?
+      `, [newBalance, userId]);
 
       console.log(
         `💰 매수 주문 잔고 예약: ${requiredAmount.toLocaleString()}원 차감 (잔여: ${newBalance.toLocaleString()}원)`
@@ -153,12 +182,11 @@ class TradingService {
       const coinName = market.split("-")[1].toLowerCase();
 
       // 현재 코인 잔고 확인
-      const balanceResult = await request.query(`
-        SELECT ${coinName}_balance FROM users WITH (UPDLOCK) WHERE id = @userId
-      `);
+      const [balanceRows] = await connection.execute(`
+        SELECT ${coinName}_balance FROM users WHERE id = ? FOR UPDATE
+      `, [userId]);
 
-      const currentCoinBalance =
-        balanceResult.recordset[0]?.[`${coinName}_balance`] || 0;
+      const currentCoinBalance = balanceRows[0]?.[`${coinName}_balance`] || 0;
 
       if (currentCoinBalance < quantity) {
         throw new Error("보유 코인이 부족합니다.");
@@ -166,14 +194,21 @@ class TradingService {
 
       const newCoinBalance = currentCoinBalance - quantity;
 
-      await request.input("newCoinBalance", sql.Decimal(18, 8), newCoinBalance)
-        .query(`
-          UPDATE users SET ${coinName}_balance = @newCoinBalance WHERE id = @userId
-        `);
+      await connection.execute(`
+        UPDATE users SET ${coinName}_balance = ? WHERE id = ?
+      `, [newCoinBalance, userId]);
 
       console.log(
         `🪙 매도 주문 잔고 예약: ${quantity}개 ${coinName.toUpperCase()} 차감 (잔여: ${newCoinBalance}개)`
       );
+    }
+
+    await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
     }
   }
 }

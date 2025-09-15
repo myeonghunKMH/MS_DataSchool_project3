@@ -49,6 +49,10 @@ const tradingPool = makePool(tradingDbName);
 const qnaDbName = process.env.QNA_DB_NAME || 'qna';
 const qnaPool = makePool(qnaDbName);
 
+// 키클락 DB 전용
+const keycloakDbName = process.env.KEYCLOAK_DB_NAME || 'keycloak';
+const keycloakPool = makePool(keycloakDbName);
+
 // === 유틸 ===
 async function healthcheck(dbPool) {
   try {
@@ -233,8 +237,8 @@ const KRWUtils = {
 async function getUserByUsername(username) {
   try {
     const [rows] = await pool.execute(
-      "SELECT id FROM users WHERE username = ? OR email = ?", 
-      [username, username]
+      "SELECT id FROM users WHERE username = ?",
+      [username]
     );
     return rows[0]?.id || null;
   } catch (error) {
@@ -246,10 +250,10 @@ async function getUserByUsername(username) {
 async function getUserBalance(username) {
   try {
     const [rows] = await pool.execute(`
-      SELECT krw_balance, btc_balance, eth_balance, xrp_balance 
-      FROM users 
-      WHERE username = ? OR email = ?
-    `, [username, username]);
+      SELECT krw_balance, btc_balance, eth_balance, xrp_balance
+      FROM users
+      WHERE username = ?
+    `, [username]);
     return rows[0] || null;
   } catch (error) {
     console.error("getUserBalance 오류:", error);
@@ -430,61 +434,177 @@ async function executeTradeTransaction(userId, market, side, finalPrice, finalQu
 }
 
 async function processBuyOrder(connection, userId, coinName, totalAmount, finalQuantity) {
-  const [balanceRows] = await connection.execute(`
-    SELECT krw_balance 
-    FROM users WHERE id = ? FOR UPDATE
-  `, [userId]);
+  // crypto_data에서 잔고 확인 (pool 사용)
+  const poolConnection = await pool.getConnection();
+  try {
+    const [balanceRows] = await poolConnection.execute(`
+      SELECT krw_balance
+      FROM users WHERE id = ? FOR UPDATE
+    `, [userId]);
 
-  const currentBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
-  const requiredAmount = KRWUtils.toInteger(totalAmount);
+    const currentBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
+    const requiredAmount = KRWUtils.toInteger(totalAmount);
 
-  if (currentBalance < requiredAmount) {
-    throw new Error("잔액이 부족합니다.");
+    console.log(`💰 시장가 매수 잔고 확인 - 사용자 ID: ${userId}`);
+    console.log(`💰 현재 잔고: ${currentBalance.toLocaleString()}원`);
+    console.log(`💰 필요 금액: ${requiredAmount.toLocaleString()}원`);
+
+    if (currentBalance < requiredAmount) {
+      throw new Error(`잔액이 부족합니다. 현재 잔고: ${currentBalance.toLocaleString()}원, 필요 금액: ${requiredAmount.toLocaleString()}원`);
+    }
+
+    const newKrwBalance = currentBalance - requiredAmount;
+
+    // crypto_data에서 잔고 차감
+    await poolConnection.execute(`
+      UPDATE users SET krw_balance = ? WHERE id = ?
+    `, [newKrwBalance, userId]);
+
+  } finally {
+    poolConnection.release();
   }
 
-  const newKrwBalance = currentBalance - requiredAmount;
-
-  await connection.execute(`
-    UPDATE users 
-    SET krw_balance = ?, 
-        ${coinName}_balance = ${coinName}_balance + ? 
-    WHERE id = ?
-  `, [newKrwBalance, finalQuantity, userId]);
+  // crypto_data에서 코인 잔고 증가
+  const cryptoConnection = await pool.getConnection();
+  try {
+    await cryptoConnection.execute(`
+      UPDATE users
+      SET ${coinName}_balance = ${coinName}_balance + ?
+      WHERE id = ?
+    `, [finalQuantity, userId]);
+  } finally {
+    cryptoConnection.release();
+  }
 }
 
 async function processSellOrder(connection, userId, coinName, finalQuantity, totalAmount) {
-  const [balanceRows] = await connection.execute(`
-    SELECT ${coinName}_balance, krw_balance 
-    FROM users WHERE id = ? FOR UPDATE
-  `, [userId]);
+  // crypto_data에서 잔고 확인 및 업데이트
+  const poolConnection = await pool.getConnection();
+  try {
+    const [balanceRows] = await poolConnection.execute(`
+      SELECT ${coinName}_balance, krw_balance
+      FROM users WHERE id = ? FOR UPDATE
+    `, [userId]);
 
-  const currentCoinBalance = balanceRows[0]?.[`${coinName}_balance`] || 0;
-  const currentKrwBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
+    const currentCoinBalance = balanceRows[0]?.[`${coinName}_balance`] || 0;
+    const currentKrwBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
 
-  if (currentCoinBalance < finalQuantity) {
-    throw new Error("보유 코인이 부족합니다.");
+    console.log(`💰 시장가 매도 잔고 확인 - 사용자 ID: ${userId}`);
+    console.log(`💰 현재 ${coinName.toUpperCase()} 잔고: ${currentCoinBalance}개`);
+    console.log(`💰 매도 수량: ${finalQuantity}개`);
+    console.log(`💰 받을 금액: ${KRWUtils.toInteger(totalAmount).toLocaleString()}원`);
+
+    if (currentCoinBalance < finalQuantity) {
+      throw new Error(`보유 코인이 부족합니다. 현재 잔고: ${currentCoinBalance}개, 매도 수량: ${finalQuantity}개`);
+    }
+
+    const addAmount = KRWUtils.toInteger(totalAmount);
+    const newKrwBalance = currentKrwBalance + addAmount;
+
+    // crypto_data에서 잔고 업데이트
+    await poolConnection.execute(`
+      UPDATE users
+      SET krw_balance = ?,
+          ${coinName}_balance = ${coinName}_balance - ?
+      WHERE id = ?
+    `, [newKrwBalance, finalQuantity, userId]);
+
+  } finally {
+    poolConnection.release();
   }
+}
 
-  const addAmount = KRWUtils.toInteger(totalAmount);
-  const newKrwBalance = currentKrwBalance + addAmount;
+// ============== 키클락 동기화 함수 추가 ===============
 
-  await connection.execute(`
-    UPDATE users 
-    SET krw_balance = ?, 
-        ${coinName}_balance = ${coinName}_balance - ? 
-    WHERE id = ?
-  `, [newKrwBalance, finalQuantity, userId]);
+// 키클락 USER_ENTITY에서 사용자 정보 가져오기
+async function getKeycloakUsers() {
+  try {
+    const [rows] = await keycloakPool.execute(`
+      SELECT ID, USERNAME, EMAIL, CREATED_TIMESTAMP, ENABLED
+      FROM USER_ENTITY
+      WHERE REALM_ID = 'itc'
+    `);
+    return rows;
+  } catch (error) {
+    console.error("키클락 사용자 조회 오류:", error);
+    return [];
+  }
+}
+
+// crypto_data.users 테이블에서 기존 키클락 사용자 확인
+async function getExistingKeycloakUsers() {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT keycloak_uuid, username
+      FROM users
+      WHERE keycloak_uuid IS NOT NULL
+    `);
+    return new Set(rows.map(row => row.keycloak_uuid));
+  } catch (error) {
+    console.error("기존 키클락 사용자 조회 오류:", error);
+    return new Set();
+  }
+}
+
+// 키클락 사용자를 crypto_data.users에 동기화
+async function syncKeycloakUsers() {
+  try {
+    console.log("🔄 키클락 사용자 동기화 시작...");
+
+    const keycloakUsers = await getKeycloakUsers();
+    const existingUsers = await getExistingKeycloakUsers();
+
+    let syncCount = 0;
+
+    for (const kcUser of keycloakUsers) {
+      // 이미 존재하는 사용자는 건너뛰기
+      if (existingUsers.has(kcUser.ID)) {
+        continue;
+      }
+
+      // 새 사용자 생성
+      try {
+        const [result] = await pool.execute(`
+          INSERT INTO users (keycloak_uuid, username, created_at)
+          VALUES (?, ?, NOW())
+        `, [kcUser.ID, kcUser.USERNAME]);
+
+        // 초기 거래 잔고 설정
+        await pool.execute(`
+          UPDATE users
+          SET
+            krw_balance = 10000000,
+            btc_balance = 0.00000000,
+            eth_balance = 0.00000000,
+            xrp_balance = 0.00000000
+          WHERE id = ?
+        `, [result.insertId]);
+
+        syncCount++;
+        console.log(`✅ 새 사용자 동기화: ${kcUser.USERNAME} (${kcUser.ID})`);
+      } catch (insertError) {
+        console.error(`❌ 사용자 동기화 실패: ${kcUser.USERNAME}`, insertError.message);
+      }
+    }
+
+    console.log(`🎉 키클락 동기화 완료: ${syncCount}명의 새 사용자 추가`);
+    return syncCount;
+  } catch (error) {
+    console.error("키클락 동기화 오류:", error);
+    throw error;
+  }
 }
 
 // 거래 관련 함수들을 exports에 추가
 module.exports = {
   ...module.exports, // 기존 exports 유지
-  
+
   // DB 풀들
   pool,           // crypto_data (기본)
   tradingPool,    // RT_trading_db (거래 전용)
   qnaPool,        // qna (Q&A 전용)
-  
+  keycloakPool,   // keycloak (키클락 전용)
+
   // 거래 관련 함수들 추가
   KRWUtils,
   getUserByUsername,
@@ -496,5 +616,13 @@ module.exports = {
   cancelPendingOrder,
   executeTradeTransaction,
   processBuyOrder,
-  processSellOrder
+  processSellOrder,
+
+  // 키클락 동기화 함수들
+  getKeycloakUsers,
+  getExistingKeycloakUsers,
+  syncKeycloakUsers,
+
+  // KRWUtils 추가
+  KRWUtils
 };
