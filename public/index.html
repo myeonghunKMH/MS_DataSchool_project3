@@ -153,14 +153,14 @@
       filter:none;
     }
 
-    /* ===== 좌우 네비 버튼 (SVG) ===== */
+    /* ===== 좌우 네비 버튼 (SVG, white border) ===== */
     .grid-nav{ pointer-events:none; }
     .arrow{
       pointer-events:auto;
       position:absolute; top:50%; transform:translateY(-50%);
       width:44px; height:44px; border-radius:50%;
       display:flex; align-items:center; justify-content:center;
-      border:1px rgb(255, 255, 255).25);
+      border:1px solid #fff;                /* <- 하얀색 테두리 */
       background:rgba(0,0,0,.55);
       color:#fff;
       box-shadow:0 0 14px rgba(255,255,255,.25);
@@ -175,7 +175,6 @@
     .arrow:active{ transform:translateY(-50%) scale(0.95); }
     .arrow.prev{ left:-52px; }
     .arrow.next{ right:-52px; }
-
     .arrow svg{ width:22px; height:22px; }
 
     @media (max-width: 640px){
@@ -196,7 +195,7 @@
     <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
     <nav>
       <a class="navbtn" href="guide.html"><img src="/images/Document.png" alt="">가이드</a>
-      <a class="navbtn" href="mypage.html">🪙 마이페이지</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
     </nav>
   </header>
 
@@ -207,18 +206,20 @@
       <div id="line2"></div>
     </div>
 
-    <!-- 4개 카드 그리드 + 좌우 네비 -->
+    <!-- 4개 카드 그리드 (1↔4 순서 교체: Game, News, Crypto, Realtime) + 좌우 네비 -->
     <section class="cards-wrap">
       <div class="grid" id="cardGrid">
-        <article class="card" data-link="realtime.html">
-          <div class="thumb">Realtime</div>
+        <!-- 1) Game -->
+        <article class="card" data-link="historical.html">
+          <div class="thumb">Game</div>
           <div class="body">
-            <h3>실시간 모의 투자 연습</h3>
-            <p class="desc">BTC·ETH·XRP 종목으로 주문·체결·잔고 UI를 체험하며 트레이딩을 연습하세요.</p>
+            <h3>과거 데이터 시뮬레이션</h3>
+            <p class="desc">실제 과거 암호화폐 데이터를 기반으로 <strong>게임처럼</strong> 투자 결정을 내리며 연습해보세요.</p>
           </div>
-          <div class="actions"><a class="btn" href="realtime.html">시작하기</a></div>
+          <div class="actions"><a class="btn" href="historical.html">시작하기</a></div>
         </article>
 
+        <!-- 2) News -->
         <article class="card" data-link="news.html">
           <div class="thumb">News</div>
           <div class="body">
@@ -228,6 +229,7 @@
           <div class="actions"><a class="btn" href="news.html">들어가기</a></div>
         </article>
 
+        <!-- 3) Crypto -->
         <article class="card" data-link="crypto.html">
           <div class="thumb">Crypto</div>
           <div class="body">
@@ -237,13 +239,14 @@
           <div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div>
         </article>
 
-        <article class="card" data-link="historical.html">
-          <div class="thumb">Game</div>
+        <!-- 4) Realtime -->
+        <article class="card" data-link="realtime.html">
+          <div class="thumb">Realtime</div>
           <div class="body">
-            <h3>과거 데이터 시뮬레이션</h3>
-            <p class="desc">실제 과거 암호화폐 데이터를 기반으로 <strong>게임처럼</strong> 투자 결정을 내리며 연습해보세요.</p>
+            <h3>실시간 모의 투자 연습</h3>
+            <p class="desc">BTC·ETH·XRP 종목으로 주문·체결·잔고 UI를 체험하며 트레이딩을 연습하세요.</p>
           </div>
-          <div class="actions"><a class="btn" href="historical.html">시작하기</a></div>
+          <div class="actions"><a class="btn" href="realtime.html">시작하기</a></div>
         </article>
       </div>
 
@@ -288,14 +291,14 @@
       typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 320));
     })();
 
-    // Focus logic for 4-card grid
+    // Focus logic for 4-card grid (기본: 4번 Realtime 강조)
     (function(){
       const grid = document.getElementById('cardGrid');
       const cards = Array.from(grid.querySelectorAll('.card'));
       const prevBtn = document.querySelector('.arrow.prev');
       const nextBtn = document.querySelector('.arrow.next');
 
-      let idx = 0;
+      let idx = 3; // 기본 주목도: 4번 카드(Realtme)
 
       function applyFocus(){
         cards.forEach((c,i)=>{
@@ -308,21 +311,37 @@
         applyFocus();
       }
 
+      // 초기 적용
       applyFocus();
 
+      // 좌우 버튼
       prevBtn.addEventListener('click', ()=> move(-1));
       nextBtn.addEventListener('click', ()=> move(+1));
 
+      // 키보드 화살표
       window.addEventListener('keydown', (e)=>{
         if(e.key === 'ArrowLeft') move(-1);
         if(e.key === 'ArrowRight') move(+1);
       });
 
+      // 카드 클릭 및 마우스 오버 시 주목도 이동
       cards.forEach((card,i)=>{
+        // 버튼 클릭은 원래 동작 유지
         card.addEventListener('click', (e)=>{
           if(e.target.closest('.btn')) return;
           idx = i; applyFocus();
         });
+        // 마우스 진입 시 포커스 이동
+        card.addEventListener('mouseenter', ()=>{
+          idx = i; applyFocus();
+        });
+        // 터치(모바일) 대응: 첫 탭에서 포커스만 이동
+        card.addEventListener('touchstart', (e)=>{
+          if(!card.classList.contains('is-focus')){
+            e.preventDefault();
+            idx = i; applyFocus();
+          }
+        }, {passive:false});
       });
     })();
   </script>

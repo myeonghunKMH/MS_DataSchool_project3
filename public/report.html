@@ -25,7 +25,6 @@
       filter:drop-shadow(0 6px 18px rgba(0,0,0,.5));
     }
 
-    /* index.html 스타일 참고한 네비 버튼 */
     .btn-nav{
       display:inline-flex; align-items:center; gap:8px;
       padding:10px 14px; border-radius:14px; font-weight:600; font-size:14px;
@@ -101,7 +100,6 @@
       <a href="index.html"><img class="logo" src="/images/logo.png" alt="ITC" /></a>
     </div>
     <div class="right">
-      <!-- index.html 버튼 톤으로 정리 -->
       <a class="navbtn" href="guide.html"><img src="/images/Document.png">가이드</a>
       <a class="btn-nav" href="/mypage.html">마이페이지</a>
     </div>
@@ -111,7 +109,7 @@
 
   <main class="wrap">
     <h1 style="margin:0 4px 6px; font-size:28px; letter-spacing:.2px;">개인화된 사용자 리포트</h1>
-    <p class="muted" style="margin:0 4px 22px;">가상의 데이터로 렌더링되어 있습니다. 실데이터 연동은 하단 주석 참고.</p>
+    <p class="muted" style="margin:0 4px 22px;">로그인 후 API에서 실제 데이터로 렌더링합니다.</p>
 
     <!-- ======= 개인화 KPI ======= -->
     <div class="grid cols-4">
@@ -157,14 +155,14 @@
       </div>
     </div>
 
-    <!-- ======= 내가 많이 거래한 종목 + 최근 체결 ======= -->
+    <!-- ======= 내가 거래한 종목 + 최근 체결 ======= -->
     <div class="grid cols-2" style="margin-top:14px;">
       <div class="card">
-        <div class="title">내가 가장 많이 거래한 종목(Top 5)</div>
+        <div class="title">내가 거래한 종목 수량</div>
         <canvas id="chart_my_top_symbols" height="120"></canvas>
       </div>
       <div class="card">
-        <div class="title">최근 체결 히스토리 (샘플)</div>
+        <div class="title">최근 체결 히스토리</div>
         <table class="table" id="table_recent">
           <thead>
             <tr><th>시간</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr>
@@ -176,140 +174,91 @@
   </main>
 
   <script>
-    // ================================
-    // 1) 샘플 데이터 (실데이터 연동시 대체)
-    // ================================
-    const days = Array.from({length: 30}, (_, i) => {
-      const d = new Date(); d.setDate(d.getDate() - (29 - i));
-      return d.toISOString().slice(5,10); // 'MM-DD'
-    });
+    const fmtKRW = v => '₩' + Number(v||0).toLocaleString('ko-KR');
+    const fmtPct = v => (v>=0?'+':'') + Number(v||0).toFixed(1) + '%';
 
-    const my = {
-      monthlyTrades: 64, monthlyTradesDiff: +12, // 전월 대비
-      monthlyVolume: 12_450_000, monthlyVolumeDiff: +8.2, // KRW
-      monthlyReturnPct: +6.4, returnRankPctile: 82, // 상위 백분위
-      topSymbols: [
-        {symbol:'BTC', share: 0.35}, {symbol:'ETH', share:0.28},
-        {symbol:'XRP', share:0.17}, {symbol:'SOL', share:0.12}, {symbol:'ADA', share:0.08}
-      ],
-      equityCurve: days.map((_, i) => 10_000_000 + i*55_000 + (Math.sin(i/3)*120_000)), // KRW
-      returnSeries: days.map((_, i) => 3 + Math.sin(i/4)*2), // 일간 %
-      marketReturnSeries: days.map((_, i) => 2 + Math.cos(i/5)*1.3),
-      recentFills: [
-        {ts:'12:31', sym:'ETH', side:'매수', qty:0.8, price:3_900_000},
-        {ts:'11:18', sym:'BTC', side:'매도', qty:0.06, price:93_500_000},
-        {ts:'10:44', sym:'XRP', side:'매수', qty:120, price:920},
-        {ts:'09:05', sym:'SOL', side:'매수', qty:2.1, price:220_000},
-        {ts:'어제', sym:'BTC', side:'매수', qty:0.05, price:92_700_000},
-      ]
-    };
+    async function loadReport() {
+      const r = await fetch('/api/user/report', { credentials: 'include' });
+      if (!r.ok) throw new Error('report api failed');
+      const data = await r.json();
+      const { days, my } = data;
 
-    // ================================
-    // 2) KPI 렌더링
-    // ================================
-    const fmtKRW = v => '₩' + v.toLocaleString('ko-KR');
-    const fmtPct = v => (v>=0?'+':'') + v.toFixed(1) + '%';
+      // ===== KPI =====
+      document.getElementById('kpi_trades').textContent = Number(my.monthlyTrades).toLocaleString('ko-KR');
+      document.getElementById('kpi_trades_diff').textContent =
+        (my.monthlyTradesDiff>=0?'+':'') + my.monthlyTradesDiff + '건';
 
-    document.getElementById('kpi_trades').textContent = my.monthlyTrades.toLocaleString('ko-KR');
-    document.getElementById('kpi_trades_diff').textContent = (my.monthlyTradesDiff>=0?'+':'') + my.monthlyTradesDiff + '건';
+      document.getElementById('kpi_volume').textContent = fmtKRW(my.monthlyVolume);
+      document.getElementById('kpi_volume_diff').textContent = fmtPct(my.monthlyVolumeDiff);
 
-    document.getElementById('kpi_volume').textContent = fmtKRW(my.monthlyVolume);
-    document.getElementById('kpi_volume_diff').textContent = fmtPct(my.monthlyVolumeDiff);
+      document.getElementById('kpi_return').textContent = fmtPct(my.monthlyReturnPct);
+      document.getElementById('kpi_return_rank').textContent = `상위 ${my.returnRankPctile}%`;
 
-    document.getElementById('kpi_return').textContent = fmtPct(my.monthlyReturnPct);
-    document.getElementById('kpi_return_rank').textContent = `상위 ${my.returnRankPctile}%`;
-
-    document.getElementById('kpi_top_symbol').textContent = my.topSymbols[0].symbol;
-    document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
-
-    // 최근 체결 테이블
-    const tbody = document.querySelector('#table_recent tbody');
-    my.recentFills.forEach(r=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.ts}</td><td>${r.sym}</td><td>${r.side}</td><td>${r.qty}</td><td>${fmtKRW(r.price)}</td>`;
-      tbody.appendChild(tr);
-    });
-
-    // ================================
-    // 3) 차트 렌더링
-    // ================================
-    const baseGrid = { color:'rgba(255,255,255,.12)' };
-    const baseTicks = { color:'#cfcfcf', font:{ size:11 } };
-    const tooltip = { enabled:true, intersect:false, mode:'index' };
-
-    // 자산 변화 (라인)
-    new Chart(document.getElementById('chart_equity'), {
-      type:'line',
-      data:{
-        labels: days,
-        datasets:[{
-          label:'보유 자산(₩)',
-          data: my.equityCurve,
-          fill:true,
-          borderWidth:2,
-          pointRadius:0,
-          tension:.35
-        }]
-      },
-      options:{
-        plugins:{ legend:{display:false}, tooltip },
-        scales:{
-          x:{ grid:{ display:false }, ticks: baseTicks },
-          y:{ grid: baseGrid, ticks: baseTicks }
-        }
+      if (my.topSymbols?.length) {
+        document.getElementById('kpi_top_symbol').textContent = my.topSymbols[0].symbol;
+        document.getElementById('kpi_top_symbol_share').textContent =
+          Math.round(my.topSymbols[0].share * 100) + '%';
+      } else {
+        document.getElementById('kpi_top_symbol').textContent = '—';
+        document.getElementById('kpi_top_symbol_share').textContent = '—';
       }
-    });
 
-    // 나의 수익률 vs 전체 평균 (라인 2개)
-    new Chart(document.getElementById('chart_return_compare'), {
-      type:'bar', /* 바 타입 유지(툴팁 편리), 실제는 라인 2개 */
-      data:{
-        labels: days,
-        datasets:[
-          { type:'line', label:'내 수익률(%)', data: my.returnSeries, borderWidth:2, pointRadius:0, tension:.35 },
-          { type:'line', label:'전체 평균(%)', data: my.marketReturnSeries, borderDash:[5,5], borderWidth:2, pointRadius:0, tension:.35 }
-        ]
-      },
-      options:{
-        plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip },
-        scales:{
-          x:{ grid:{ display:false }, ticks: baseTicks },
-          y:{ grid: baseGrid, ticks: baseTicks }
-        }
-      }
-    });
-
-    // 내가 많이 거래한 종목 (가로 막대)
-    new Chart(document.getElementById('chart_my_top_symbols'), {
-      type:'bar',
-      data:{
-        labels: my.topSymbols.map(d=>d.symbol),
-        datasets:[{ label:'거래 비중(%)', data: my.topSymbols.map(d=>Math.round(d.share*100)) }]
-      },
-      options:{
-        indexAxis:'y',
-        plugins:{ legend:{display:false}, tooltip },
-        scales:{
-          x:{ grid: baseGrid, ticks: baseTicks, max:100 },
-          y:{ grid:{ display:false }, ticks: baseTicks }
-        }
-      }
-    });
-
-    // ================================
-    // 4) 실데이터 연동 가이드 (주석)
-    // ================================
-    /*
-      // (1) 개인 리포트 데이터
-      fetch('/api/user/report?userId=...').then(r=>r.json()).then(data=>{
-        // my = data.my; 이후 KPI/표/차트 업데이트
+      // ===== 최근 체결 테이블 =====
+      const tbody = document.querySelector('#table_recent tbody');
+      tbody.innerHTML = '';
+      (my.recentFills || []).forEach(r=>{
+        const t = new Date(r.ts);
+        const hhmm = isNaN(t.getTime()) ? r.ts : t.toTimeString().slice(0,5);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${hhmm}</td><td>${r.sym}</td><td>${r.side}</td><td>${r.qty}</td><td>${fmtKRW(r.price)}</td>`;
+        tbody.appendChild(tr);
       });
 
-      값 업데이트 후:
-        - KPI: innerText 다시 채우기
-        - 표: tbody.innerHTML = '' 후 append
-        - 차트: chart.data.datasets[i].data = ...; chart.update()
-    */
+      // ===== 차트 렌더링 =====
+      const baseGrid = { color:'rgba(255,255,255,.12)' };
+      const baseTicks = { color:'#cfcfcf', font:{ size:11 } };
+      const tooltip = { enabled:true, intersect:false, mode:'index' };
+
+      // 1) 현금잔고 추정 라인
+      new Chart(document.getElementById('chart_equity'), {
+        type:'line',
+        data:{ labels: days, datasets:[{
+          label:'현금 잔고(₩)',
+          data: my.equityCurve,
+          fill:true, borderWidth:2, pointRadius:0, tension:.35
+        }]},
+        options:{ plugins:{ legend:{display:false}, tooltip },
+          scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } }
+        }
+      });
+
+      // 2) 변화율 vs 기준선(0%)
+      new Chart(document.getElementById('chart_return_compare'), {
+        type:'bar',
+        data:{ labels: days, datasets:[
+          { type:'line', label:'현금잔고 변화율(%)', data: my.returnSeries, borderWidth:2, pointRadius:0, tension:.35 },
+          { type:'line', label:'기준선(0%)', data: my.marketReturnSeries, borderDash:[5,5], borderWidth:2, pointRadius:0, tension:.35 }
+        ]},
+        options:{ plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip },
+          scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } }
+        }
+      });
+
+      // 3) 내가 많이 거래한 종목(가로 막대)
+      new Chart(document.getElementById('chart_my_top_symbols'), {
+        type:'bar',
+        data:{ labels: (my.topSymbols||[]).map(d=>d.symbol),
+          datasets:[{ label:'거래 비중(%)', data:(my.topSymbols||[]).map(d=>Math.round(d.share*100)) }] },
+        options:{ indexAxis:'y', plugins:{ legend:{display:false}, tooltip },
+          scales:{ x:{ grid:baseGrid, ticks:baseTicks, max:100 }, y:{ grid:{display:false}, ticks:baseTicks } }
+        }
+      });
+    }
+
+    loadReport().catch(err=>{
+      console.error(err);
+      document.querySelector('.muted').textContent = '리포트 로딩 실패: 로그인 또는 데이터 상태를 확인하세요.';
+    });
   </script>
 </body>
 </html>
