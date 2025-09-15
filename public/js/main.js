@@ -78,5 +78,14 @@ if (typeof window !== "undefined") {
     // TradingView 디버깅용
     getChart: () => app?.chartManager.chart,
     isLightweightChartsLoaded: () => !!window.LightweightCharts,
+    // 🔍 새로운 디버깅 메서드들
+    logViewports: () => app?.chartManager.logAllViewportStates(),
+    forceSyncCharts: () => app?.chartManager.forceSyncAllViewports(),
+    debugMode: (enabled) => {
+      if (app?.chartManager) {
+        app.chartManager._debugMode = enabled;
+        console.log(`디버그 모드: ${enabled ? '활성화' : '비활성화'}`);
+      }
+    },
   };
 }

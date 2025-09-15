@@ -39,6 +39,44 @@ export class ChartManager {
     this._preservedViewport = null;
     this._isIndicatorCreating = false;
     this._chartCreationQueue = [];
+
+    // 🔍 디버깅용 상태 추적
+    this._debugMode = true;
+    this._syncEvents = [];
+  }
+
+  // 🔍 디버깅 헬퍼 메서드
+  _debug(message, data = {}) {
+    if (this._debugMode) {
+      console.log(`🔍 ChartManager Debug: ${message}`, data);
+      this._syncEvents.push({
+        timestamp: Date.now(),
+        message,
+        data
+      });
+    }
+  }
+
+  // 🔍 현재 모든 차트의 뷰포트 상태 출력
+  logAllViewportStates() {
+    const states = {
+      priceTime: this.priceChart?.timeScale().getVisibleTimeRange?.(),
+      priceLogical: this.priceChart?.timeScale().getVisibleLogicalRange(),
+      volumeTime: this.volumeChart?.timeScale().getVisibleTimeRange?.(),
+      volumeLogical: this.volumeChart?.timeScale().getVisibleLogicalRange(),
+      rsiTime: this.rsiChart?.timeScale().getVisibleTimeRange?.(),
+      rsiLogical: this.rsiChart?.timeScale().getVisibleLogicalRange(),
+      macdTime: this.macdChart?.timeScale().getVisibleTimeRange?.(),
+      macdLogical: this.macdChart?.timeScale().getVisibleLogicalRange(),
+      dataLengths: {
+        price: this.lastCandleData?.length || 0,
+        rsi: this.rsiSeries ? "unknown" : 0,
+        macd: this.macdSeries ? "unknown" : 0,
+      }
+    };
+
+    console.table(states);
+    return states;
   }
 
   // 🔧 새로운 비동기 헬퍼 메서드들
@@ -110,31 +148,102 @@ export class ChartManager {
     }
   }
 
+  // 🎯 로지컬 기반 동기화 메서드 (안정적)
+  forceSyncAllViewports() {
+    if (!this.priceChart) return;
+
+    try {
+      const mainLogicalRange = this.priceChart.timeScale().getVisibleLogicalRange();
+      const mainBarSpacing = this.priceChart.timeScale().options().barSpacing;
+
+      if (!mainLogicalRange) return;
+
+      console.log("🔄 로지컬 범위 뷰포트 동기화 실행:", mainLogicalRange);
+
+      // 모든 차트를 메인 차트와 동일한 로지컬 범위로 동기화
+      if (this.rsiChart) {
+        this.rsiChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
+        this.rsiChart.timeScale().applyOptions({ barSpacing: mainBarSpacing });
+      }
+
+      if (this.macdChart) {
+        this.macdChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
+        this.macdChart.timeScale().applyOptions({ barSpacing: mainBarSpacing });
+      }
+
+      if (this.volumeChart) {
+        this.volumeChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
+        this.volumeChart.timeScale().applyOptions({ barSpacing: mainBarSpacing });
+      }
+
+      console.log("✅ 로지컬 범위 뷰포트 동기화 완료");
+    } catch (error) {
+      console.warn("뷰포트 동기화 실패:", error);
+    }
+  }
+
+  // 폴백용 로지컬 동기화
+  fallbackLogicalSync() {
+    console.log("🔄 폴백: 로지컬 동기화 실행");
+    const mainRange = this.priceChart.timeScale().getVisibleLogicalRange();
+    if (!mainRange) return;
+
+    // RSI 차트 동기화 (RSI는 14개 인덱스부터 시작)
+    if (this.rsiChart) {
+      this.rsiChart.timeScale().setVisibleLogicalRange(mainRange);
+    }
+
+    // MACD 차트 동기화 (MACD는 26개 인덱스부터 시작)
+    if (this.macdChart) {
+      this.macdChart.timeScale().setVisibleLogicalRange(mainRange);
+    }
+
+    // 볼륨 차트 동기화
+    if (this.volumeChart) {
+      this.volumeChart.timeScale().setVisibleLogicalRange(mainRange);
+    }
+  }
+
   async restorePreservedViewport(targetChart) {
     if (!this._preservedViewport || !targetChart) return false;
 
     try {
+      // 더 긴 대기시간으로 차트 안정화
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // 메인 차트와 완전히 동일한 뷰포트 적용
       if (this.priceChart && this._preservedViewport.logicalRange) {
-        this.priceChart
-          .timeScale()
-          .setVisibleLogicalRange(this._preservedViewport.logicalRange);
+        const currentMainRange = this.priceChart.timeScale().getVisibleLogicalRange();
+        const currentMainBarSpacing = this.priceChart.timeScale().options().barSpacing;
+
+        // 현재 메인 차트의 실제 뷰포트 사용 (더 정확함)
+        if (currentMainRange) {
+          targetChart.timeScale().setVisibleLogicalRange(currentMainRange);
+        } else {
+          targetChart.timeScale().setVisibleLogicalRange(this._preservedViewport.logicalRange);
+        }
+
+        // barSpacing 동기화
+        targetChart.timeScale().applyOptions({
+          barSpacing: currentMainBarSpacing || this._preservedViewport.barSpacing || 6,
+        });
       }
 
+      // 추가 검증: 복원이 제대로 되었는지 확인
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      if (this._preservedViewport.logicalRange) {
-        targetChart
-          .timeScale()
-          .setVisibleLogicalRange(this._preservedViewport.logicalRange);
+      const finalRange = targetChart.timeScale().getVisibleLogicalRange();
+      const mainRange = this.priceChart?.timeScale().getVisibleLogicalRange();
 
-        if (this._preservedViewport.barSpacing) {
-          targetChart.timeScale().applyOptions({
-            barSpacing: this._preservedViewport.barSpacing,
-          });
-        }
-      }
+      console.log("🔍 뷰포트 복원 검증:", {
+        preserved: this._preservedViewport.logicalRange,
+        main: mainRange,
+        target: finalRange,
+        synced: mainRange && finalRange &&
+                Math.abs(mainRange.from - finalRange.from) < 0.1 &&
+                Math.abs(mainRange.to - finalRange.to) < 0.1
+      });
 
-      console.log("✅ 뷰포인트 복원 완료");
       return true;
     } catch (error) {
       console.warn("뷰포인트 복원 실패:", error);
@@ -417,7 +526,7 @@ export class ChartManager {
       },
     });
 
-    this.priceSeries = this.priceChart.addCandlestickSeries({
+    this.priceSeries = this.priceChart.addSeries(LightweightCharts.CandlestickSeries, {
       upColor: "#26a69a",
       downColor: "#ef5350",
       borderVisible: false,
@@ -527,7 +636,7 @@ export class ChartManager {
       },
     });
 
-    this.volumeSeries = this.volumeChart.addHistogramSeries({
+    this.volumeSeries = this.volumeChart.addSeries(LightweightCharts.HistogramSeries, {
       color: "#26a69a",
       priceFormat: {
         type: "volume",
@@ -556,27 +665,27 @@ export class ChartManager {
       });
     }
 
-    // 3. 차트 스케일 동기화 (X축 완벽 정렬)
-    const syncTimeScale = (range, source = "price") => {
-      if (!range) return;
+    // 🎯 완전히 새로운 시간 기반 동기화
+    const syncTimeScale = (logicalRange, source = "price") => {
+      if (!logicalRange) return;
 
       // 순환 참조 방지를 위한 플래그
       if (this._syncing) return;
       this._syncing = true;
 
       try {
-        // 소스에 따라 다른 차트들 동기화
+        // 로지컬 범위 기반 동기화 (v5.0에서도 이 방식이 더 안정적)
         if (source !== "volume" && this.volumeChart) {
-          this.volumeChart.timeScale().setVisibleLogicalRange(range);
+          this.volumeChart.timeScale().setVisibleLogicalRange(logicalRange);
         }
         if (source !== "price" && this.priceChart) {
-          this.priceChart.timeScale().setVisibleLogicalRange(range);
+          this.priceChart.timeScale().setVisibleLogicalRange(logicalRange);
         }
         if (this.rsiChart) {
-          this.rsiChart.timeScale().setVisibleLogicalRange(range);
+          this.rsiChart.timeScale().setVisibleLogicalRange(logicalRange);
         }
         if (this.macdChart) {
-          this.macdChart.timeScale().setVisibleLogicalRange(range);
+          this.macdChart.timeScale().setVisibleLogicalRange(logicalRange);
         }
       } catch (error) {
         console.warn("차트 동기화 오류:", error);
@@ -660,14 +769,25 @@ export class ChartManager {
       syncCrosshair(param, "volume");
     });
 
-    // 5. 초기 차트 뷰 설정 (오른쪽은 최신 데이터이므로 여유 없음)
+    // 5. 초기 차트 뷰 설정 (실제 데이터 길이 기반으로 동적 계산)
+    const dataLength = candleData.length;
+    const visibleCount = Math.min(50, dataLength); // 최대 50개 캔들 표시
+    const startIndex = Math.max(0, dataLength - visibleCount);
+
+    console.log("📊 초기 뷰포트 설정:", {
+      총데이터: dataLength,
+      표시할데이터: visibleCount,
+      시작인덱스: startIndex,
+      끝인덱스: dataLength - 1
+    });
+
     this.priceChart.timeScale().setVisibleLogicalRange({
-      from: 20, // 100개 데이터 중 처음 20개 숨김 (왼쪽 여유)
-      to: 100, // 마지막까지 표시 (오른쪽 여유 없음)
+      from: startIndex,
+      to: dataLength - 1,
     });
     this.volumeChart.timeScale().setVisibleLogicalRange({
-      from: 20,
-      to: 100,
+      from: startIndex,
+      to: dataLength - 1,
     });
 
     // 반응형 처리 및 무한스크롤 설정
@@ -707,27 +827,59 @@ export class ChartManager {
 
   calculateRSI(candleData, period = 14) {
     const result = [];
-    const gains = [];
-    const losses = [];
 
+    if (candleData.length < period + 1) {
+      console.warn("RSI 계산에 충분한 데이터가 없습니다:", candleData.length, "< ", period + 1);
+      return result;
+    }
+
+    // 🎯 앞부분을 null로 패딩하여 메인 차트와 인덱스 일치시키기
+    for (let i = 0; i < period; i++) {
+      result.push({ time: candleData[i].time, value: null });
+    }
+
+    // 모든 변화량 미리 계산
+    const changes = [];
     for (let i = 1; i < candleData.length; i++) {
-      const change = candleData[i].close - candleData[i - 1].close;
-      gains.push(change > 0 ? change : 0);
-      losses.push(change < 0 ? -change : 0);
+      changes.push(candleData[i].close - candleData[i - 1].close);
+    }
 
-      if (i >= period) {
-        const avgGain =
-          gains.slice(-period).reduce((sum, gain) => sum + gain, 0) / period;
-        const avgLoss =
-          losses.slice(-period).reduce((sum, loss) => sum + loss, 0) / period;
+    // 처음 period 구간의 평균 gain/loss 계산
+    let avgGain = 0;
+    let avgLoss = 0;
 
-        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-        const rsi = 100 - 100 / (1 + rs);
-
-        result.push({ time: candleData[i].time, value: rsi });
+    for (let i = 0; i < period; i++) {
+      if (changes[i] > 0) {
+        avgGain += changes[i];
+      } else {
+        avgLoss += Math.abs(changes[i]);
       }
     }
 
+    avgGain /= period;
+    avgLoss /= period;
+
+    // 첫 번째 RSI 값 계산 (period 번째 인덱스)
+    let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    let rsi = 100 - 100 / (1 + rs);
+    result.push({ time: candleData[period].time, value: rsi });
+
+    // 나머지 RSI 값들을 Wilder의 smoothing method로 계산
+    for (let i = period; i < changes.length; i++) {
+      const gain = changes[i] > 0 ? changes[i] : 0;
+      const loss = changes[i] < 0 ? Math.abs(changes[i]) : 0;
+
+      // Wilder's smoothing
+      avgGain = ((avgGain * (period - 1)) + gain) / period;
+      avgLoss = ((avgLoss * (period - 1)) + loss) / period;
+
+      rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+      rsi = 100 - 100 / (1 + rs);
+
+      result.push({ time: candleData[i + 1].time, value: rsi });
+    }
+
+    console.log(`RSI 계산 완료: ${result.length}개 값 생성 (전체 데이터: ${candleData.length}개)`);
     return result;
   }
 
@@ -811,13 +963,21 @@ export class ChartManager {
       histogram: [],
     };
 
-    // 🔧 결과 데이터 검증 및 필터링
-    for (let i = slowPeriod - 1; i < candleData.length; i++) {
+    // 🎯 앞부분을 null로 패딩하여 메인 차트와 인덱스 일치시키기
+    const paddingLength = slowPeriod + signalPeriod - 1; // 26 + 9 - 1 = 34
+    for (let i = 0; i < paddingLength; i++) {
+      result.macd.push({ time: candleData[i].time, value: null });
+      result.signal.push({ time: candleData[i].time, value: null });
+      result.histogram.push({ time: candleData[i].time, value: null });
+    }
+
+    // 🔧 Signal period 이후부터 실제 MACD 값 설정
+    for (let i = paddingLength; i < candleData.length; i++) {
       const time = candleData[i].time;
       const macdValue = macdLine[i];
       const signalValue = signalLine[i];
 
-      // 🔧 유효한 값만 추가
+      // 🔧 유효한 값만 설정 (중복 추가 방지)
       if (
         macdValue != null &&
         signalValue != null &&
@@ -833,6 +993,11 @@ export class ChartManager {
           value: histogramValue,
           color: histogramValue >= 0 ? "#26a69a" : "#ef5350",
         });
+      } else {
+        // null 값도 추가하여 인덱스 일치 유지
+        result.macd.push({ time, value: null });
+        result.signal.push({ time, value: null });
+        result.histogram.push({ time, value: null });
       }
     }
 
@@ -856,6 +1021,12 @@ export class ChartManager {
 
     console.log("🔄 RSI 차트 생성 시작...");
     this._isIndicatorCreating = true;
+
+    // CSS transition 비활성화
+    const rsiChartElement = document.getElementById("rsiChart");
+    rsiChartElement.classList.add("creating");
+    rsiChartElement.classList.remove("hidden");
+
     this.preserveCurrentViewport();
 
     try {
@@ -896,18 +1067,49 @@ export class ChartManager {
       const isChartReady = await this.waitForChartReady(this.rsiChart);
       if (!isChartReady) return null;
 
-      this.rsiSeries = this.rsiChart.addLineSeries({
+      this.rsiSeries = this.rsiChart.addSeries(LightweightCharts.LineSeries, {
         color: "#FFA500",
         lineWidth: 2,
       });
 
-      if (this.lastCandleData && this.lastCandleData.length > 0) {
-        const rsiData = this.calculateRSI(this.lastCandleData, 14);
+      let rsiData = [];
+      if (this.lastCandleData && this.lastCandleData.length >= 15) {
+        rsiData = this.calculateRSI(this.lastCandleData, 14);
+        console.log("🔍 RSI 초기 생성:", {
+          candleCount: this.lastCandleData.length,
+          rsiCount: rsiData.length,
+          첫번째캔들시간: new Date(this.lastCandleData[0].time * 1000),
+          첫번째RSI시간: rsiData[0] ? new Date(rsiData[0].time * 1000) : null,
+          RSI시작인덱스차이: rsiData[0] ?
+            this.lastCandleData.findIndex(candle => candle.time === rsiData[0].time) : -1
+        });
         await this.waitForDataSet(this.rsiSeries, rsiData);
+      } else {
+        console.warn("⚠️ RSI 생성을 위한 데이터가 부족합니다:", this.lastCandleData?.length);
       }
 
-      await this.restorePreservedViewport(this.rsiChart);
+      // RSI 차트를 메인 차트와 같은 뷰포트로 동기화
+      if (rsiData.length > 0 && this.priceChart) {
+        try {
+          const mainLogicalRange = this.priceChart.timeScale().getVisibleLogicalRange();
+          if (mainLogicalRange) {
+            this.rsiChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
+          }
+        } catch (error) {
+          console.warn("RSI 초기 뷰포트 동기화 실패:", error);
+        }
+      }
+
       this.setupRSIEventListeners();
+
+      // CSS transition 재활성화
+      const rsiChartElement = document.getElementById("rsiChart");
+      rsiChartElement.classList.remove("creating");
+
+      // 추가: 강제 동기화로 확실히 보장
+      setTimeout(() => {
+        this.forceSyncAllViewports();
+      }, 100);
 
       console.log("✅ RSI 차트 생성 완료");
       return this.rsiChart;
@@ -980,6 +1182,12 @@ export class ChartManager {
 
     console.log("🔄 MACD 차트 생성 시작...");
     this._isIndicatorCreating = true;
+
+    // CSS transition 비활성화
+    const macdChartElement = document.getElementById("macdChart");
+    macdChartElement.classList.add("creating");
+    macdChartElement.classList.remove("hidden");
+
     this.preserveCurrentViewport();
 
     try {
@@ -1020,31 +1228,63 @@ export class ChartManager {
       const isChartReady = await this.waitForChartReady(this.macdChart);
       if (!isChartReady) return null;
 
-      this.macdSeries = this.macdChart.addLineSeries({
+      this.macdSeries = this.macdChart.addSeries(LightweightCharts.LineSeries, {
         color: "#2196F3",
         lineWidth: 2,
         priceFormat: { type: "price", precision: 0, minMove: 1 },
       });
 
-      this.macdSignalSeries = this.macdChart.addLineSeries({
+      this.macdSignalSeries = this.macdChart.addSeries(LightweightCharts.LineSeries, {
         color: "#FF9800",
         lineWidth: 2,
       });
 
-      this.macdHistogramSeries = this.macdChart.addHistogramSeries({
+      this.macdHistogramSeries = this.macdChart.addSeries(LightweightCharts.HistogramSeries, {
         color: "#26a69a",
       });
 
-      if (this.lastCandleData && this.lastCandleData.length > 0) {
+      if (this.lastCandleData && this.lastCandleData.length >= 35) {
         const macdData = this.calculateMACD(this.lastCandleData);
+        console.log("🔍 MACD 초기 생성:", {
+          candleCount: this.lastCandleData.length,
+          macdCount: macdData.macd.length,
+          signalCount: macdData.signal.length,
+          histogramCount: macdData.histogram.length,
+          첫번째캔들시간: new Date(this.lastCandleData[0].time * 1000),
+          첫번째MACD시간: macdData.macd[0] ? new Date(macdData.macd[0].time * 1000) : null,
+          MACD시작인덱스차이: macdData.macd[0] ?
+            this.lastCandleData.findIndex(candle => candle.time === macdData.macd[0].time) : -1
+        });
 
         await this.waitForDataSet(this.macdSeries, macdData.macd);
         await this.waitForDataSet(this.macdSignalSeries, macdData.signal);
         await this.waitForDataSet(this.macdHistogramSeries, macdData.histogram);
+
+        // MACD 차트를 메인 차트와 같은 뷰포트로 동기화
+        if (macdData.macd.length > 0 && this.priceChart) {
+          try {
+            const mainLogicalRange = this.priceChart.timeScale().getVisibleLogicalRange();
+            if (mainLogicalRange) {
+              this.macdChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
+            }
+          } catch (error) {
+            console.warn("MACD 초기 뷰포트 동기화 실패:", error);
+          }
+        }
+      } else {
+        console.warn("⚠️ MACD 생성을 위한 데이터가 부족합니다:", this.lastCandleData?.length);
       }
 
-      await this.restorePreservedViewport(this.macdChart);
       this.setupMACDEventListeners();
+
+      // CSS transition 재활성화
+      const macdChartElement = document.getElementById("macdChart");
+      macdChartElement.classList.remove("creating");
+
+      // 추가: 강제 동기화로 확실히 보장
+      setTimeout(() => {
+        this.forceSyncAllViewports();
+      }, 100);
 
       console.log("✅ MACD 차트 생성 완료");
       return this.macdChart;
@@ -1119,7 +1359,7 @@ export class ChartManager {
 
     // MA5 추가
     if (Array.isArray(ma5Data) && ma5Data.length > 0) {
-      this.indicatorSeries.ma5 = this.priceChart.addLineSeries({
+      this.indicatorSeries.ma5 = this.priceChart.addSeries(LightweightCharts.LineSeries, {
         color: "#FF0000",
         lineWidth: 1,
         title: "MA5",
@@ -1130,7 +1370,7 @@ export class ChartManager {
 
     // MA20 추가
     if (Array.isArray(ma20Data) && ma20Data.length > 0) {
-      this.indicatorSeries.ma20 = this.priceChart.addLineSeries({
+      this.indicatorSeries.ma20 = this.priceChart.addSeries(LightweightCharts.LineSeries, {
         color: "#00FF00",
         lineWidth: 1,
         title: "MA20",
@@ -1504,24 +1744,44 @@ export class ChartManager {
         removedDuplicates: allCandleData.length - uniqueCandleData.length,
       });
 
-      // RSI 업데이트
-      if (this.rsiSeries) {
+      // RSI 업데이트 - 전체 데이터로 다시 계산하여 완전한 지표 생성
+      if (this.rsiSeries && uniqueCandleData.length >= 15) { // RSI 계산 최소 요구 데이터
+        console.log("🔍 RSI 전체 재계산 시작 - 데이터 개수:", uniqueCandleData.length);
         const rsiData = this.calculateRSI(uniqueCandleData, 14);
-        this.rsiSeries.setData(rsiData);
+        console.log("🔍 RSI 계산 결과:", rsiData.length, "개 포인트");
+
+        if (rsiData.length > 0) {
+          this.rsiSeries.setData(rsiData);
+        }
       }
 
-      // MACD 업데이트
+      // MACD 업데이트 - 전체 데이터로 다시 계산하여 완전한 지표 생성
       if (
         this.macdSeries &&
         this.macdSignalSeries &&
-        this.macdHistogramSeries
+        this.macdHistogramSeries &&
+        uniqueCandleData.length >= 35 // MACD 계산 최소 요구 데이터 (26 + 9)
       ) {
+        console.log("🔍 MACD 전체 재계산 시작 - 데이터 개수:", uniqueCandleData.length);
         const macdData = this.calculateMACD(uniqueCandleData);
-        this.macdSeries.setData(macdData.macd);
-        this.macdSignalSeries.setData(macdData.signal);
-        this.macdHistogramSeries.setData(macdData.histogram);
+        console.log("🔍 MACD 계산 결과:", {
+          macd: macdData.macd.length,
+          signal: macdData.signal.length,
+          histogram: macdData.histogram.length
+        });
+
+        if (macdData.macd.length > 0) {
+          this.macdSeries.setData(macdData.macd);
+          this.macdSignalSeries.setData(macdData.signal);
+          this.macdHistogramSeries.setData(macdData.histogram);
+        }
       }
     }
+
+    // 히스토리 데이터 추가 후 뷰포트 동기화 보장
+    setTimeout(() => {
+      this.forceSyncAllViewports();
+    }, 200);
 
     console.log("🔍 appendHistoricalData 완료");
   }
@@ -1572,7 +1832,7 @@ export class ChartManager {
       200: "#DDA0DD",
     };
 
-    const maSeries = this.priceChart.addLineSeries({
+    const maSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
       color: colors[period] || "#FFFFFF",
       lineWidth: 2,
       title: `MA${period}`,
@@ -1626,19 +1886,19 @@ export class ChartManager {
 
         const bbData = this.calculateBollingerBands(this.lastCandleData, 20, 2);
 
-        this.bbUpperSeries = this.priceChart.addLineSeries({
+        this.bbUpperSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
           color: "rgba(255, 255, 255, 0.5)",
           lineWidth: 1,
           title: "BB Upper",
         });
 
-        this.bbMiddleSeries = this.priceChart.addLineSeries({
+        this.bbMiddleSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
           color: "rgba(255, 255, 255, 0.3)",
           lineWidth: 1,
           title: "BB Middle",
         });
 
-        this.bbLowerSeries = this.priceChart.addLineSeries({
+        this.bbLowerSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
           color: "rgba(255, 255, 255, 0.5)",
           lineWidth: 1,
           title: "BB Lower",
