@@ -8,7 +8,7 @@
   <style>
     :root{
       color-scheme: dark;
-      --accent:#ffd166;          /* 포인트 컬러 */
+      --accent:#ffd166;
       --stroke:#2b2b2b;
       --glow:255,255,255;
     }
@@ -17,7 +17,6 @@
     html,body{ height:90%; }
     body{
       margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      /* 어두운 톤 유지 (이전 버전) */
       background:
         radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
         radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
@@ -53,22 +52,21 @@
       transform:translateY(-1px); color:#fff;
     }
 
-    /* ===== Layout (세로 길이 단축) ===== */
+    /* ===== Layout ===== */
     main{
-      width:min(1100px,92vw);
-      margin:130px auto 48px;              /* 180 → 150 (상단 간격 축소) */
-      display:flex; flex-direction:column; gap:22px; /* 28 → 22 */
+      width:min(1200px,92vw);
+      margin:130px auto 48px;
+      display:flex; flex-direction:column; gap:22px;
     }
 
-    /* ===== Typewriter / Hero (고정 높이로 레이아웃 불변) ===== */
+    /* ===== Hero / Typewriter ===== */
     #typewriter{
       display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;
-      height:clamp(110px,16vw,140px);      /* 고정 높이 → 카드 레이아웃 안 움직임 */
+      height:clamp(110px,16vw,140px);
       justify-content:center;
     }
     #line1{
       font-size:clamp(24px,3.6vw,40px); font-weight:900; letter-spacing:.3px;
-      /* 더 밝은 메탈릭 그라데이션 */
       background:linear-gradient(95deg,
         rgba(255,255,255,1) 0%,
         rgba(240,240,240,.85) 18%,
@@ -88,33 +86,34 @@
     .cursor.complete{ animation:blink 1s step-end infinite; }
     @keyframes caret{50%{opacity:0;}} @keyframes blink{50%{opacity:0;}}
 
-    /* ===== Cards ===== */
-    .grid{ display:grid; gap:16px; grid-template-columns:repeat(3,minmax(0,1fr)); }
-    @media (max-width:980px){ .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    /* ===== Cards (Grid) ===== */
+    .cards-wrap{
+      position:relative;
+      padding: 8px 60px;
+    }
+    .grid{
+      display:grid; gap:16px; grid-template-columns:repeat(4,minmax(0,1fr));
+      align-items:stretch;
+    }
+    @media (max-width:1100px){ .grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width:900px){ .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
 
     .card{
       position:relative;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,.00));
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,0));
       border:1px solid var(--stroke);
       border-radius:16px;
-      box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
-      display:grid; flex-direction:column; overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+      display:grid; overflow:hidden;
       grid-template-rows: auto 1fr auto;
-      transition:.28s;
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease, filter .28s ease, opacity .28s ease;
     }
-    /* 하단만 살짝 밝아지게 */
     .card::after{
       content:""; position:absolute; inset:auto 0 0 0; height:46px;
       background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
       pointer-events:none;
     }
-    .card:hover{
-      transform:translateY(-5px);
-      box-shadow:0 12px 26px rgba(0,0,0,.45), 0 0 18px rgba(var(--glow),.16);
-      border-color:rgba(var(--glow),.22);
-    }
-
     .thumb{
       aspect-ratio:10/9;
       background:
@@ -125,7 +124,7 @@
       text-shadow:0 0 22px rgba(var(--glow),.38), 0 4px 18px rgba(var(--glow),.12);
       border-bottom:1px solid var(--stroke);
     }
-    .body{ padding:14px; }                 /* 18 → 14 */
+    .body{ padding:14px; }
     .body h3{ margin:0 0 4px; font-weight:800; }
     .desc{ color:#b0b0b0; font-size:14px; line-height:1.55; }
     .actions{ display:flex; justify-content:flex-end; padding:0 14px 14px; margin-top:auto;}
@@ -141,25 +140,55 @@
       color:#fff; transform:translateY(-1px);
     }
 
-    /* ===== Footer (면책 문구) ===== */
+    /* ===== 강조/잔상 효과 ===== */
+    .card.is-dim{
+      opacity:.55;
+      filter: grayscale(.08) brightness(.88);
+    }
+    .card.is-focus{
+      transform: translateY(-8px) scale(1.02);
+      box-shadow:0 16px 34px rgba(0,0,0,.45), 0 0 18px rgba(var(--glow),.18);
+      border-color: rgba(var(--glow),.28);
+      opacity:1;
+      filter:none;
+    }
+
+    /* ===== 좌우 네비 버튼 (SVG) ===== */
+    .grid-nav{ pointer-events:none; }
+    .arrow{
+      pointer-events:auto;
+      position:absolute; top:50%; transform:translateY(-50%);
+      width:44px; height:44px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      border:1px rgb(255, 255, 255).25);
+      background:rgba(0,0,0,.55);
+      color:#fff;
+      box-shadow:0 0 14px rgba(255,255,255,.25);
+      transition:.2s;
+      user-select:none; cursor:pointer;
+    }
+    .arrow:hover{
+      background:rgba(0,0,0,.75);
+      box-shadow:0 0 18px rgba(255,255,255,.5);
+      transform:translateY(-50%) scale(1.05);
+    }
+    .arrow:active{ transform:translateY(-50%) scale(0.95); }
+    .arrow.prev{ left:-52px; }
+    .arrow.next{ right:-52px; }
+
+    .arrow svg{ width:22px; height:22px; }
+
+    @media (max-width: 640px){
+      .arrow.prev{ left:-36px; }
+      .arrow.next{ right:-36px; }
+    }
+
+    /* ===== Footer ===== */
     footer{
       display:flex; justify-content:center; margin:16px 0 36px;
       color:#9a9a9a; font-size:12px; text-align:center; line-height:1.4;
       padding:0 16px;
     }
-
-    /* ===== Tutorial Badge ===== */
-    .bubble-btn{
-      position:fixed; right:22px; bottom:22px; z-index:99;
-      height:44px; padding:0 18px; border-radius:9999px;
-      background:linear-gradient(135deg,#ffffff,#e7e7e7);
-      color:#111; font-weight:900; font-size:14px; text-decoration:none;
-      display:inline-flex; align-items:center; gap:10px;
-      box-shadow:0 14px 38px rgba(0,0,0,.50), 0 0 28px rgba(var(--glow),.45), inset 0 1px 0 rgba(255,255,255,.9);
-      transition:.22s; border:1px solid rgba(255,255,255,.75);
-    }
-    .bubble-btn:hover{ transform:translateY(-2px); }
-    .bubble-dot{ width:8px; height:8px; border-radius:50%; background:#111; opacity:.7; }
   </style>
 </head>
 <body>
@@ -172,40 +201,65 @@
   </header>
 
   <main>
-    <!-- Hero / Typewriter (높이 고정) -->
+    <!-- Hero / Typewriter -->
     <div id="typewriter">
       <div id="line1"></div>
       <div id="line2"></div>
     </div>
 
-    <!-- 기능 카드 -->
-    <section class="grid">
-      <article class="card">
-        <div class="thumb">Realtime</div>
-        <div class="body">
-          <h3>실시간 모의 투자 연습</h3>
-          <p class="desc">BTC·ETH·XRP 종목으로 주문·체결·잔고 UI를 체험하며 트레이딩을 연습하세요.</p>
-        </div>
-        <div class="actions"><a class="btn" href="realtime.html">들어가기</a></div>
-      </article>
+    <!-- 4개 카드 그리드 + 좌우 네비 -->
+    <section class="cards-wrap">
+      <div class="grid" id="cardGrid">
+        <article class="card" data-link="realtime.html">
+          <div class="thumb">Realtime</div>
+          <div class="body">
+            <h3>실시간 모의 투자 연습</h3>
+            <p class="desc">BTC·ETH·XRP 종목으로 주문·체결·잔고 UI를 체험하며 트레이딩을 연습하세요.</p>
+          </div>
+          <div class="actions"><a class="btn" href="realtime.html">시작하기</a></div>
+        </article>
 
-      <article class="card">
-        <div class="thumb">News</div>
-        <div class="body">
-          <h3>뉴스 한눈에 보기</h3>
-          <p class="desc">암호화폐 관련 뉴스를 모아서 빠르게 확인할 수 있습니다.</p>
-        </div>
-        <div class="actions"><a class="btn" href="news.html">들어가기</a></div>
-      </article>
+        <article class="card" data-link="news.html">
+          <div class="thumb">News</div>
+          <div class="body">
+            <h3>뉴스 한눈에 보기</h3>
+            <p class="desc">암호화폐 관련 뉴스를 모아서 빠르게 확인할 수 있습니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="news.html">들어가기</a></div>
+        </article>
 
-      <article class="card">
-        <div class="thumb">Crypto</div>
-        <div class="body">
-          <h3>암호화폐 백과사전</h3>
-          <p class="desc">대표 코인과 개념들을 정리한 백과사전을 살펴보세요.</p>
-        </div>
-        <div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div>
-      </article>
+        <article class="card" data-link="crypto.html">
+          <div class="thumb">Crypto</div>
+          <div class="body">
+            <h3>암호화폐 백과사전</h3>
+            <p class="desc">대표 코인과 개념들을 정리한 백과사전을 살펴보세요.</p>
+          </div>
+          <div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div>
+        </article>
+
+        <article class="card" data-link="historical.html">
+          <div class="thumb">Game</div>
+          <div class="body">
+            <h3>과거 데이터 시뮬레이션</h3>
+            <p class="desc">실제 과거 암호화폐 데이터를 기반으로 <strong>게임처럼</strong> 투자 결정을 내리며 연습해보세요.</p>
+          </div>
+          <div class="actions"><a class="btn" href="historical.html">시작하기</a></div>
+        </article>
+      </div>
+
+      <!-- 좌우 네비 (SVG) -->
+      <div class="grid-nav">
+        <button class="arrow prev" aria-label="이전">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+          </svg>
+        </button>
+        <button class="arrow next" aria-label="다음">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+          </svg>
+        </button>
+      </div>
     </section>
   </main>
 
@@ -214,17 +268,13 @@
     제공되는 정보는 학습/연습을 위한 참고 자료이며, 실제 투자 결과와 손실에 대한 책임을 지지 않습니다.
   </footer>
 
-  <!-- 튜토리얼 배지 -->
-  <a href="historical.html" class="bubble-btn" aria-label="튜토리얼 열기">
-    <span class="bubble-dot" aria-hidden="true"></span> 튜토리얼
-  </a>
-
-  <!-- Typewriter JS (line 높이 고정이라도 여전히 타이핑 효과 유지) -->
+  <!-- Typewriter + Focus JS -->
   <script>
+    // Typewriter
     (() => {
       const texts = [
         { el: "line1", text: "안녕하세요, ITC입니다." },
-        { el: "line2", text: "실시간 가격 흐름으로 연습하거나 뉴스와 백과사전으로 정보를 확인하세요." }
+        { el: "line2", text: "실시간·과거 데이터 게임으로 연습하고, 뉴스와 백과사전으로 정보를 확인하세요." }
       ];
       function typeWriter({ el, text }, done) {
         const target = document.getElementById(el);
@@ -236,6 +286,44 @@
         })();
       }
       typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 320));
+    })();
+
+    // Focus logic for 4-card grid
+    (function(){
+      const grid = document.getElementById('cardGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const prevBtn = document.querySelector('.arrow.prev');
+      const nextBtn = document.querySelector('.arrow.next');
+
+      let idx = 0;
+
+      function applyFocus(){
+        cards.forEach((c,i)=>{
+          c.classList.toggle('is-focus', i === idx);
+          c.classList.toggle('is-dim', i !== idx);
+        });
+      }
+      function move(dir){
+        idx = (idx + dir + cards.length) % cards.length;
+        applyFocus();
+      }
+
+      applyFocus();
+
+      prevBtn.addEventListener('click', ()=> move(-1));
+      nextBtn.addEventListener('click', ()=> move(+1));
+
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'ArrowLeft') move(-1);
+        if(e.key === 'ArrowRight') move(+1);
+      });
+
+      cards.forEach((card,i)=>{
+        card.addEventListener('click', (e)=>{
+          if(e.target.closest('.btn')) return;
+          idx = i; applyFocus();
+        });
+      });
     })();
   </script>
 </body>
