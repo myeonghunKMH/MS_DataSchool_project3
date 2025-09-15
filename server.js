@@ -258,6 +258,10 @@ const realtimeDisposer = registerRealtime(app, wss);
 const registerNews = require("./news");
 registerNews(app);
 
+// ===== 리포트 라우트 연결(report.js) =====
+const registerReport = require("./report");
+registerReport(app);
+
 
 // 종료 시 정리
 process.on('SIGINT', () => { realtimeDisposer.close(); process.exit(0); });
