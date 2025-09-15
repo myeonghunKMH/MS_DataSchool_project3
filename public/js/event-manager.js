@@ -1,8 +1,20 @@
-// event-manager.js - 드롭다운 이벤트 추가된 버전
+// event-manager.js - 이벤트 처리 매니저
+/**
+ * 역할: 모든 UI 이벤트 리스너 설정 및 처리
+ * 주요 기능:
+ * - 버튼 클릭 이벤트 처리 (가격조정, 퍼센트, 주문버튼) (setupButtonEvents)
+ * - 입력 필드 이벤트 처리 (가격, 수량, 총액) (setupInputEvents)
+ * - 거래 탭 및 타입 선택 이벤트 (setupTradingEvents)
+ * - 호가창 탭 전환 이벤트 (setupOrderbookEvents)
+ * - 차트 시간대 및 지표 이벤트 (setupChartEvents, setupDropdownEvents)
+ * - 주문 내역 탭 및 새로고침 (setupTradeHistoryTabEvents, setupOrderListButtonEvents)
+ * - 이벤트 들어간 UI 업데이트 및 다른 매니저 호출
+ */
 
 import { Utils } from "./utils.js";
 
 export class EventManager {
+  // 모든 UI 이벤트 리스너 설정 및 처리 담당 클래스
   constructor(state, domManager, uiController, tradingManager, chartManager) {
     this.state = state;
     this.dom = domManager;
@@ -19,7 +31,7 @@ export class EventManager {
     this.setupButtonEvents();
     this.setupTradeHistoryTabEvents();
     this.setupOrderListButtonEvents();
-    this.setupDropdownEvents(); // 🔧 드롭다운 이벤트 추가
+    this.setupDropdownEvents();
     this.setupIndicatorCloseButtons();
   }
 

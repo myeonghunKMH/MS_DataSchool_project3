@@ -1,8 +1,19 @@
-// DOMManager.js - 주문총액 입력 지원 버전
+// DOMManager.js - DOM 요소 관리 매니저
+/**
+ * 역할: HTML DOM 요소들에 대한 접근 및 조작 담당
+ * 주요 기능:
+ * - DOM 요소 참조 초기화 및 관리 (getElements)
+ * - 주문 입력 필드 값 설정 (setOrderPrice, setOrderQuantity, setOrderTotal)
+ * - 사용 가능 잔고 표시 업데이트 (updateAvailableAmount)
+ * - 주문 결과 메시지 표시 (showOrderResult)
+ * - 호가창 및 가격 정보 업데이트 (호가창 데이터 표시)
+ * - DOM 조작을 다른 매니저에서 쉽게 사용할 수 있도록 추상화
+ */
 
 import { Utils } from "./utils.js";
 
 export class DOMManager {
+  // HTML DOM 요소 접근 및 조작 담당 클래스
   constructor() {
     this.elements = this.getElements();
   }
@@ -24,10 +35,10 @@ export class DOMManager {
         "price-percentage-dropdown"
       ),
 
-      // 이벤트 리스너용 추가
+      // 이벤트 리스너용 (기존 요소 재사용)
       orderPriceInput: document.getElementById("order-price"),
       orderQuantityInput: document.getElementById("order-quantity"),
-      orderTotalInput: document.getElementById("order-total"), // 🔧 추가
+      orderTotalInput: document.getElementById("order-total"),
       orderTotalMarketInput: document.getElementById("order-total-market"),
 
       coinTabs: document.getElementById("coin-tabs"),
@@ -56,7 +67,6 @@ export class DOMManager {
       ),
       priceBtns: document.querySelectorAll(".price-btn"),
       quantityBtns: document.querySelectorAll(".quantity-btns button"),
-      // totalBtns 제거 - 더 이상 사용하지 않음
     };
   }
 
@@ -86,7 +96,7 @@ export class DOMManager {
     }
   }
 
-  // 🔧 주문총액 설정 함수 추가
+  // 주문총액 설정
   setOrderTotal(total) {
     if (this.elements.orderTotal) {
       this.elements.orderTotal.value = Utils.formatKRW(total);

@@ -1,7 +1,20 @@
+// UIController.js - UI 컴트롤러
+/**
+ * 역할: 사용자 인터페이스 업데이트 및 표시 관리
+ * 주요 기능:
+ * - 코인 탭 및 요약 정보 표시 (updateCoinTabs, updateCoinSummary)
+ * - 거래 패널 UI 업데이트 (updateTradingPanel)
+ * - 호가창 데이터 표시 (updateOrderbook)
+ * - 대기/체결 주문 리스트 표시 (updatePendingOrdersList, updateFilledOrdersList)
+ * - 사용자 데이터 초기화 및 로드 (setupInitialData, fetchUserData)
+ * - 가격/수량 자동 계산 UI 반영 (updateOrderTotal, updateQuantityFromPrice)
+ * - 코인 전환 처리 (switchCoin)
+ */
 import { MARKET_CODES, COIN_NAMES } from "./constants.js";
 import { Utils } from "./utils.js";
 
 export class UIController {
+  // 사용자 인터페이스 업데이트 및 표시 관리 담당 클래스
   constructor(state, domManager) {
     this.state = state;
     this.dom = domManager;

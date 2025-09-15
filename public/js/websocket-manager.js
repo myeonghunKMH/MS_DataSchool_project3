@@ -1,8 +1,19 @@
-// public/js/websocket-manager.js - 개선된 버전
+// public/js/websocket-manager.js - 웹소켓 매니저
+/**
+ * 역할: 실시간 데이터 수신 및 처리 (업비트 웹소켓 연결)
+ * 주요 기능:
+ * - 서버 웹소켓 연결 및 재연결 처리 (connect, handleReconnection)
+ * - 실시간 티커/호가창 데이터 수신 및 파싱 (handleTickerData, handleOrderbookData)
+ * - 클라이언트에게 데이터 브로드캐스트 (broadcastToClients)
+ * - 주문 체결 알림 처리 및 이팩트 (handleOrderFillNotification)
+ * - 체결 사운드 및 애니메이션 효과 (playFillSound, showFillAnimation)
+ * - 연결 상태 모니터링 및 관리 (isConnected, forceReconnect)
+ */
 import { MARKET_CODES } from "./constants.js";
 import { Utils } from "./utils.js";
 
 export class WebSocketManager {
+  // 실시간 데이터 수신 및 처리 담당 클래스
   constructor(state, uiController, tradingManager) {
     this.state = state;
     this.ui = uiController;
@@ -67,7 +78,7 @@ export class WebSocketManager {
     try {
       const message = JSON.parse(data);
 
-      // 🔥 주문 체결 알림 처리 (개선된 버전)
+      // 주문 체결 알림 처리
       if (message.type === "order_filled") {
         this.handleOrderFillNotification(message.data);
         return;
@@ -84,7 +95,7 @@ export class WebSocketManager {
     }
   }
 
-  // 🔧 개선된 주문 체결 알림 처리
+  // 주문 체결 알림 처리
   async handleOrderFillNotification(orderData) {
     console.log("🎯 주문 체결 알림 수신:", orderData);
 
@@ -115,10 +126,10 @@ export class WebSocketManager {
       this.ui.dom.showOrderResult(message, true);
     }
 
-    // 🔧 체결 사운드 효과 재생
+    // 체결 사운드 효과 재생
     this.playFillSound(orderData.status);
 
-    // 🔧 체결 애니메이션 효과
+    // 체결 애니메이션 효과
     this.showFillAnimation(orderData);
 
     // 관련 데이터 새로고침

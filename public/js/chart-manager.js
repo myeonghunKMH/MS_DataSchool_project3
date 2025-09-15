@@ -1,8 +1,20 @@
-// chart-manager.js
+// chart-manager.js - 차트 관리 매니저
+/**
+ * 역할: TradingView Lightweight Charts를 이용한 차트 생성 및 관리
+ * 주요 기능:
+ * - 캠들 차트 생성 및 데이터 렌더링 (fetchAndRender, processAndRenderData)
+ * - 차트 초기화 및 설정 (initializeCharts, createChart)
+ * - 보조지표 추가/제거 (addIndicator, removeIndicator, addMovingAverage)
+ * - 시간대 및 코인 변경에 따른 차트 업데이트 (checkAutoUpdate)
+ * - 차트 뷰포트 보존/복원 (preserveCurrentViewport, restorePreservedViewport)
+ * - 캠들 데이터 캠시 관리 및 최적화 (CacheManager 연동)
+ * - 대량 데이터 비동기 처리 및 성능 최적화
+ */
 import { COIN_NAMES } from "./constants.js";
 import { CacheManager } from "./cache-manager.js";
 
 export class ChartManager {
+  // TradingView 차트 생성 및 관리 담당 클래스
   constructor(state) {
     this.state = state;
     this.priceChart = null; // 메인 차트 인스턴스
