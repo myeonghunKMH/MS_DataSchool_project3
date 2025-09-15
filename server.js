@@ -186,6 +186,25 @@ app.get("/api/health", async (req, res) => {
 const registerQnaRoutes = require('./qna');
 registerQnaRoutes(app);
 
+// ===== 실시간 거래 모듈 연결 (trading 통합) =====
+let tradingWebSocketManager = null;
+try {
+  const APIRouter = require('./trading/routes/api-router');
+  const TradingService = require('./trading/services/trading-service');
+  
+  // DB 매니저와 서비스 초기화
+  const tradingService = new TradingService(db, null); // WebSocket 매니저는 나중에 설정
+  const apiRouter = new APIRouter(db, tradingService);
+  
+  // API 라우터 등록
+  app.use('/api', apiRouter.router);
+  
+  console.log('✅ Trading 모듈이 성공적으로 통합되었습니다.');
+} catch (error) {
+  console.error('❌ Trading 모듈 통합 실패:', error.message);
+  console.log('⚠️ 기본 realtime.js 모듈로 대체합니다.');
+}
+
 // ===== 시나리오 라우트 연결 (scenario.js) =====
 const registerScenarioRoutes = require("./scenario");
 registerScenarioRoutes(app);
@@ -196,6 +215,18 @@ const registerRealtime = require("./realtime");
 // server & wss는 여기서 '한 번만' 생성
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+// Trading WebSocket 매니저 초기화 (통합된 경우에만)
+if (tradingWebSocketManager === null) {
+  try {
+    const WebSocketManager = require('./trading/managers/websocket-manager');
+    tradingWebSocketManager = new WebSocketManager(wss, db);
+    tradingWebSocketManager.connect();
+    console.log('✅ Trading WebSocket 매니저가 초기화되었습니다.');
+  } catch (error) {
+    console.error('❌ Trading WebSocket 매니저 초기화 실패:', error.message);
+  }
+}
 
 // 실시간 기능 부착 후 disposer 받기
 const realtimeDisposer = registerRealtime(app, wss);

@@ -2,7 +2,6 @@
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
 const CONFIG = require("../config");
-const KRWUtils = require("../utils/krw-utils");
 const OrderMatchingEngine = require("../services/order-matching-engine");
 
 class WebSocketManager {
@@ -11,6 +10,7 @@ class WebSocketManager {
     this.clientWss = clientWebSocketServer;
     this.currentMarketPrices = {};
     this.dbManager = dbManager;
+    this.KRWUtils = dbManager.KRWUtils; // 데이터베이스의 KRWUtils 사용
 
     // 🔧 주문 매칭 엔진 초기화 및 WebSocket 매니저 연결
     this.matchingEngine = new OrderMatchingEngine(dbManager);
@@ -128,7 +128,7 @@ class WebSocketManager {
     if (!CONFIG.MARKET_CODES.includes(code)) return;
 
     // 현재 시장가 업데이트 (정수로 저장)
-    this.currentMarketPrices[code] = KRWUtils.toInteger(data.trade_price);
+    this.currentMarketPrices[code] = this.KRWUtils.toInteger(data.trade_price);
 
     // 마지막 가격 저장
     if (!this.latestOrderbooks[code]) {
@@ -233,7 +233,7 @@ class WebSocketManager {
   getIntegerPrices() {
     const integerPrices = {};
     Object.keys(this.currentMarketPrices).forEach((market) => {
-      integerPrices[market] = KRWUtils.toInteger(
+      integerPrices[market] = this.KRWUtils.toInteger(
         this.currentMarketPrices[market]
       );
     });

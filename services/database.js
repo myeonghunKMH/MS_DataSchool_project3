@@ -36,10 +36,14 @@ function makePool(dbName) {
   return pool;
 }
 
-// === 풀 2개 생성 ===
-// 기존 서비스용(crypto_data). 서버의 기존 import 호환을 위해 이름 'pool'도 유지.
+// === 풀 3개 생성 ===
+// 기존 서비스용(crypto_data) - 기본 데이터
 const cryptoDbName = process.env.DB_NAME || 'crypto_data';
 const pool = makePool(cryptoDbName);
+
+// 거래 전용(RT_trading_db) - pending_orders, transactions 등
+const tradingDbName = process.env.TRADING_DB_NAME || 'RT_trading_db';
+const tradingPool = makePool(tradingDbName);
 
 // Q&A 전용(qna)
 const qnaDbName = process.env.QNA_DB_NAME || 'qna';
@@ -255,7 +259,7 @@ async function getUserBalance(username) {
 
 async function getUserTransactions(userId, limit = 50, offset = 0) {
   try {
-    const [rows] = await pool.execute(`
+    const [rows] = await tradingPool.execute(`
       SELECT market, side, type, price, quantity, total_amount, created_at
       FROM transactions 
       WHERE user_id = ? 
@@ -271,7 +275,7 @@ async function getUserTransactions(userId, limit = 50, offset = 0) {
 
 async function getUserPendingOrders(userId) {
   try {
-    const [rows] = await pool.execute(`
+    const [rows] = await tradingPool.execute(`
       SELECT id, market, side, order_type, price, quantity, remaining_quantity, 
              total_amount, status, created_at
       FROM pending_orders 
@@ -287,7 +291,7 @@ async function getUserPendingOrders(userId) {
 
 async function getMarketPendingOrders(market) {
   try {
-    const [rows] = await pool.execute(`
+    const [rows] = await tradingPool.execute(`
       SELECT id, user_id, market, side, order_type, price, quantity, 
              remaining_quantity, total_amount, status, created_at
       FROM pending_orders 
@@ -305,7 +309,7 @@ async function getMarketPendingOrders(market) {
 }
 
 async function createPendingOrder(userId, market, side, price, quantity, totalAmount, type) {
-  const connection = await pool.getConnection();
+  const connection = await tradingPool.getConnection();
   try {
     await connection.beginTransaction();
 
@@ -341,7 +345,7 @@ async function createPendingOrder(userId, market, side, price, quantity, totalAm
 }
 
 async function cancelPendingOrder(userId, orderId) {
-  const connection = await pool.getConnection();
+  const connection = await tradingPool.getConnection();
   try {
     await connection.beginTransaction();
 
@@ -399,7 +403,7 @@ async function cancelPendingOrder(userId, orderId) {
 }
 
 async function executeTradeTransaction(userId, market, side, finalPrice, finalQuantity, totalAmount, type) {
-  const connection = await pool.getConnection();
+  const connection = await tradingPool.getConnection();
   try {
     await connection.beginTransaction();
 
@@ -475,6 +479,11 @@ async function processSellOrder(connection, userId, coinName, finalQuantity, tot
 // 거래 관련 함수들을 exports에 추가
 module.exports = {
   ...module.exports, // 기존 exports 유지
+  
+  // DB 풀들
+  pool,           // crypto_data (기본)
+  tradingPool,    // RT_trading_db (거래 전용)
+  qnaPool,        // qna (Q&A 전용)
   
   // 거래 관련 함수들 추가
   KRWUtils,

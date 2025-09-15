@@ -2,13 +2,13 @@
 const express = require("express");
 const axios = require("axios");
 const CONFIG = require("../config");
-const KRWUtils = require("../utils/krw-utils");
 const ValidationUtils = require("../utils/validation-utils");
 
 class APIRouter {
   constructor(dbManager, tradingService) {
     this.db = dbManager;
     this.trading = tradingService;
+    this.KRWUtils = dbManager.KRWUtils; // 데이터베이스의 KRWUtils 사용
     this.router = express.Router();
     this.setupRoutes();
   }
@@ -36,7 +36,7 @@ class APIRouter {
         });
       }
 
-      const processedBalance = KRWUtils.processBalance(balance);
+      const processedBalance = this.KRWUtils.processBalance(balance);
       res.json(processedBalance);
     } catch (err) {
       console.error("잔고 조회 오류:", err);
@@ -176,7 +176,7 @@ class APIRouter {
       );
       // ✅ 화살표 함수를 사용하여 'this' 컨텍스트를 유지합니다.
       const processedTransactions = transactions.map((t) =>
-        KRWUtils.processTransaction(t)
+        this.KRWUtils.processTransaction(t)
       );
 
       res.json(processedTransactions);
