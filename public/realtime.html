@@ -10,7 +10,6 @@
     <script src="https://unpkg.com/lightweight-charts@5.0.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   </head>
-
   <body>
     <!-- 🔧 새로 추가: 사용자 정보 표시 헤더 -->
     
@@ -28,14 +27,11 @@
         </button>
       </div>
     </div>
-
     <div class="container">
       <div class="header-summary" id="coin-summary"></div>
-
       <div class="top-chart-section">
         <div class="chart-controls">
           <div class="coin-tabs" id="coin-tabs"></div>
-
           <!-- 지표 및 차트 설정 드롭다운들 -->
           <div class="indicator-controls">
             <div class="dropdown-container">
@@ -49,27 +45,16 @@
                 <label><input type="checkbox" data-ma="200" /> MA200</label>
               </div>
             </div>
-
             <div class="dropdown-container">
-              <button class="indicator-btn" id="technical-toggle">
-                보조지표 ▼
-              </button>
+              <button class="indicator-btn" id="technical-toggle">보조지표 ▼</button>
               <div class="indicator-panel hidden" id="technical-panel">
-                <label
-                  ><input type="checkbox" data-indicator="RSI" /> RSI</label
-                >
-                <label
-                  ><input type="checkbox" data-indicator="MACD" /> MACD</label
-                >
-                <label
-                  ><input type="checkbox" data-indicator="BB" />
-                  볼린저밴드</label
-                >
+                <label><input type="checkbox" data-indicator="RSI" /> RSI</label>
+                <label><input type="checkbox" data-indicator="MACD" /> MACD</label>
+                <label><input type="checkbox" data-indicator="BB" /> 볼린저밴드</label>
               </div>
             </div>
           </div>
-
-          <!-- 시간단위를 드롭다운으로 변경 -->
+          <!-- 시간단위 선택 -->
           <div class="time-controls">
             <select id="timeframe-select" class="timeframe-dropdown">
               <option value="1">1분</option>
@@ -82,9 +67,26 @@
             </select>
           </div>
         </div>
+
+        <!-- 지표 상태 요약칸 -->
+        <section class="indicator-summary" aria-label="지표 상태 요약">
+          <div class="ind-item" id="summary-rsi">
+            <span class="label">RSI</span>
+            <span class="value status-neutral" data-name="rsi">안전</span>
+          </div>
+          <div class="ind-item" id="summary-macd">
+            <span class="label">MACD</span>
+            <span class="value status-neutral" data-name="macd">중립</span>
+          </div>
+          <div class="ind-item" id="summary-bb">
+            <span class="label">볼린저 밴드</span>
+            <span class="value status-normal" data-name="bb">정상</span>
+          </div>
+        </section>
+
         <div class="chart-container">
           <div id="priceChart" class="chart-section price-chart"></div>
-          
+
           <!-- RSI 차트 (초기 숨김) -->
           <div id="rsiChart" class="chart-section indicator-chart hidden" data-indicator="RSI">
             <div class="indicator-header">
@@ -93,7 +95,7 @@
             </div>
             <div class="chart-content"></div>
           </div>
-          
+
           <!-- MACD 차트 (초기 숨김) -->
           <div id="macdChart" class="chart-section indicator-chart hidden" data-indicator="MACD">
             <div class="indicator-header">
@@ -102,7 +104,7 @@
             </div>
             <div class="chart-content"></div>
           </div>
-          
+
           <div id="volumeChart" class="chart-section volume-chart"></div>
         </div>
       </div>
@@ -110,9 +112,7 @@
       <div class="bottom-content">
         <div class="orderbook-wrapper">
           <div class="orderbook-tab-group">
-            <button id="toggle-general" class="tab-button active">
-              일반 호가
-            </button>
+            <button id="toggle-general" class="tab-button active">일반 호가</button>
             <button id="toggle-grouped" class="tab-button">누적 호가</button>
             <button class="tab-button disabled">호가주문</button>
           </div>
@@ -153,33 +153,23 @@
             </div>
           </div>
         </div>
-
         <div class="trading-panel">
           <div class="trading-tabs">
             <button class="trading-tab active" data-side="bid">매수</button>
             <button class="trading-tab" data-side="ask">매도</button>
           </div>
-
           <div class="trading-content">
             <div class="balance-and-type">
               <div class="available-balance">
                 <span>주문가능</span>
-                <span id="available-amount" class="available-amount-value"
-                  >0 KRW</span
-                >
+                <span id="available-amount" class="available-amount-value">0 KRW</span>
               </div>
-
               <div class="trading-type">
-                <button class="trading-type-btn active" data-type="limit">
-                  지정가
-                </button>
-                <button class="trading-type-btn" data-type="market">
-                  시장가
-                </button>
+                <button class="trading-type-btn active" data-type="limit">지정가</button>
+                <button class="trading-type-btn" data-type="market">시장가</button>
                 <button class="trading-type-btn disabled">예약</button>
               </div>
             </div>
-
             <div class="trading-input-group price-input-group">
               <label for="order-price">주문가</label>
               <input type="text" id="order-price" placeholder="0" />
@@ -189,7 +179,6 @@
                 <button class="price-btn plus">+</button>
               </div>
             </div>
-
             <div class="trading-input-group quantity-input-group">
               <label for="order-quantity">주문수량</label>
               <input type="text" id="order-quantity" placeholder="0" />
@@ -200,12 +189,10 @@
                 <button data-percent="100">최대</button>
               </div>
             </div>
-
             <div class="trading-input-group total-input-group">
               <label for="order-total">주문총액</label>
               <input type="text" id="order-total" placeholder="0" />
             </div>
-
             <div class="trading-input-group market-total-group hidden">
               <label for="order-total-market">주문총액</label>
               <input type="text" id="order-total-market" placeholder="0" />
@@ -216,26 +203,14 @@
                 <button data-percent="100">최대</button>
               </div>
             </div>
-
             <button class="trade-button bid-button">매수</button>
             <button class="trade-button ask-button hidden">매도</button>
           </div>
-
           <div class="trade-history-container">
             <div class="tabs">
-              <button id="pending-orders-tab" class="tab-button active">
-                대기 주문
-              </button>
-              <button id="filled-orders-tab" class="tab-button">
-                체결 내역
-              </button>
-              <button
-                id="refresh-all-orders"
-                class="tab-button refresh-tab"
-                title="전체 새로고침"
-              >
-                🔄
-              </button>
+              <button id="pending-orders-tab" class="tab-button active">대기 주문</button>
+              <button id="filled-orders-tab" class="tab-button">체결 내역</button>
+              <button id="refresh-all-orders" class="tab-button refresh-tab" title="전체 새로고침">🔄</button>
             </div>
             <div id="pending-orders-section" class="tab-content">
               <div id="pending-orders-list" class="order-list"></div>
@@ -248,7 +223,7 @@
       </div>
     </div>
 
-    <!-- 🔧 새로 추가: 사용자 정보 로딩 스크립트 -->
+    <!-- 사용자 정보 로딩 스크립트 및 전역 지표함수 (필요시) -->
     <script>
       // 사용자 정보 로딩
     async function loadUserInfo() {
@@ -293,9 +268,7 @@
       loadUserInfo();
     });
 
-      // 전역 함수로 지표 관리
       let currentIndicators = [];
-
       function addIndicator(type) {
         const app = window.TradingApp?.app();
         if (app?.chartManager) {
@@ -306,7 +279,6 @@
           }
         }
       }
-
       function clearIndicators() {
         currentIndicators.forEach(({ series }) => {
           if (series && typeof series.remove === "function") {

@@ -1,5 +1,4 @@
 /* realtime.css - 실시간 트레이딩 페이지 스타일 */
-
 /* 상단 헤더 요약 정보 */
 .header-summary {
   display: flex;
@@ -8,30 +7,25 @@
   background-color: #1a1a1a;
   padding: 20px 0;
 }
-
 .summary-left {
   display: flex;
   flex-direction: column;
 }
-
 .summary-main {
   display: flex;
   align-items: baseline;
   margin-bottom: 5px;
 }
-
 .summary-name {
   font-size: 1.5rem;
   font-weight: bold;
   margin-right: 10px;
   color: #a0a0a0;
 }
-
 .summary-price {
   font-size: 2.5rem;
   font-weight: bold;
 }
-
 .summary-sub {
   font-size: 1rem;
   opacity: 0.8;
@@ -39,27 +33,22 @@
   align-items: center;
   gap: 10px;
 }
-
 .summary-right {
   display: flex;
   gap: 30px;
   font-size: 0.9rem;
 }
-
 .summary-item {
   display: flex;
   flex-direction: column;
 }
-
 .summary-label {
   opacity: 0.6;
   margin-bottom: 5px;
 }
-
 .summary-value {
   font-weight: bold;
 }
-
 /* 상단 차트 섹션 */
 .top-chart-section {
   background-color: #1c1c1c;
@@ -67,19 +56,16 @@
   border-radius: 8px;
   margin-bottom: 20px;
 }
-
 .chart-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
-
 .coin-tabs {
   display: flex;
   gap: 5px;
 }
-
 .coin-tab,
 .time-tab {
   background-color: #2a2a2a;
@@ -90,36 +76,31 @@
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 }
-
 .coin-tab.active,
 .time-tab.active {
   background: #022c22;
 }
-
 .chart-container-wrapper,
 .volume-container-wrapper {
   position: relative;
   height: 500px;
   width: 100%;
 }
-
 #coinChart {
   height: 100%;
   width: 100%;
 }
-
 canvas {
   width: 100% !important;
   height: 100% !important;
 }
-
 /* 하단 콘텐츠 레이아웃 */
 .bottom-content {
   display: flex;
   gap: 20px;
 }
 
-/* === 업비트 스타일 호가창 래퍼 === */
+/* 좌측 하단: 호가창 */
 .orderbook-wrapper {
   background: #181a20;
   border-radius: 4px;
@@ -130,13 +111,11 @@ canvas {
   height: 600px;
   overflow: hidden;
 }
-
 .orderbook-tab-group {
   display: flex;
   justify-content: space-between;
   border-bottom: 1px solid #333;
 }
-
 .tab-button {
   flex-grow: 1;
   background-color: #1c1c1c;
@@ -147,23 +126,19 @@ canvas {
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 }
-
 .tab-button:hover:not(.active) {
   background-color: #2a2a2a;
   color: #e0e0e0;
 }
-
 .tab-button.active {
   color: #e0e0e0;
   border-bottom: 2px solid #007bff;
 }
-
 .tab-button.disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-/* === 실제 거래소 스타일 호가창 === */
 .orderbook-container {
   display: flex;
   flex-direction: column;
@@ -390,7 +365,6 @@ canvas {
   width: 100%;
   height: 100%;
 }
-
 .orderbook-list {
   flex: 1;
   overflow-y: auto;
@@ -427,7 +401,6 @@ canvas {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
-
 .orderbook-list::-webkit-scrollbar {
   width: 4px;
 }
@@ -435,18 +408,12 @@ canvas {
 .orderbook-list::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .orderbook-list::-webkit-scrollbar-thumb {
   background-color: #444;
   border-radius: 2px;
   transition: background-color 0.2s ease;
 }
 
-.orderbook-list::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
-}
-
-/* === 업비트 스타일 호가창 아이템 === */
 .orderbook-unit {
   display: grid;
   align-items: center;
@@ -456,187 +423,45 @@ canvas {
   min-height: 24px;
   cursor: pointer;
   position: relative;
-  background: #181a20;
-  border-bottom: 1px solid rgba(43, 49, 57, 0.3);
-
-  /* 성능 최적화 */
-  transform: translateZ(0);
-  contain: layout;
-  will-change: auto;
-
-  /* 부드러운 트랜지션 */
-  transition: background-color 0.15s ease;
 }
 
-/* 일반 호가창 그리드 (3칸) */
-.orderbook-unit {
-  grid-template-columns: 1fr 1.5fr 1fr;
-  gap: 12px;
-}
-
-/* 누적 호가창 그리드 (5칸) */
-.orderbook-list.cumulative .orderbook-unit {
-  grid-template-columns: 1.2fr 0.8fr 1fr 1.2fr 1.2fr;
-}
-
-/* 가격 섹션 (가격 + 등락률) */
-.price-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.price-section .price-item {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.price-section .change-item {
-  font-size: 10px;
-  font-weight: 400;
-}
-
-/* 호가창 압력 배경 바 */
-.orderbook-unit {
-  position: relative;
-  overflow: hidden;
-}
-
-.orderbook-unit::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  z-index: 0;
-  transition: width 0.3s ease;
-  opacity: 0.6;
-}
-
-/* Ask (매도) 압력 바 - 누적호가용 */
-.ask-list.cumulative .orderbook-unit::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(246, 70, 93, 0.5) 100%);
-  width: var(--cumulative-width, 0%);
-  right: 0;
-  left: auto;
-}
-
-/* Bid (매수) 압력 바 - 누적호가용 */
-.bid-list.cumulative .orderbook-unit::before {
-  background: linear-gradient(90deg, rgba(14, 203, 129, 0.5) 0%, transparent 100%);
-  width: var(--cumulative-width, 0%);
-}
-
-/* 일반 호가창 압력 바 */
-.ask-list:not(.cumulative) .orderbook-unit::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(246, 70, 93, 0.3) 100%);
-  width: var(--pressure-width, 0%);
-  right: 0;
-  left: auto;
-}
-
-.bid-list:not(.cumulative) .orderbook-unit::before {
-  background: linear-gradient(90deg, rgba(14, 203, 129, 0.3) 0%, transparent 100%);
-  width: var(--pressure-width, 0%);
-}
-
-/* 통합 리스트 압력 바 - 매도 */
-.unified-list .ask-item::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(246, 70, 93, 0.3) 100%);
-  width: var(--pressure-width, 0%);
-  right: 0;
-  left: auto;
-}
-
-/* 통합 리스트 압력 바 - 매수 */
-.unified-list .bid-item::before {
-  background: linear-gradient(90deg, rgba(14, 203, 129, 0.3) 0%, transparent 100%);
-  width: var(--pressure-width, 0%);
-}
-
-/* 통합 리스트 누적 압력 바 - 매도 */
-.unified-list.cumulative .ask-item::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(246, 70, 93, 0.5) 100%);
-  width: var(--cumulative-width, 0%);
-  right: 0;
-  left: auto;
-}
-
-/* 통합 리스트 누적 압력 바 - 매수 */
-.unified-list.cumulative .bid-item::before {
-  background: linear-gradient(90deg, rgba(14, 203, 129, 0.5) 0%, transparent 100%);
-  width: var(--cumulative-width, 0%);
-}
-
-/* 업비트 스타일 호버 효과 */
 .orderbook-unit:hover {
   background-color: #2b3139 !important;
 }
 
-.ask-list .orderbook-unit:hover {
-  background-color: rgba(246, 70, 93, 0.1) !important;
-}
-
-.bid-list .orderbook-unit:hover {
-  background-color: rgba(14, 203, 129, 0.1) !important;
-}
-
-/* 통합 리스트 hover 효과 */
-.unified-list .ask-item:hover {
-  background-color: rgba(246, 70, 93, 0.1) !important;
-}
-
-.unified-list .bid-item:hover {
-  background-color: rgba(14, 203, 129, 0.1) !important;
-}
-
-/* 클릭 효과 */
 .orderbook-unit:active {
-  background-color: #363a45 !important;
-  transition-duration: 0.05s;
+  transform: scale(0.98);
 }
 
-/* === 업비트 스타일 호가창 데이터 항목들 === */
-.orderbook-item {
-  position: relative;
-  z-index: 1;
-  font-variant-numeric: tabular-nums;
-  font-weight: 400;
+.orderbook-unit[data-step="1000"] .orderbook-price {
+  border-left: 2px solid #ffa500;
 }
 
-/* 가격 (호가) */
-.price-item {
-  font-weight: 500;
-  font-size: 13px;
+.orderbook-unit[data-step="1"] .orderbook-price {
+  border-left: 2px solid #00ff88;
 }
 
-.ask-list .price-item {
-  color: #f6465d;  /* 업비트 빨간색 */
-  text-align: left;
+.ask-list .orderbook-unit {
+  background: linear-gradient(to right, #1c1c1c, rgba(255, 0, 0, 0.1));
 }
 
-.bid-list .price-item {
-  color: #0ecb81;  /* 업비트 초록색 */
-  text-align: left;
+.bid-list .orderbook-unit {
+  background: linear-gradient(to right, rgba(0, 0, 255, 0.1), #1c1c1c);
 }
 
-/* 통합 리스트 가격 색상 */
-.unified-list .ask-item .price-item {
-  color: #f6465d;  /* 업비트 빨간색 */
-  text-align: left;
+.orderbook-price {
+  font-weight: bold;
 }
 
-.unified-list .bid-item .price-item {
-  color: #0ecb81;  /* 업비트 초록색 */
-  text-align: left;
+.orderbook-price.ask {
+  color: #4caf50;
 }
 
-/* 수량 */
-.size-item {
-  font-weight: 400;
-  color: #f0f0f0;
-  text-align: right;
+.orderbook-price.bid {
+  color: #f44336;
+}
+
+.orderbook-size {
   font-size: 12px;
 }
 
@@ -722,7 +547,6 @@ canvas {
 .orderbook-list::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #666 0%, #444 100%);
 }
-
 .orderbook-price-info {
   text-align: center;
   font-weight: bold;
@@ -731,7 +555,6 @@ canvas {
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
 }
-
 /* 우측 하단: 주문창 섹션 */
 .trading-panel {
   background-color: #1c1c1c;
@@ -739,12 +562,10 @@ canvas {
   padding: 15px;
   flex: 1;
 }
-
 .trading-tabs {
   display: flex;
   margin-bottom: 15px;
 }
-
 .trading-tab {
   flex-grow: 1;
   padding: 10px;
@@ -755,27 +576,22 @@ canvas {
   color: #e0e0e0;
   transition: background-color 0.3s;
 }
-
 .trading-tab:first-child {
   border-radius: 5px 0 0 5px;
   background-color: #d64d50;
 }
-
 .trading-tab:last-child {
   border-radius: 0 5px 5px 0;
   background-color: #5d94d8;
 }
-
 .trading-tab.active {
   font-weight: bold;
 }
-
 .trading-content {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
-
 .balance-and-type {
   display: flex;
   justify-content: space-between;
@@ -783,26 +599,22 @@ canvas {
   gap: 20px;
   margin-bottom: 15px;
 }
-
 .available-balance {
   display: flex;
   flex-direction: column;
   font-size: 0.9rem;
   min-width: 120px;
 }
-
 .available-amount-value {
   font-weight: bold;
   margin-top: 2px;
 }
-
 .trading-type {
   align-items: end;
   display: flex;
   gap: 2px;
   flex: 1;
 }
-
 .trading-type-btn {
   background-color: #2a2a2a;
   color: #e0e0e0;
@@ -814,34 +626,28 @@ canvas {
   white-space: nowrap;
   font-size: 1rem;
 }
-
 .trading-type-btn.active {
   background-color: #444;
 }
-
 .trading-type-btn.disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
-
 .trading-input-group {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
-
 .trading-input-group.hidden {
   display: none;
 }
-
 .trading-input-group label {
   width: 80px;
   font-size: 0.9rem;
   color: #e0e0e0;
   font-weight: 500;
 }
-
 .trading-input-group input {
   flex-grow: 1;
   background-color: #2a2a2a;
@@ -852,36 +658,30 @@ canvas {
   font-size: 1rem;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
-
 .trading-input-group input:focus {
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
   outline: none;
 }
-
 .trading-input-group input:disabled {
   background-color: #1a1a1a;
   border-color: #333;
   cursor: not-allowed;
   opacity: 0.7;
 }
-
 .trading-input-group input.error {
   border-color: #c84a31;
   box-shadow: 0 0 5px rgba(200, 74, 49, 0.3);
 }
-
 .trading-input-group input.success {
   border-color: #00ff88;
   box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
 }
-
 .price-controls {
   display: flex;
   gap: 5px;
   align-items: center;
 }
-
 .price-btn {
   background-color: #2a2a2a;
   color: #e0e0e0;
@@ -893,11 +693,9 @@ canvas {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-
 .price-btn:hover {
   background-color: #444;
 }
-
 #price-percentage-dropdown {
   background-color: #2a2a2a;
   color: #e0e0e0;
@@ -906,13 +704,11 @@ canvas {
   border-radius: 5px;
   font-size: 0.8rem;
 }
-
 .quantity-btns {
   display: flex;
   gap: 5px;
   flex-grow: 1;
 }
-
 .quantity-btns button {
   flex-grow: 1;
   background-color: #2a2a2a;
@@ -924,22 +720,18 @@ canvas {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-
 .quantity-btns button:hover {
   background-color: #444;
 }
-
 .total-input-group {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .total-input-group label {
   width: 80px;
   font-size: 0.9rem;
 }
-
 .total-input-group input {
   flex-grow: 1;
   background-color: #2a2a2a;
@@ -949,18 +741,15 @@ canvas {
   border-radius: 5px;
   font-size: 1rem;
 }
-
 .total-input-group input:focus {
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
   outline: none;
 }
-
 .total-controls {
   display: flex;
   gap: 5px;
 }
-
 .total-controls button {
   background-color: #2a2a2a;
   color: #e0e0e0;
@@ -972,15 +761,12 @@ canvas {
   transition: background-color 0.2s;
   min-width: 45px;
 }
-
 .total-controls button:hover {
   background-color: #444;
 }
-
 .total-controls button:active {
   transform: scale(0.95);
 }
-
 .trade-button {
   padding: 15px;
   border: none;
@@ -990,46 +776,38 @@ canvas {
   cursor: pointer;
   transition: background-color 0.3s;
 }
-
 .bid-button {
   background-color: #d64d50;
   color: white;
 }
-
 .bid-button:hover {
   background-color: #c23e41;
 }
-
 .ask-button {
   background-color: #5d94d8;
   color: white;
 }
-
 .ask-button:hover {
   background-color: #4a7bc8;
 }
-
 /* 대기 주문 섹션 */
 .pending-orders-section {
   border-top: 1px solid #333;
   padding-top: 16px;
   margin-top: 16px;
 }
-
 .pending-orders-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
-
 .pending-orders-header h4 {
   color: #e0e0e0;
   font-size: 13px;
   font-weight: 600;
   margin: 0;
 }
-
 .refresh-btn {
   background: #2a2a2a;
   border: 1px solid #444;
@@ -1040,38 +818,31 @@ canvas {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-
 .refresh-btn:hover {
   background-color: #444;
 }
-
 .pending-orders-list {
   max-height: 200px;
   overflow-y: auto;
 }
-
 .pending-orders-list::-webkit-scrollbar,
 .filled-orders-list::-webkit-scrollbar {
   width: 6px;
 }
-
 .pending-orders-list::-webkit-scrollbar-track,
 .filled-orders-list::-webkit-scrollbar-track {
   background: #1a1a1a;
   border-radius: 3px;
 }
-
 .pending-orders-list::-webkit-scrollbar-thumb,
 .filled-orders-list::-webkit-scrollbar-thumb {
   background: #444;
   border-radius: 3px;
 }
-
 .pending-orders-list::-webkit-scrollbar-thumb:hover,
 .filled-orders-list::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
-
 .no-orders-message {
   color: #666;
   font-size: 12px;
@@ -1082,7 +853,6 @@ canvas {
   border: 1px dashed #333;
   margin: 10px 0;
 }
-
 .pending-order-item {
   background: #1e2026;
   border: 1px solid #2b2e36;
@@ -1094,31 +864,26 @@ canvas {
   transition: all 0.3s ease;
   position: relative;
 }
-
 .pending-order-item:hover {
   border-left-color: #007bff;
   background: #252830;
   transform: translateX(2px);
 }
-
 .pending-order-item.partial-filled {
   border-left-color: #2196f3;
   background: linear-gradient(90deg, rgba(33, 150, 243, 0.1) 0%, #1e2026 100%);
 }
-
 .pending-order-item .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
-
 .pending-order-item .order-main-info {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .pending-order-item .order-details {
   display: flex;
   justify-content: space-between;
@@ -1126,48 +891,39 @@ canvas {
   margin-bottom: 6px;
   font-size: 11px;
 }
-
 .pending-order-item .order-info {
   display: flex;
   gap: 12px;
   align-items: center;
 }
-
 .order-side.positive {
   color: #c84a31;
   font-weight: 600;
 }
-
 .order-side.negative {
   color: #1261c4;
   font-weight: 600;
 }
-
 .coin-name {
   color: #f1f1f4;
   font-weight: 500;
 }
-
 .order-time {
   color: #8991a0;
   font-size: 10px;
   text-align: right;
 }
-
 .order-price {
   color: #c9cbcf;
   font-weight: 600;
 }
-
 .order-quantity {
   color: #8991a0;
 }
-
 .order-total {
   color: #888;
   font-size: 10px;
 }
-
 .cancel-btn {
   background: #c84a31;
   color: white;
@@ -1179,12 +935,10 @@ canvas {
   transition: all 0.2s;
   font-weight: 500;
 }
-
 .cancel-btn:hover {
   background: #d64545;
   transform: scale(1.05);
 }
-
 .status-badge {
   background-color: #ff9800;
   color: white;
@@ -1194,19 +948,16 @@ canvas {
   font-weight: bold;
   margin-left: 5px;
 }
-
 .status-badge.partial {
   background-color: #2196f3;
   animation: pulse 2s infinite;
 }
-
 .order-progress {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 8px;
 }
-
 .progress-bar {
   flex: 1;
   height: 4px;
@@ -1214,7 +965,6 @@ canvas {
   border-radius: 2px;
   overflow: hidden;
 }
-
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #2196f3, #21cbf3);
@@ -1222,7 +972,6 @@ canvas {
   transition: width 0.3s ease;
   position: relative;
 }
-
 .progress-fill::after {
   content: "";
   position: absolute;
@@ -1238,14 +987,12 @@ canvas {
   );
   animation: shimmer 2s infinite;
 }
-
 .progress-text {
   font-size: 9px;
   color: #2196f3;
   font-weight: 600;
   white-space: nowrap;
 }
-
 /* 체결 내역 스타일 */
 .transaction-item {
   background: #1e2026;
@@ -1256,33 +1003,27 @@ canvas {
   font-size: 11px;
   transition: background 0.2s;
 }
-
 .transaction-item:hover {
   background: #252830;
 }
-
 .transaction-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
-
 .tx-side.positive {
   color: #c84a31;
   font-weight: 600;
 }
-
 .tx-side.negative {
   color: #1261c4;
   font-weight: 600;
 }
-
 .tx-coin {
   color: #f1f1f4;
   font-weight: 500;
 }
-
 .tx-type {
   background: #444;
   color: #ccc;
@@ -1290,7 +1031,6 @@ canvas {
   border-radius: 3px;
   font-size: 8px;
 }
-
 .transaction-details {
   display: flex;
   justify-content: space-between;
@@ -1298,20 +1038,17 @@ canvas {
   font-size: 10px;
   color: #8991a0;
 }
-
 .tx-time {
   color: #666;
   font-size: 9px;
   text-align: right;
 }
-
 /* 체결 알림 스타일 */
 .fill-notification {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: slideInFromTop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-
 /* 로딩 스피너 */
 .loading-spinner {
   display: inline-block;
@@ -1323,7 +1060,6 @@ canvas {
   animation: spin 1s ease-in-out infinite;
   margin-left: 8px;
 }
-
 /* 애니메이션 */
 @keyframes pulse {
   0% {
@@ -1336,7 +1072,6 @@ canvas {
     opacity: 1;
   }
 }
-
 @keyframes shimmer {
   0% {
     left: -100%;
@@ -1345,13 +1080,11 @@ canvas {
     left: 100%;
   }
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
-
 @keyframes slideInFromTop {
   0% {
     transform: translate(-50%, -100px);
@@ -1362,7 +1095,6 @@ canvas {
     opacity: 1;
   }
 }
-
 /* 반응형 개선 */
 @media (max-width: 768px) {
   .trading-input-group {
@@ -1370,39 +1102,31 @@ canvas {
     align-items: stretch;
     gap: 8px;
   }
-
   .trading-input-group label {
     width: auto;
   }
-
   .total-controls,
   .quantity-btns {
     justify-content: space-between;
   }
-
   .order-details {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-
   .order-info {
     flex-direction: column;
     gap: 2px;
   }
-
   .progress-text {
     font-size: 8px;
   }
-
   .transaction-details {
     flex-direction: column;
     gap: 2px;
   }
 }
-
 /* realtime.css에서 차트 관련 부분 수정 */
-
 /* 🔧 차트 컨테이너 크기 축소 및 정렬 개선 */
 .chart-container {
   display: flex;
@@ -1414,20 +1138,17 @@ canvas {
   overflow: visible; /* 🔧 overflow를 visible로 변경 */
   background-color: #1a1a1a;
 }
-
 #priceChart {
   flex: 3; /* 가격차트가 더 큰 비율 */
   min-height: 400px; /* 🔧 최소 높이 설정 */
   width: 100%;
 }
-
 #volumeChart {
   flex: 1; /* 볼륨차트는 작은 비율 */
   min-height: 120px; /* 🔧 최소 높이 설정 */
   width: 100%;
   border-top: 1px solid #333; /* 구분선 */
 }
-
 /* 🔧 차트 간 여백 제거 */
 #priceChart,
 #volumeChart {
@@ -1436,22 +1157,18 @@ canvas {
   border: none;
   display: block;
 }
-
 /* 🔧 반응형 개선 */
 @media (max-width: 768px) {
   .chart-container {
     height: 360px; /* 모바일에서 더 작게 */
   }
-
   #priceChart {
     min-height: 240px;
   }
-
   #volumeChart {
     min-height: 100px;
   }
 }
-
 /* 드롭다운 공통 스타일 */
 .indicator-dropdown,
 .timeframe-dropdown {
@@ -1465,37 +1182,31 @@ canvas {
   transition: all 0.2s;
   min-width: 120px;
 }
-
 .indicator-dropdown:hover,
 .timeframe-dropdown:hover {
   background-color: #444;
   border-color: #666;
 }
-
 .indicator-dropdown:focus,
 .timeframe-dropdown:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
-
 /* 시간단위 컨트롤 스타일 */
 .time-controls {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .time-controls label {
   color: #e0e0e0;
   font-size: 0.9rem;
   font-weight: 500;
 }
-
 .timeframe-dropdown {
   min-width: 80px;
 }
-
 /* 기존 indicator-controls 스타일 수정 */
 .indicator-controls {
   display: flex;
@@ -1505,13 +1216,11 @@ canvas {
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
-
 /* 반응형 개선 */
 @media (max-width: 768px) {
   .indicator-controls {
     gap: 10px;
   }
-
   .indicator-dropdown,
   .timeframe-dropdown {
     min-width: 100px;
@@ -1519,12 +1228,10 @@ canvas {
     padding: 6px 10px;
   }
 }
-
 /* 기존 indicator-controls 뒤에 추가 */
 .dropdown-container {
   position: relative;
 }
-
 .indicator-panel {
   position: absolute;
   top: 100%;
@@ -1537,7 +1244,6 @@ canvas {
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-
 .indicator-panel label {
   display: block;
   margin-bottom: 8px;
@@ -1545,11 +1251,9 @@ canvas {
   color: #e0e0e0;
   font-size: 0.9rem;
 }
-
 .indicator-panel input[type="checkbox"] {
   margin-right: 8px;
 }
-
 /* 보조지표 차트 레이아웃 */
 .chart-section {
   width: 100%;
@@ -1559,13 +1263,11 @@ canvas {
   display: block;
   position: relative;
 }
-
 .price-chart {
   height: 320px;
   min-height: 320px;
   flex-shrink: 0;
 }
-
 .indicator-chart {
   height: 120px;
   min-height: 120px;
@@ -1574,12 +1276,10 @@ canvas {
   background-color: #1a1a1a;
   transition: height 0.3s ease, opacity 0.3s ease;
 }
-
 /* 차트 생성 중에는 transition 비활성화 */
 .indicator-chart.creating {
   transition: none !important;
 }
-
 .indicator-chart.hidden {
   height: 0;
   min-height: 0;
@@ -1587,7 +1287,6 @@ canvas {
   opacity: 0;
   border: none;
 }
-
 .indicator-header {
   display: flex;
   justify-content: space-between;
@@ -1598,12 +1297,10 @@ canvas {
   height: 25px;
   font-size: 12px;
 }
-
 .indicator-title {
   color: #e0e0e0;
   font-weight: 500;
 }
-
 .indicator-close {
   background: none;
   border: none;
@@ -1618,35 +1315,19 @@ canvas {
   justify-content: center;
   transition: color 0.2s;
 }
-
 .indicator-close:hover {
   color: #e0e0e0;
 }
-
-.indicator-btn {
-  background: #064e3b;    /* 파란색 배경 */
-  color: #a7f3d0;              /* 흰 글씨 */
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  transition: background 0.2s ease, transform 0.1s ease;
-}
-
 
 .chart-content {
   height: calc(100% - 25px);
   width: 100%;
 }
-
 .volume-chart {
   flex: 1;
   min-height: 80px;
   border-top: 1px solid #333;
 }
-
 /* 사용자 헤더 */
 .user-header {
   background-color: #0f0f0f;
@@ -1656,19 +1337,16 @@ canvas {
   justify-content: space-between;
   align-items: center;
 }
-
 .user-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .user-info #user-name {
   color: #e0e0e0;
   font-weight: 600;
   font-size: 0.95rem;
 }
-
 .user-status {
   background-color: #00C851;
   color: white;
@@ -1677,12 +1355,10 @@ canvas {
   font-size: 0.7rem;
   font-weight: 500;
 }
-
 .header-actions {
   display: flex;
   gap: 10px;
 }
-
 .header-btn {
   background-color: #2a2a2a;
   color: #e0e0e0;
@@ -1693,19 +1369,16 @@ canvas {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .header-btn:hover {
   background-color: #444;
   border-color: #666;
 }
-
 /* 기존 컨테이너 여백 조정 */
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 15px 20px; /* 상단 여백 줄임 */
 }
-
 /* 반응형 */
 @media (max-width: 768px) {
   .user-header {
@@ -1722,5 +1395,66 @@ canvas {
   .header-btn {
     flex: 1;
     max-width: 100px;
+  }
+}
+
+/* --- [지표 상태 요약 칸 추가] --- */
+.indicator-summary {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #151515, #1a1a1a);
+  border: 1px solid #2b2b2b;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.indicator-summary .ind-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #171717;
+  border: 1px solid #262626;
+  min-width: 130px;
+}
+.indicator-summary .label {
+  font-size: 12px;
+  color: #9aa3b2;
+}
+.indicator-summary .value {
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  white-space: nowrap;
+}
+.indicator-summary .value.status-safe { background: #10b981; }       /* 안전/상승 */
+.indicator-summary .value.status-alert { background: #f59e0b; }      /* 경고 */
+.indicator-summary .value.status-sell { background: #ef4444; }       /* 약세 */
+.indicator-summary .value.status-buy { background: #16a34a; }        /* 강세 */
+.indicator-summary .value.status-neutral { background: #64748b; }    /* 중립 */
+.indicator-summary .value.status-normal { background: #3b82f6; }     /* BB 정상 */
+.indicator-summary .value.status-upper { background: #e11d48; }      /* BB 상단 돌파 */
+.indicator-summary .value.status-lower { background: #06b6d4; }      /* BB 하단 돌파 */
+.indicator-summary .value.status-squeeze { background: #8b5cf6; }    /* 스퀴즈 */
+/* 반응형 */
+@media (max-width: 768px) {
+  .indicator-summary {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .indicator-summary .ind-item {
+    min-width: 100px;
+    padding: 6px 8px;
+  }
+  .indicator-summary .label {
+    font-size: 11px;
+  }
+  .indicator-summary .value {
+    font-size: 12px;
+    padding: 3px 8px;
   }
 }
