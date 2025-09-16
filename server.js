@@ -287,7 +287,6 @@ registerReport(app);
 
 // ===== AI 챗봇 프록시 라우트 =====
 app.post("/api/chat", keycloak.protect(), async (req, res) => {
-  console.log('[/api/chat] Incoming headers:', req.headers); // 임시 디버깅 로그
   const { model, messages } = req.body;
   const apiKey = process.env.LLM_API_KEY;
   const apiEndpoint = 'https://chat.itc.today/api/v1/chat/completions';
