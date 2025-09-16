@@ -303,7 +303,8 @@ const AIAssistant = (() => {
 
             const response = await fetch('/api/chat', {
                 method: 'POST',
-                headers: headers,
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',  
                 body: JSON.stringify(requestBody)
             });
 
