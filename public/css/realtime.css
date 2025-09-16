@@ -93,7 +93,7 @@
 
 .coin-tab.active,
 .time-tab.active {
-  background-color: #444;
+  background: #022c22;
 }
 
 .chart-container-wrapper,
@@ -1622,6 +1622,19 @@ canvas {
 .indicator-close:hover {
   color: #e0e0e0;
 }
+
+.indicator-btn {
+  background: #064e3b;    /* 파란색 배경 */
+  color: #a7f3d0;              /* 흰 글씨 */
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
 
 .chart-content {
   height: calc(100% - 25px);
