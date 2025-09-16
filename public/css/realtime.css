@@ -1318,6 +1318,36 @@ canvas {
 .indicator-close:hover {
   color: #e0e0e0;
 }
+.indicator-btn {
+  display: inline-flex;          /* 내용 크기에 맞춰 버튼 길이 */
+  align-items: center;
+  gap: 6px;                      /* 텍스트와 화살표 간격 */
+  padding: 8px 12px;
+  background: #1f2937;           /* 다크톤 */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: background 0.2s ease, transform 0.1s ease;
+  font-size: 14px;
+}
+
+.indicator-btn:hover {
+  background: #374151;           /* hover 시 살짝 밝게 */
+}
+
+.indicator-btn:active {
+  background: #4b5563;           /* active 시 포인트 느낌 */
+  transform: scale(0.97);        /* 눌린 듯한 효과 */
+}
+
+/* 화살표만 오른쪽 붙이기 */
+.indicator-btn span {
+  display: inline-block;
+  font-size: 12px;
+}
 
 .chart-content {
   height: calc(100% - 25px);
