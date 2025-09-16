@@ -13,17 +13,18 @@
 
   <body>
     <!-- 🔧 새로 추가: 사용자 정보 표시 헤더 -->
+    
     <div class="user-header">
       <div class="user-info">
         <span id="user-name">로딩 중...</span>
         <span class="user-status">로그인됨</span>
       </div>
       <div class="header-actions">
-        <button class="header-btn" onclick="window.location.href='/mypage.html'">
-          마이페이지
+        <button class="header-btn" onclick="window.location.href='/index.html'">
+          메인페이지
         </button>
-        <button class="header-btn" onclick="window.location.href='/logout'">
-          로그아웃
+         <button class="header-btn" onclick="window.location.href='/mypage.html'">
+          MyPage
         </button>
       </div>
     </div>
@@ -250,27 +251,47 @@
     <!-- 🔧 새로 추가: 사용자 정보 로딩 스크립트 -->
     <script>
       // 사용자 정보 로딩
-      async function loadUserInfo() {
-        try {
-          const response = await fetch('/api/user');
-          if (response.ok) {
-            const user = await response.json();
-            document.getElementById('user-name').textContent = 
-              user.preferred_username || user.name || user.email || '사용자';
-            
-            // 삭제 예약 사용자 알림
-            if (user.deletion_cancelled) {
-              alert('계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다.');
-            }
+    async function loadUserInfo() {
+      try {
+        console.log('사용자 정보 로딩 시작...');
+        const response = await fetch('/api/user');
+        console.log('API 응답 상태:', response.status);
+        
+        if (response.ok) {
+          const user = await response.json();
+          console.log('받은 사용자 데이터:', user);
+          
+          // 사용자명 표시 (이메일에서 @ 앞부분만 추출)
+          const userName = user.username ? user.username.split('@')[0] : '사용자';
+          console.log('표시할 사용자명:', userName);
+          
+          const userNameElement = document.getElementById('user-name');
+          if (userNameElement) {
+            userNameElement.textContent = userName;
+            console.log('사용자명 업데이트 완료');
+          } else {
+            console.error('user-name 엘리먼트를 찾을 수 없습니다');
           }
-        } catch (error) {
-          console.error('사용자 정보 로딩 실패:', error);
-          document.getElementById('user-name').textContent = '사용자';
+          
+          // 삭제 예약 사용자 알림
+          if (user.deletion_cancelled) {
+            alert('계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다.');
+          }
+        } else {
+          console.error('사용자 정보 로딩 실패:', response.status);
+          document.getElementById('user-name').textContent = '로그인 오류';
         }
+      } catch (error) {
+        console.error('사용자 정보 로딩 실패:', error);
+        document.getElementById('user-name').textContent = '네트워크 오류';
       }
+    }
 
-      // 페이지 로드 시 사용자 정보 로딩
-      document.addEventListener('DOMContentLoaded', loadUserInfo);
+    // 페이지 로드 시 사용자 정보 로딩
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM 로드 완료, 사용자 정보 로딩 시작');
+      loadUserInfo();
+    });
 
       // 전역 함수로 지표 관리
       let currentIndicators = [];
