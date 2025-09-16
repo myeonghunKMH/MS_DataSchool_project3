@@ -142,15 +142,21 @@
 
     /* ===== 강조/잔상 효과 ===== */
     .card.is-dim{
-      opacity:.55;
-      filter: grayscale(.08) brightness(.88);
+      opacity:.35;
+      filter: grayscale(.15) brightness(.65);
+      transition: all 0.4s ease;
     }
     .card.is-focus{
-      transform: translateY(-8px) scale(1.02);
-      box-shadow:0 16px 34px rgba(0,0,0,.45), 0 0 18px rgba(var(--glow),.18);
-      border-color: rgba(var(--glow),.28);
+      transform: translateY(-8px) scale(1.04);
+      box-shadow:
+        0 20px 50px rgba(0,0,0,.6), 
+        0 0 30px rgba(var(--glow),.35),
+        0 0 60px rgba(255,255,255,.15);
+      border-color: rgba(var(--glow),.45);
       opacity:1;
-      filter:none;
+      filter: brightness(1.25) contrast(1.1);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03) 40%, rgba(255,255,255,.01));
+      transition: all 0.4s ease;
     }
 
     /* ===== 좌우 네비 버튼 (SVG, white border) ===== */
@@ -536,9 +542,7 @@
   <div class="tutorial-progress" id="tutorialProgress"></div>
 
   <button class="help-button" id="helpButton">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-    </svg>
+    <img src="/images/coin_good1.png" alt="튜토리얼 마스코트" style="width:24px; height:24px; border-radius:50%;">
     처음 오셨나요?
   </button>
 
@@ -724,8 +728,52 @@
         this.elements.bubble.className = `tutorial-bubble active ${position}`;
 
         document.querySelectorAll('.card').forEach(card => {
-            card.classList.toggle('is-focus', card === element);
-            card.classList.toggle('is-dim', card !== element);
+            if (card === element) {
+                card.classList.add('is-focus');
+                card.classList.remove('is-dim');
+                // 튜토리얼용 매우 강한 밝기 효과 - 카드 내용이 확실히 보이도록
+                card.style.filter = 'brightness(3.5) contrast(1.8) saturate(1.5)';
+                card.style.boxShadow = '0 30px 80px rgba(0,0,0,.9), 0 0 80px rgba(255,255,255,1), 0 0 120px rgba(255,209,102,.8), inset 0 0 50px rgba(255,255,255,.4)';
+                card.style.background = 'linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.15) 40%, rgba(255,255,255,.08))';
+                card.style.borderColor = 'rgba(255,209,102,1)';
+                card.style.transform = 'translateY(-12px) scale(1.08)';
+                // 카드 내부 텍스트도 더 밝게
+                const cardElements = card.querySelectorAll('h3, .desc, .btn');
+                cardElements.forEach(el => {
+                    if (el.classList.contains('btn')) {
+                        el.style.backgroundColor = 'rgba(255,255,255,.15)';
+                        el.style.color = '#fff';
+                        el.style.borderColor = 'rgba(255,209,102,.8)';
+                    } else {
+                        el.style.color = '#fff';
+                        el.style.textShadow = '0 2px 8px rgba(0,0,0,.5)';
+                    }
+                });
+                // 썸네일도 더 밝게 하지만 텍스트는 보이도록
+                const thumb = card.querySelector('.thumb');
+                if (thumb) {
+                    thumb.style.background = 'linear-gradient(170deg, rgba(255,255,255,.4), rgba(255,255,255,.1) 60%), linear-gradient(to right, #505050, #303030)';
+                    thumb.style.color = '#000';
+                    thumb.style.textShadow = '0 0 10px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.3)';
+                }
+            } else {
+                card.classList.add('is-dim');
+                card.classList.remove('is-focus');
+                card.style.filter = 'brightness(0.25) contrast(0.7) grayscale(0.3)';
+                card.style.boxShadow = '';
+                card.style.background = '';
+                card.style.borderColor = '';
+                card.style.transform = '';
+                // 다른 카드들의 스타일 초기화
+                const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
+                cardElements.forEach(el => {
+                    el.style.backgroundColor = '';
+                    el.style.color = '';
+                    el.style.borderColor = '';
+                    el.style.textShadow = '';
+                    el.style.background = '';
+                });
+            }
         });
 
         requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
@@ -743,7 +791,24 @@
         this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: 50%; transform: translateY(-50%);`;
         this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: 50%; transform: translateY(-50%);`;
         this.elements.bubble.className = 'tutorial-bubble active right';
-        document.querySelectorAll('.card').forEach(card => card.classList.remove('is-focus', 'is-dim'));
+        document.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('is-focus', 'is-dim');
+            // 센터 모드에서도 인라인 스타일 제거
+            card.style.filter = '';
+            card.style.boxShadow = '';
+            card.style.background = '';
+            card.style.borderColor = '';
+            card.style.transform = '';
+            // 카드 내부 요소들도 초기화
+            const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
+            cardElements.forEach(el => {
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.style.borderColor = '';
+                el.style.textShadow = '';
+                el.style.background = '';
+            });
+        });
         
         requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
       }
@@ -767,7 +832,24 @@
         this.elements.bubble.classList.remove('show', 'active');
         this.elements.mascot.classList.remove('active');
         this.elements.progress.classList.remove('active');
-        document.querySelectorAll('.card').forEach(card => card.classList.remove('is-focus', 'is-dim'));
+        document.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('is-focus', 'is-dim');
+            // 튜토리얼 종료 시 인라인 스타일 제거
+            card.style.filter = '';
+            card.style.boxShadow = '';
+            card.style.background = '';
+            card.style.borderColor = '';
+            card.style.transform = '';
+            // 카드 내부 요소들도 초기화
+            const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
+            cardElements.forEach(el => {
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.style.borderColor = '';
+                el.style.textShadow = '';
+                el.style.background = '';
+            });
+        });
         this.elements.mascot.style.cssText = '';
         localStorage.setItem('itc-tutorial-completed', 'true');
       }
