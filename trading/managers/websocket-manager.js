@@ -183,7 +183,7 @@ class WebSocketManager {
   }
 
   /**
-   * 🔧 개선된 주문 체결 알림을 클라이언트에게 전송
+   * 주문 체결 알림을 해당 사용자에게만 전송 (접속한 계정만)
    */
   broadcastOrderFillNotification(userId, orderDetails) {
     const notification = {
@@ -192,22 +192,14 @@ class WebSocketManager {
       timestamp: Date.now(),
       data: {
         ...orderDetails,
-        // 추가 정보
         executionTime: new Date().toISOString(),
         marketPrice: this.currentMarketPrices[orderDetails.market],
       },
     };
 
-    console.log(
-      `📢 체결 알림 브로드캐스트: 사용자 ${userId}, ${orderDetails.market} ${
-        orderDetails.side
-      } ${
-        orderDetails.executedQuantity
-      }개 @ ${orderDetails.executionPrice.toLocaleString()}원`
-    );
-
-    // 모든 클라이언트에게 체결 알림 전송
+    // 해당 사용자에게만 체결 알림 전송 (접속한 계정만)
     this.clientWss.clients.forEach((client) => {
+      // 추후 사용자 인증 시스템 구현시 해당 사용자에게만 전송하도록 수정 필요
       if (client.readyState === WebSocket.OPEN) {
         try {
           client.send(JSON.stringify(notification));

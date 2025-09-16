@@ -1087,6 +1087,11 @@ canvas {
   transition: height 0.3s ease, opacity 0.3s ease;
 }
 
+/* 차트 생성 중에는 transition 비활성화 */
+.indicator-chart.creating {
+  transition: none !important;
+}
+
 .indicator-chart.hidden {
   height: 0;
   min-height: 0;

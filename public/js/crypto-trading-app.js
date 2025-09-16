@@ -1,4 +1,14 @@
-// crypto-trading-app.js - 매니저 간 참조 설정
+// crypto-trading-app.js - 암호화폐 거래 애플리케이션 (메인 애플리케이션)
+/**
+ * 역할: 전체 암호화폐 거래 시스템의 메인 컨트롤러
+ * 주요 기능:
+ * - 모든 매니저 인스턴스 생성 및 초기화 (constructor)
+ * - 매니저 간 참조 설정 및 의존성 주입 (constructor)
+ * - 시스템 전체 초기화 및 시작 (initialize)
+ * - 주기적 업데이트 관리 (startPeriodicUpdates)
+ * - 전역 에러 처리 및 로깅 (handleError)
+ * - 시스템 정리 및 종료 (cleanup)
+ */
 import { TradingState } from "./trading-state.js";
 import { DOMManager } from "./dom-manager.js";
 import { UIController } from "./ui-controller.js";
@@ -8,6 +18,7 @@ import { EventManager } from "./event-manager.js";
 import { WebSocketManager } from "./websocket-manager.js";
 
 export class CryptoTradingApp {
+  // 메인 애플리케이션 클래스 - 모든 매니저들을 통합 관리
   constructor() {
     this.state = new TradingState();
     this.domManager = new DOMManager();
@@ -17,7 +28,7 @@ export class CryptoTradingApp {
     this.tradingManager = new TradingManager(this.state, this.domManager);
     this.uiController = new UIController(this.state, this.domManager);
 
-    // 🔧 매니저 간 참조 설정 (순서 중요)
+    // 매니저 간 참조 설정
     this.uiController.setManagers(this.chartManager, this.tradingManager);
     this.tradingManager.setUIController(this.uiController);
 
@@ -35,7 +46,7 @@ export class CryptoTradingApp {
       this.tradingManager
     );
 
-    console.log("🔧 매니저 간 참조 설정 완료");
+    console.log("매니저 간 참조 설정 완료");
   }
 
   async initialize() {

@@ -1,16 +1,28 @@
-// TradingManager.js - 최종 수정된 전체 코드
+// TradingManager.js - 거래 처리 매니저
+/**
+ * 역할: 모의투자 거래 주문 처리 및 검증 담당
+ * 주요 기능:
+ * - 매수/매도 주문 전송 및 처리 (sendOrder)
+ * - 주문 입력값 검증 (가격, 수량, 잔고) (validateLimitOrder, validateMarketBuyOrder, validateMarketSellOrder)
+ * - 사용자 잔고 조회 및 업데이트 (fetchUserBalance)
+ * - 대기/체결 주문 내역 조회 (fetchPendingOrders, fetchFilledOrders)
+ * - 주문 취소 처리 (cancelOrder)
+ * - 가격/수량 자동 계산 (adjustPrice, calculatePercentageAmount)
+ * - 데이터 전체 새로고침 (refreshAllData)
+ */
 
 import { Utils } from "./utils.js";
 import { MIN_ORDER_AMOUNTS } from "./constants.js";
 
 export class TradingManager {
+  // 거래 주문 처리 및 검증 담당 클래스
   constructor(state, domManager) {
     this.state = state;
     this.dom = domManager;
-    this.uiController = null; // 🔧 UIController 참조 추가
+    this.uiController = null;
   }
 
-  // 🔧 UIController 참조 설정
+  // UIController 참조 설정
   setUIController(uiController) {
     this.uiController = uiController;
   }
@@ -202,7 +214,7 @@ export class TradingManager {
     }
   }
 
-  // 🔧 개선된 지정가 주문 검증 (코인별 최소 금액 적용)
+  // 지정가 주문 검증 (코인별 최소 금액 적용)
   validateLimitOrder(price, quantity) {
     if (!price || !quantity || price <= 0 || quantity <= 0) {
       this.dom.showOrderResult(
@@ -212,7 +224,7 @@ export class TradingManager {
       return false;
     }
 
-    // 🔧 코인별 최소 주문 금액 체크
+    // 코인별 최소 주문 금액 체크
     const minOrderAmount = MIN_ORDER_AMOUNTS[this.state.activeCoin] || 5000;
     const totalAmount = price * quantity;
     if (totalAmount < minOrderAmount) {
@@ -225,7 +237,7 @@ export class TradingManager {
       return false;
     }
 
-    // 🔧 코인별 가격 단위 체크
+    // 코인별 가격 단위 체크
     const priceStep = Utils.getPriceStep(price, this.state.activeCoin);
     if (price % priceStep !== 0) {
       const adjustedPrice = Utils.adjustPriceToStep(
@@ -397,7 +409,7 @@ export class TradingManager {
     }
   }
 
-  // 🔧 개선된 퍼센트 계산 (무조건 1000원 단위)
+  // 퍼센트 계산 (1000원 단위)
   calculatePercentageAmount(percent) {
     const percentage = percent / 100;
 
@@ -406,7 +418,7 @@ export class TradingManager {
         // 매수: 잔고 기준으로 총액 계산
         let totalAmount = Math.floor(this.state.userKRWBalance * percentage);
 
-        // 🔧 비트코인/이더리움의 경우 무조건 1000원 단위로 조정
+        // 1000원 단위로 조정
         if (
           this.state.activeCoin === "KRW-BTC" ||
           this.state.activeCoin === "KRW-ETH"
@@ -437,7 +449,7 @@ export class TradingManager {
         if (orderPrice > 0) {
           let total = quantity * orderPrice;
 
-          // 🔧 비트코인/이더리움의 경우 총액도 무조건 1000원 단위로 조정
+          // 총액도 1000원 단위로 조정
           if (
             this.state.activeCoin === "KRW-BTC" ||
             this.state.activeCoin === "KRW-ETH"
@@ -455,7 +467,7 @@ export class TradingManager {
       if (this.state.activeTradingSide === "bid") {
         let totalAmount = Math.floor(this.state.userKRWBalance * percentage);
 
-        // 🔧 시장가 매수도 1000원 단위로 조정
+        // 시장가 매수도 1000원 단위로 조정
         if (
           this.state.activeCoin === "KRW-BTC" ||
           this.state.activeCoin === "KRW-ETH"
@@ -472,7 +484,7 @@ export class TradingManager {
     }
   }
 
-  // 🔧 개선된 가격 조정 (코인별 호가 단위 적용)
+  // 가격 조정 (코인별 호가 단위 적용)
   adjustPrice(direction) {
     const currentPrice =
       Utils.parseNumber(this.dom.elements.orderPrice?.value) || 0;
@@ -484,7 +496,7 @@ export class TradingManager {
 
     this.dom.setOrderPrice(newPrice);
 
-    // 🔧 가격 변경 시 총액도 업데이트 (수량이 있는 경우)
+    // 가격 변경 시 총액도 업데이트
     if (this.state.activeTradingType === "limit") {
       const quantity =
         Utils.parseNumber(this.dom.elements.orderQuantity?.value) || 0;
@@ -494,7 +506,7 @@ export class TradingManager {
         // 수량 기준으로 총액 재계산
         let newTotal = newPrice * quantity;
 
-        // 🔧 비트코인/이더리움의 경우 총액을 1000원 단위로 조정
+        // 총액을 1000원 단위로 조정
         if (
           this.state.activeCoin === "KRW-BTC" ||
           this.state.activeCoin === "KRW-ETH"
@@ -515,7 +527,7 @@ export class TradingManager {
     }
   }
 
-  // 🔧 주문총액 변경 시 수량 자동 계산
+  // 주문총액 변경 시 수량 자동 계산
   updateQuantityFromTotal() {
     if (this.state.activeTradingType !== "limit") return;
 

@@ -1,5 +1,17 @@
-// public/js/cache-manager.js - 개별 캔들 추적 방식
+// public/js/cache-manager.js - 캐시 관리 매니저
+/**
+ * 역할: 차트 데이터 캐싱 및 성능 최적화
+ * 주요 기능:
+ * - 일반 API 데이터 캐싱 (get, set, isValid)
+ * - 캔들 데이터 스마트 캐싱 (addCandles, getCachedCandles, hasCandle)
+ * - 캔들 데이터 중복 방지 및 효율적 저장 (getMissingTimestamps)
+ * - 캐시 크기 제한 및 자동 정리 (limitCandleCache, cleanupCache)
+ * - 히스토리 데이터 지능형 처리 (getHistoryDataSmart)
+ * - 캐시 통계 및 디버깅 지원 (getStats, debugCandleCache)
+ * - 메모리 사용량 최적화 및 성능 향상
+ */
 export class CacheManager {
+  // 차트 데이터 캐싱 및 성능 최적화 담당 클래스
   constructor() {
     this.cacheTimeout = 60000; // 1분
     this.cache = new Map(); // 일반 차트 데이터 캐싱

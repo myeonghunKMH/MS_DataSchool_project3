@@ -296,11 +296,11 @@ async function getUserPendingOrders(userId) {
 async function getMarketPendingOrders(market) {
   try {
     const [rows] = await tradingPool.execute(`
-      SELECT id, user_id, market, side, order_type, price, quantity, 
+      SELECT id, user_id, market, side, order_type, price, quantity,
              remaining_quantity, total_amount, status, created_at
-      FROM pending_orders 
+      FROM pending_orders
       WHERE market = ? AND status IN ('pending', 'partial') AND remaining_quantity > 0
-      ORDER BY 
+      ORDER BY
         CASE WHEN side = 'bid' THEN price END DESC,
         CASE WHEN side = 'ask' THEN price END ASC,
         created_at ASC
@@ -309,6 +309,85 @@ async function getMarketPendingOrders(market) {
   } catch (error) {
     console.error("getMarketPendingOrders 오류:", error);
     return [];
+  }
+}
+
+// 주문 체결 트랜잭션 처리
+async function executeOrderFillTransaction(userId, orderId, market, side, executionPrice, executedQuantity, totalAmount, remainingQuantity) {
+  const tradingConnection = await tradingPool.getConnection();
+  const cryptoConnection = await pool.getConnection();
+
+  try {
+    await tradingConnection.beginTransaction();
+    await cryptoConnection.beginTransaction();
+
+    // 1. RT_trading_db에서 pending_orders 업데이트
+    const status = remainingQuantity <= 0 ? 'filled' : 'partial';
+    await tradingConnection.execute(`
+      UPDATE pending_orders
+      SET remaining_quantity = ?, status = ?, updated_at = NOW()
+      WHERE id = ?
+    `, [remainingQuantity, status, orderId]);
+
+    // 2. RT_trading_db에서 transactions에 체결 내역 추가
+    await tradingConnection.execute(`
+      INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'limit', NOW())
+    `, [userId, market, side, KRWUtils.toInteger(executionPrice), executedQuantity, KRWUtils.toInteger(totalAmount)]);
+
+    // 3. crypto_data에서 잔고 업데이트
+    const coinName = market.split('-')[1].toLowerCase();
+
+    if (side === 'bid') {
+      // 매수 체결: 코인 잔고 증가
+      await cryptoConnection.execute(`
+        UPDATE users
+        SET ${coinName}_balance = ${coinName}_balance + ?
+        WHERE id = ?
+      `, [executedQuantity, userId]);
+    } else {
+      // 매도 체결: KRW 잔고 증가
+      await cryptoConnection.execute(`
+        UPDATE users
+        SET krw_balance = krw_balance + ?
+        WHERE id = ?
+      `, [KRWUtils.toInteger(totalAmount), userId]);
+    }
+
+    await tradingConnection.commit();
+    await cryptoConnection.commit();
+
+    // 체결 로그는 주문 매칭 엔진에서 처리
+
+  } catch (error) {
+    await tradingConnection.rollback();
+    await cryptoConnection.rollback();
+    console.error('주문 체결 트랜잭션 오류:', error);
+    throw error;
+  } finally {
+    tradingConnection.release();
+    cryptoConnection.release();
+  }
+}
+
+// 사용자 잔고 조정 (환불 등)
+async function adjustUserBalance(userId, balanceType, amount) {
+  const connection = await pool.getConnection();
+  try {
+    const adjustedAmount = balanceType === 'krw_balance' ? KRWUtils.toInteger(amount) : amount;
+
+    await connection.execute(`
+      UPDATE users
+      SET ${balanceType} = ${balanceType} + ?
+      WHERE id = ?
+    `, [adjustedAmount, userId]);
+
+    // 잔고 조정 완료
+  } catch (error) {
+    console.error('잔고 조정 오류:', error);
+    throw error;
+  } finally {
+    connection.release();
   }
 }
 
@@ -349,13 +428,17 @@ async function createPendingOrder(userId, market, side, price, quantity, totalAm
 }
 
 async function cancelPendingOrder(userId, orderId) {
-  const connection = await tradingPool.getConnection();
-  try {
-    await connection.beginTransaction();
+  const tradingConnection = await tradingPool.getConnection();
+  const cryptoConnection = await pool.getConnection();
 
-    const [orderRows] = await connection.execute(`
+  try {
+    await tradingConnection.beginTransaction();
+    await cryptoConnection.beginTransaction();
+
+    // 1. 주문 정보 조회 (RT_trading_db에서)
+    const [orderRows] = await tradingConnection.execute(`
       SELECT market, side, price, remaining_quantity, total_amount, status
-      FROM pending_orders 
+      FROM pending_orders
       WHERE id = ? AND user_id = ? AND status IN ('pending', 'partial') FOR UPDATE
     `, [orderId, userId]);
 
@@ -365,44 +448,52 @@ async function cancelPendingOrder(userId, orderId) {
 
     const order = orderRows[0];
 
-    await connection.execute(`
-      UPDATE pending_orders 
+    // 2. 주문 상태 업데이트 (RT_trading_db에서)
+    await tradingConnection.execute(`
+      UPDATE pending_orders
       SET status = 'cancelled', updated_at = NOW()
       WHERE id = ? AND user_id = ? AND status IN ('pending', 'partial')
     `, [orderId, userId]);
 
+    // 3. 잔고 복구 (crypto_data에서)
     if (order.side === "bid") {
+      // 매수 주문 취소: KRW 잔고 복구
       const refundAmount = KRWUtils.calculateTotal(order.price, order.remaining_quantity);
-      
-      await connection.execute(`
-        UPDATE users 
+
+      await cryptoConnection.execute(`
+        UPDATE users
         SET krw_balance = krw_balance + ?
         WHERE id = ?
       `, [refundAmount, userId]);
 
-      console.log(`💰 매수 주문 취소 - KRW 잔고 복구: ${refundAmount.toLocaleString()}원`);
+      console.log(`💰 매수 주문 취소 완료 - KRW 잔고 복구: ${refundAmount.toLocaleString()}원`);
     } else if (order.side === "ask") {
+      // 매도 주문 취소: 코인 잔고 복구
       const coinName = order.market.split("-")[1].toLowerCase();
-      
-      await connection.execute(`
-        UPDATE users 
+
+      await cryptoConnection.execute(`
+        UPDATE users
         SET ${coinName}_balance = ${coinName}_balance + ?
         WHERE id = ?
       `, [order.remaining_quantity, userId]);
 
-      console.log(`🪙 매도 주문 취소 - ${coinName.toUpperCase()} 잔고 복구: ${order.remaining_quantity}개`);
+      console.log(`🪙 매도 주문 취소 완료 - ${coinName.toUpperCase()} 잔고 복구: ${order.remaining_quantity}개`);
     }
 
-    await connection.commit();
+    await tradingConnection.commit();
+    await cryptoConnection.commit();
+
     console.log(`❌ 주문 취소 완료: ID ${orderId}`);
 
     return { message: "주문이 성공적으로 취소되었습니다." };
   } catch (error) {
-    await connection.rollback();
+    await tradingConnection.rollback();
+    await cryptoConnection.rollback();
     console.error("주문 취소 처리 오류:", error);
     throw error;
   } finally {
-    connection.release();
+    tradingConnection.release();
+    cryptoConnection.release();
   }
 }
 
@@ -445,9 +536,7 @@ async function processBuyOrder(connection, userId, coinName, totalAmount, finalQ
     const currentBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
     const requiredAmount = KRWUtils.toInteger(totalAmount);
 
-    console.log(`💰 시장가 매수 잔고 확인 - 사용자 ID: ${userId}`);
-    console.log(`💰 현재 잔고: ${currentBalance.toLocaleString()}원`);
-    console.log(`💰 필요 금액: ${requiredAmount.toLocaleString()}원`);
+    // 시장가 매수 잔고 확인
 
     if (currentBalance < requiredAmount) {
       throw new Error(`잔액이 부족합니다. 현재 잔고: ${currentBalance.toLocaleString()}원, 필요 금액: ${requiredAmount.toLocaleString()}원`);
@@ -489,10 +578,7 @@ async function processSellOrder(connection, userId, coinName, finalQuantity, tot
     const currentCoinBalance = balanceRows[0]?.[`${coinName}_balance`] || 0;
     const currentKrwBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
 
-    console.log(`💰 시장가 매도 잔고 확인 - 사용자 ID: ${userId}`);
-    console.log(`💰 현재 ${coinName.toUpperCase()} 잔고: ${currentCoinBalance}개`);
-    console.log(`💰 매도 수량: ${finalQuantity}개`);
-    console.log(`💰 받을 금액: ${KRWUtils.toInteger(totalAmount).toLocaleString()}원`);
+    // 시장가 매도 잔고 확인
 
     if (currentCoinBalance < finalQuantity) {
       throw new Error(`보유 코인이 부족합니다. 현재 잔고: ${currentCoinBalance}개, 매도 수량: ${finalQuantity}개`);
@@ -622,6 +708,10 @@ module.exports = {
   getKeycloakUsers,
   getExistingKeycloakUsers,
   syncKeycloakUsers,
+
+  // 주문 매칭 관련 함수들
+  executeOrderFillTransaction,
+  adjustUserBalance,
 
   // KRWUtils 추가
   KRWUtils

@@ -5,12 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>과거 데이터 모의투자</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
 
     <style>
         * {
@@ -19,20 +17,209 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg: #212121;
+            --panel: #1f1f1f;
+            --panel-2: #1f1f1f;
+            --line: #424242;
+            --hairline: #5e5e5e;
+            --text: #E8ECF3;
+            --muted: #bfc6d6;
+            --active: #ffffff;
+            --active-600: #a3a3a3;
+            --headline: #ffd166;
+            --candle-up: rgb(255, 103, 103);
+            --candle-down: rgb(74, 196, 175);
+            --vol-up: rgba(255, 103, 103, .34);
+            --vol-down: rgba(74, 196, 175, .30);
+            --font-sm: 12.5px;
+            --font-md: 14.5px;
+            --font-lg: 18px;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f1419;
-            color: #ffffff;
-            overflow-x: hidden;
+            margin: 0;
+            background: var(--panel);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         .header {
-            background: #1a1f2e;
-            padding: 15px 20px;
-            border-bottom: 1px solid #2d3748;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--line);
+            position: relative;
+            background: var(--panel);
+        }
+
+        .left-tools {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-title {
+            text-align: center;
+            flex: 1;
+            /* 중앙 배치 */
+        }
+
+        .scenario-badge {
+            padding: 6px 16px;
+            border-radius: 9999px;
+            /* 완전히 둥근 pill */
+            background: rgba(49, 49, 49, 0.705);
+            border: 1px solid #bbb;
+            color: #bbb;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .scenario-subtitle {
+            font-size: var(--font-lg);
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .header-date {
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            color: #ffffff;
+            font-size: 15px;
+            opacity: .95;
+        }
+
+        .scenario-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn {
+            font-size: 12px;
+            padding: 9px 12px;
+            border-radius: 12px;
+            background: rgba(63, 63, 63, 0.705);
+            border: 1px solid var(--hairline);
+            color: #dfe5f1;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+            height: 35px;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn:hover {
+            background: #2c2c2c;
+            color: var(--active);
+        }
+
+        .back-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .back-text {
+            font-size: var(--font-sm);
+            font-weight: 600;
+        }
+
+        .header-title {
+            text-align: center;
+            flex: 1;
+        }
+
+        .scenario-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #bbbbbb;
+        }
+
+        .balances {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .b-item {
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(63, 63, 63, 0), rgb(63, 63, 63));
+        }
+
+        .b-label {
+            font-size: 9px;
+            color: #bac0cc;
+        }
+
+        .b-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: #eef3ff;
+        }
+
+        .b-value.positive {
+            color: #9CD67A;
+        }
+
+        .b-value.negative {
+            color: #FF7A7A;
+        }
+
+        .coin-icon {
+            width: 22px;
+            /* 아이콘 크기 */
+            height: 22px;
+            vertical-align: middle;
+        }
+
+        #krwBalance::after {
+            content: "₩";
+            margin-left: 2px;
+            font-size: 14px;
+            color: #eef3ff;
+        }
+
+        .scenario-subtitle {
+            font-size: var(--font-lg);
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .price-box {
+            text-align: center;
+        }
+
+        .price-main {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--active);
+        }
+
+        .price-sub {
+            font-size: var(--font-md);
+            margin-top: 4px;
+            color: var(--muted);
+        }
+
+        .price-sub.positive {
+            color: var(--candle-up);
+        }
+
+        .price-sub.negative {
+            color: var(--candle-down);
         }
 
         .logo {
@@ -48,26 +235,41 @@
         }
 
         .balance-item {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(63, 63, 63, 0), rgb(63, 63, 63));
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 16px;
             text-align: center;
         }
 
         .balance-label {
-            font-size: 12px;
-            color: #8892b0;
-            margin-bottom: 2px;
+            font-size: var(--font-sm);
+            color: var(--muted);
+            margin-bottom: 4px;
         }
 
         .balance-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #00d4aa;
+            font-size: var(--font-lg);
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .balance-value.positive {
+            color: var(--candle-up);
+        }
+
+        .balance-value.negative {
+            color: var(--candle-down);
         }
 
         .main-container {
             display: grid;
-            grid-template-columns: 300px 1fr 350px;
-            height: calc(100vh - 70px);
+            grid-template-columns: 230px 1fr 280px;
+            /* ✅ 좌측 220px, 우측 280px, 나머지 전부 중앙 */
+            height: calc(100vh - 85px);
             gap: 1px;
+            /* ✅ 공간 제거 */
             background: #2d3748;
         }
 
@@ -75,6 +277,36 @@
             background: #1a1f2e;
             display: flex;
             flex-direction: column;
+            width: 230px;
+            min-width: 200px;
+        }
+
+        .news-section {
+            border-top: 1px solid #2d3748;
+            padding: 12px 8px;
+            /* ✅ 내부 여백 축소 */
+            overflow-y: auto;
+            flex: 4;
+        }
+
+        .news-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 13px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        #news-timeline {
+            max-height: 600px;
+            overflow-y: auto;
+            font-size: 12px;
+            /* ✅ 뉴스 항목 글씨 크기 줄임 */
+            line-height: 1.4;
+        }
+
+        .news-entry {
+            padding: 5px 0;
         }
 
         .market-select {
@@ -156,8 +388,9 @@
         }
 
         .chart-header {
-            padding: 20px;
-            border-bottom: 1px solid #2d3748;
+            padding: 5px 15px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -182,22 +415,24 @@
         }
 
         .control-btn {
-            padding: 8px 15px;
-            background: #2d3748;
-            border: none;
-            color: #ffffff;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid #414141;
+            background: #202020;
+            color: #b1b1b1;
             cursor: pointer;
-            font-size: 14px;
+            height: 32px;
         }
 
         .control-btn:hover {
-            background: #4a5568;
+            background: #2c2c2c;
         }
 
         .control-btn.active {
-            background: #00d4aa;
-            color: #1a1f2e;
+            border-color: var(--active);
+            color: var(--active);
         }
 
         .speed-control {
@@ -207,13 +442,15 @@
         }
 
         .speed-slider {
-            width: 100px;
+            width: 130px;
+            accent-color: #cacaca;
         }
 
         .chart-container {
             flex: 1;
-            padding: 20px;
+            padding: 8px;
             position: relative;
+            background: #1b1b1b;
         }
 
         #priceChart {
@@ -222,67 +459,114 @@
         }
 
         .right-panel {
-            background: #1a1f2e;
+            background: var(--panel);
             display: flex;
             flex-direction: column;
+            width: 100%;
+            min-width: unset;
         }
 
         .trading-section {
             flex: 1;
-            padding: 20px;
+            padding: 15px 6px;
+        }
+
+        .trade-header {
+            width: 100%;
+            border-bottom: 1px solid var(--line);
+            margin: 0;
+            padding: 0;
         }
 
         .trading-tabs {
-            display: flex;
-            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            height: 50px;
+            font-size: 20px;
+            margin: 0;
+            padding: 0;
+            border-radius: 0;
+            overflow: hidden;
         }
 
         .trading-tab {
-            flex: 1;
-            padding: 12px;
-            background: #2d3748;
-            border: none;
-            color: #8892b0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-md);
+            font-weight: 700;
+            color: #fff;
             cursor: pointer;
-            font-size: 14px;
-        }
-
-        .trading-tab.active {
-            background: #00d4aa;
-            color: #1a1f2e;
+            border: none;
+            line-height: 1;
+            height: 100%;
         }
 
         .trading-tab.buy {
-            border-radius: 4px 0 0 4px;
+            background: #661f1a;
         }
 
+        /* ✅ 어두운 빨강 */
         .trading-tab.sell {
-            border-radius: 0 4px 4px 0;
+            background: #123764;
+        }
+
+        /* ✅ 어두운 파랑 */
+        .trading-tab.active {
+            opacity: 0.9;
         }
 
         .order-form {
-            margin-bottom: 30px;
+            margin: 0;
+            /* ✅ 바깥 여백 제거 */
+            padding: 0;
+            /* ✅ 내부 여백 제거 */
+            background: transparent;
+            /* ✅ 배경 없애고 우측패널 배경 그대로 사용 */
+            border: none;
+            /* ✅ 테두리 제거 */
+            border-radius: 0;
+            /* ✅ 둥근 모서리 제거 */
+            width: 100%;
+            /* ✅ 패널 전체 가로 차지 */
+            box-sizing: border-box;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .form-label {
             display: block;
             margin-bottom: 5px;
             font-size: 14px;
-            color: #8892b0;
+            color: #ffffff;
+            /* ✅ 상단 헤더와 동일 텍스트 색 */
         }
 
         .form-input {
             width: 100%;
             padding: 10px;
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            border-radius: 4px;
-            color: #ffffff;
-            font-size: 14px;
+            /* ✅ 살짝 줄여서 높이 조정 */
+            border: 1px solid var(--line);
+            background: var(--panel);
+            /* ✅ 헤더와 동일한 배경색 */
+            color: var(--text);
+            /* ✅ 디자인 텍스트 색상 */
+            border-radius: 8px;
+            /* ✅ 둥근 정도 줄임 */
+            font-size: var(--font-md);
+            height: 38px;
+            /* ✅ 고정 높이 */
+            box-sizing: border-box;
+            -moz-appearance: textfield;
+        }
+
+        .form-input::-webkit-outer-spin-button,
+        .form-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .form-input:focus {
@@ -304,27 +588,41 @@
         }
 
         .percentage-btn {
-            padding: 8px;
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            color: #8892b0;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
+            padding: 8px 0;
+            /* ✅ 높이 줄임 */
             flex: 1;
+            background: var(--panel);
+            /* ✅ 배경 통일 */
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            /* ✅ pill → 살짝 둥글게 */
+            font-size: var(--font-sm);
+            font-weight: 600;
+            color: var(--text);
+            /* ✅ 텍스트 색 통일 */
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            height: 38px;
+            /* ✅ 입력칸과 동일 높이 */
+            box-sizing: border-box;
         }
 
         .percentage-btn:hover {
-            background: #4a5568;
+            background: #1f2535;
+            border-color: #5a5a5a;
         }
 
         .percentage-input-group {
             display: flex;
             align-items: center;
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            border-radius: 4px;
-            padding: 0 10px 0 0;
+            background: var(--panel);
+            /* ✅ 패널 색상 통일 */
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            height: 38px;
+            /* ✅ 버튼과 입력칸 높이 동일 */
+            padding: 0 6px;
+            box-sizing: border-box;
         }
 
         .percentage-input {
@@ -347,27 +645,36 @@
 
         .order-btn {
             width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 14px;
+            border-radius: 14px;
+            /* 더 둥글게 */
+            font-size: var(--font-md);
+            /* 텍스트 크기 통일 */
+            font-weight: 700;
+            border: 1px solid #2a2f38;
+            /* 얇은 테두리 */
             cursor: pointer;
-            margin-top: 15px;
+            background: linear-gradient(180deg, var(--active), var(--active-600));
+            color: #0b0c0f;
+            transition: opacity 0.2s, transform 0.02s;
         }
 
-        .buy-btn {
-            background: #d73527;
+        .order-btn.buy-btn {
+            background: #b52b20;
             color: #ffffff;
         }
 
-        .sell-btn {
-            background: #1261c4;
+        .order-btn.sell-btn {
+            background: #0f4e9c;
             color: #ffffff;
         }
 
         .order-btn:hover {
-            opacity: 0.9;
+            opacity: 0.85;
+        }
+
+        .order-btn:active {
+            transform: translateY(0.5px);
         }
 
         .order-btn:disabled {
@@ -460,7 +767,17 @@
             background: #2d3748;
             display: flex;
             justify-content: space-between;
+            /* 좌/우 균형 */
             align-items: center;
+            font-size: 14px;
+            gap: 20px;
+            /* 요소 간 간격 */
+        }
+
+        #timeDisplay {
+            color: #00d4aa;
+            /* 시뮬시간 강조 */
+            font-family: monospace;
             font-size: 14px;
         }
 
@@ -548,14 +865,23 @@
 
         .confirm-btn {
             width: 100%;
-            padding: 15px;
-            background: #00d4aa;
-            color: #1a1f2e;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid #2a2f38;
+            background: linear-gradient(180deg, var(--active), var(--active-600));
+            color: #0b0c0f;
+            font-size: var(--font-md);
+            font-weight: 700;
             cursor: pointer;
+            transition: opacity 0.2s, transform 0.02s;
+        }
+
+        .confirm-btn:hover {
+            opacity: 0.85;
+        }
+
+        .confirm-btn:active {
+            transform: translateY(0.5px);
         }
 
         .error-message {
@@ -565,6 +891,32 @@
             border-radius: 4px;
             margin-bottom: 15px;
             font-size: 14px;
+        }
+
+        .pill-btn {
+            flex: 1;
+            padding: 12px 0;
+            background: #202020;
+            border: 1px solid #414141;
+            border-radius: 9999px;
+            /* 완전 둥근 pill */
+            color: #b1b1b1;
+            font-weight: 700;
+            font-size: var(--font-md);
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .pill-btn:hover {
+            background: #2c2c2c;
+            border-color: #5a5a5a;
+            color: var(--active);
+        }
+
+        .currency-krw {
+            color: #ffd166;
+            font-weight: 800;
+            font-size: 0.8em;
         }
 
         @media (max-width: 1200px) {
@@ -584,39 +936,38 @@
 
 <body>
     <div class="header">
-        <div class="logo">과거 데이터 가상화폐 모의투자</div>
-        <div class="balance-info">
-            <div class="balance-item">
-                <div class="balance-label">보유 KRW</div>
-                <div class="balance-value" id="krwBalance">1,000,000</div>
+        <div class="left-tools">
+            <a href="javascript:history.back()" class="back-btn">← 튜토리얼</a>
+        </div>
+        <div class="scenario-wrap">
+            <span class="scenario-badge">SCENARIO 02</span>
+            <span class="scenario-title">ETH 과거 데이터 모의투자</span>
+        </div>
+        <div class="balances">
+            <div class="b-item">
+                <div class="b-label">보유 KRW</div>
+                <div class="b-value">
+                    <span id="krwBalance">10,000,000</span>
+                </div>
             </div>
-            <div class="balance-item">
-                <div class="balance-label">총 자산</div>
-                <div class="balance-value" id="totalAssets">1,000,000</div>
+            <div class="b-item">
+                <div class="b-label">총 자산</div>
+                <div class="b-value">
+                    <img src="/images/coin.png" alt="코인" class="coin-icon">
+                    <span id="totalAssets">10,000,000</span>
+                </div>
             </div>
-            <div class="balance-item">
-                <div class="balance-label">수익률</div>
-                <div class="balance-value" id="profitRate">0.00%</div>
+            <div class="b-item">
+                <div class="b-label">수익률</div>
+                <div class="b-value">
+                    <span id="profitRate">0.00%</span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="main-container">
-        <div class="left-panel">
-            <div class="market-select">
-                <div class="market-tabs">
-                    <button onclick="history.back()" class="market-tab active">이전 페이지</button>
-                </div>
-            </div>
-            <div class="market-list">
-                <div class="market-item active" data-market="eth">
-                    <div>
-                        <div class="market-name">ETH/KRW</div>
-                        <div class="market-price" id="eth-price">-</div>
-                    </div>
-                    <div class="price-change" id="eth-change">-</div>
-                </div>
-            </div>
+        <div class="left-panel" style="background: var(--panel);">
             <div class="news-section" style="border-top:1px solid #2d3748; padding:15px 10px; overflow-y:auto; flex:4;">
                 <div class="news-title" style="font-weight:bold; margin-bottom:10px;">뉴스 타임라인</div>
                 <div id="news-timeline" class="news-list" style="max-height:600px; overflow-y:auto;"></div>
@@ -625,23 +976,20 @@
 
         <div class="center-panel">
             <div class="chart-header">
-                <div class="price-info">
-                    <div class="current-price" id="currentPrice">-</div>
-                    <div id="priceChange">-</div>
+                <div class="price-box">
+                    <div class="price-main" id="currentPrice">-</div>
+                    <div class="price-sub" id="priceChange">-</div>
                 </div>
                 <div class="simulation-controls">
-                    <button class="control-btn" id="playBtn">▶️ 시작</button>
-                    <button class="control-btn" id="pauseBtn">⏸️ 일시정지</button>
-                    <button class="control-btn" id="resetBtn">🔄 리셋</button>
+                    <button class="control-btn" id="playBtn">▶ 시작</button>
+                    <button class="control-btn" id="pauseBtn">⏸ 일시정지</button>
+                    <button class="control-btn" id="resetBtn">↻ 리셋</button>
                     <div class="speed-control">
                         <span>속도:</span>
                         <input type="range" class="speed-slider" id="speedSlider" min="1" max="10" value="1">
                         <span id="speedDisplay">1x</span>
                     </div>
                 </div>
-            </div>
-            <div class="time-display" id="timeDisplay">
-                시뮬레이션 시간: 준비 중...
             </div>
             <div class="chart-container">
                 <canvas id="priceChart"></canvas>
@@ -651,17 +999,19 @@
                     <div class="status-dot"></div>
                     <span id="statusText">시뮬레이션 대기 중</span>
                 </div>
+                <div id="timeDisplay">시뮬레이션 시간: 준비 중...</div>
                 <div id="dataProgress">데이터 로딩 중...</div>
             </div>
         </div>
 
         <div class="right-panel">
-            <div class="trading-section">
+            <div class="trade-header">
                 <div class="trading-tabs">
                     <button class="trading-tab buy active" id="buyTab">매수</button>
                     <button class="trading-tab sell" id="sellTab">매도</button>
                 </div>
-
+            </div>
+            <div class="trading-section">
                 <div class="order-form" id="orderForm">
                     <div class="form-group">
                         <label class="form-label">주문 수량</label>
@@ -738,21 +1088,18 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:1500;">
     </div>
     <div id="news-popup" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%,-20%);
-                background:#1a1f2e; border:1px solid #444; padding:25px; border-radius:8px;
-                z-index:2000; text-align:left; width:600px; max-height:70vh; overflow-y:auto;">
-
+                        background:url('/images/news1.png') center center / cover no-repeat; 
+                        border:1px solid #444; padding:25px; border-radius:8px;
+                        z-index:2000; text-align:left; width:600px; max-height:70vh; overflow-y:auto;
+                        color:#242424; font-weight:bold;">
         <h3 id="news-popup-title" style="margin-bottom:10px; font-size:1.4rem;"></h3>
-        <div id="news-popup-date" style="font-size:0.9rem; color:#bbb; margin-bottom:15px;"></div>
+        <div id="news-popup-date" style="font-size:0.9rem; color:#ffffff; margin-bottom:15px; font-weight:bold;"></div>
         <p id="news-popup-desc" style="margin:10px 0; line-height:1.5; white-space:pre-line;"></p>
-
         <!-- 1단계: 선택 버튼 (항상 보임, 기존 스타일 복원) -->
         <div id="news-popup-choice" style="display:flex; gap:10px; margin-top:15px;">
-            <button id="news-popup-buy" style="flex:1; padding:12px; background:#d73527; border:none; border-radius:5px;
-                       cursor:pointer; color:#fff; font-weight:bold;">매수</button>
-            <button id="news-popup-sell" style="flex:1; padding:12px; background:#1261c4; border:none; border-radius:5px;
-                       cursor:pointer; color:#fff; font-weight:bold;">매도</button>
-            <button id="news-popup-hold" style="flex:1; padding:12px; background:#444; border:none; border-radius:5px;
-                       cursor:pointer; color:#fff; font-weight:bold;">유지</button>
+            <button id="news-popup-buy" class="pill-btn">매수</button>
+            <button id="news-popup-sell" class="pill-btn">매도</button>
+            <button id="news-popup-hold" class="pill-btn">유지</button>
         </div>
 
         <!-- 2단계: 실제 주문창 (버튼은 그대로 두고, 주문창만 추가로 노출됨) -->
@@ -982,9 +1329,9 @@
                                 data: [],
                                 yAxisID: 'yPrice',
                                 color: {
-                                    up: 'rgba(215, 53, 39, 0.8)',
-                                    down: 'rgba(18, 97, 196, 0.8)',
-                                    unchanged: '#999'
+                                    up: getComputedStyle(document.documentElement).getPropertyValue('--candle-up').trim(),
+                                    down: getComputedStyle(document.documentElement).getPropertyValue('--candle-down').trim(),
+                                    unchanged: '#9aa0a6'
                                 }
                             },
                             {
@@ -1003,11 +1350,15 @@
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: 'day',    // 🔹 시나리오2는 일봉
-                                    tooltipFormat: 'yyyy-MM-dd'
+                                    unit: 'day',
+                                    tooltipFormat: 'yyyy-MM-dd',
+                                    displayFormats: { day: 'MM-dd' }
                                 },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.1)' },
-                                ticks: { color: '#8892b0', maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }
+                                adapters: {
+                                    date: luxon
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.08)' },
+                                ticks: { color: '#8892b0', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
                             },
                             yVolume: {
                                 type: 'linear',
@@ -1049,7 +1400,9 @@
                 // ✅ 캔들 데이터 (몸통 표시)
                 const priceData = displayData.map(d => {
                     const isUp = parseFloat(d.trade_price) >= parseFloat(d.opening_price);
-                    const candleColor = isUp ? 'rgba(215, 53, 39, 0.8)' : 'rgba(18, 97, 196, 0.8)'; // 거래량 색과 맞춤
+                    const candleColor = isUp
+                        ? getComputedStyle(document.documentElement).getPropertyValue('--candle-up').trim()
+                        : getComputedStyle(document.documentElement).getPropertyValue('--candle-down').trim();
                     return {
                         x: new Date(d.candle_date_time_kst).getTime(),
                         o: parseFloat(d.opening_price),
@@ -1069,8 +1422,8 @@
                 // ✅ 거래량 색상 (상승 = 빨강, 하락 = 파랑)
                 const volumeColors = displayData.map(d =>
                     parseFloat(d.trade_price) >= parseFloat(d.opening_price)
-                        ? 'rgba(215, 53, 39, 0.5)'   // 상승 → 빨강
-                        : 'rgba(18, 97, 196, 0.5)'   // 하락 → 파랑
+                        ? getComputedStyle(document.documentElement).getPropertyValue('--vol-up').trim()
+                        : getComputedStyle(document.documentElement).getPropertyValue('--vol-down').trim()
                 );
 
                 // 차트 데이터 갱신
@@ -1117,7 +1470,7 @@
                 const price = parseFloat(currentData.trade_price);
                 const prevData = this.historicalData[this.currentMarket]?.[this.currentDataIndex - 1];
 
-                document.getElementById('currentPrice').textContent = price.toLocaleString() + ' KRW';
+                document.getElementById('currentPrice').innerHTML = `<span class="currency-krw">ETH/KRW </span>${price.toLocaleString()} &#8361;`;
 
                 if (prevData) {
                     const prevPrice = parseFloat(prevData.trade_price);
@@ -1149,41 +1502,31 @@
             resetSimulation() {
                 this.pauseSimulation();
 
-                // 🔹 시나리오 시작일 기준 30일 미리 표시
-                const startTsKst = new Date(this.scenarioStart + "T00:00:00+09:00").getTime();
-                const preloadEnd = startTsKst + 5 * 24 * 60 * 60 * 1000; // 6일 (7/7 ~ 7/12)
-                const data = this.historicalData[this.currentMarket] || [];
+                // 🔹 초기 한 달(3/25~4/25) 데이터까지 미리 표시
+                const preloadEnd = new Date("2021-04-25T23:59:59+09:00").getTime();
+                const data = this.historicalData[this.currentMarket];
                 let preloadIndex = data.findIndex(d => d.timestamp >= preloadEnd);
-                if (preloadIndex === -1) preloadIndex = Math.max(0, data.length - 1);
+                if (preloadIndex === -1) preloadIndex = 0;
 
-                this.currentDataIndex = preloadIndex;   // ✅ 한 달 구간 미리 그림
-                this.startIndex = preloadIndex;         // ✅ 시뮬레이션 시작점 재설정
+                this.currentDataIndex = preloadIndex;  // ✅ 한 달 구간 미리 그림
+                this.startIndex = preloadIndex;        // ✅ 시뮬레이션 시작점 재설정
 
-                // ✅ 포트폴리오 초기화 (현금 500만 + ETH 500만 원치 보유)
-                const firstData = data[this.startIndex];
-                if (firstData) {
-                    const initPrice = parseFloat(firstData.opening_price);
-                    const ethAmount = 5000000 / initPrice;
-
-                    this.portfolio = {
-                        krw: 5000000,
-                        eth: { amount: ethAmount, totalCost: 5000000 }
-                    };
-                } else {
-                    this.portfolio = {
-                        krw: 5000000,
-                        eth: { amount: 0, totalCost: 0 }
-                    };
-                }
-
+                this.portfolio = {
+                    krw: this.initialKrw,
+                    btc: { amount: 0, totalCost: 0 },
+                    eth: { amount: 0, totalCost: 0 },
+                    xrp: { amount: 0, totalCost: 0 }
+                };
                 this.tradeHistory = [];
 
-                // ✅ 뉴스 상태/타임라인 초기화
+                // ✅ 뉴스 상태 초기화 (_userAction 제거)
                 this.newsList.forEach(n => delete n._userAction);
+
+                // ✅ 뉴스 타임라인 초기화
                 document.getElementById("news-timeline").innerHTML = "";
 
                 this.updateMarketPrices();
-                this.updateChart(); // ✅ 초기 구간 데이터 반영
+                this.updateChart(); // ✅ 초기 한 달 데이터 반영
                 document.getElementById('statusText').textContent = '시뮬레이션 리셋 완료';
             }
 
@@ -1521,7 +1864,11 @@
                     box.appendChild(div);
                 }
 
-                div.innerHTML = `<strong>${news.time}</strong><br>${news.title}${actionTag}`;
+                div.innerHTML = `
+                    <div class="news-entry">
+                        <strong>${news.time}${actionTag}</strong><br>${news.title}
+                    </div>
+                `;
                 div.onclick = () => this.showNewsPopup(news);
             }
 
