@@ -292,12 +292,26 @@ const AIAssistant = (() => {
     const callLLM = async (messages) => {
         const requestBody = { model: 'model-router', messages };
         try {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+
+            // Keycloak 토큰이 있으면 Authorization 헤더에 추가
+            if (window.keycloak && window.keycloak.token) {
+                headers['Authorization'] = 'Bearer ' + window.keycloak.token;
+            }
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify(requestBody)
             });
+
             if (!response.ok) {
+                // 401 Unauthorized의 경우, 사용자가 다시 로그인해야 할 수 있음을 알림
+                if (response.status === 401) {
+                    throw new Error('인증이 필요합니다. 다시 로그인해주세요.');
+                }
                 const errorData = await response.json();
                 throw new Error(errorData.error || `API call failed with status: ${response.status}`);
             }
