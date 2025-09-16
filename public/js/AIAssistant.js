@@ -126,7 +126,25 @@ const AIAssistant = (() => {
     const addMessageToChat = (sender, text) => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message', sender);
-        messageElement.textContent = text;
+        
+        if (sender === 'bot') {
+            // 봇 메시지 가독성 개선
+            let formattedText = text
+                // 숫자와 퍼센트를 강조
+                .replace(/(\d+(?:,\d{3})*(?:\.\d+)?%?원?)/g, '<em>$1</em>')
+                // 코인명 강조
+                .replace(/(비트코인|이더리움|리플|BTC|ETH|XRP)/g, '<strong>$1</strong>')
+                // 중요한 키워드 강조
+                .replace(/(상승|하락|급등|급락|돌파|지지|저항)/g, '<strong>$1</strong>')
+                // 문장 간 간격 개선을 위한 줄바꿈 처리
+                .replace(/\. ([가-힣A-Z])/g, '.\n\n$1');
+            
+            messageElement.innerHTML = formattedText;
+        } else {
+            // 사용자 메시지는 텍스트만
+            messageElement.textContent = text;
+        }
+        
         messagesContainer.appendChild(messageElement);
         scrollToBottom();
         return messageElement;
