@@ -108,6 +108,7 @@ stages:
                   --from-literal=DEFAULT_USER='$(DEFAULT-USER)' \
                   --from-literal=UPBIT_WS_URL='$(UPBIT-WS-URL)' \
                   --from-literal=MARKET_CODES='$(MARKET-CODES)' \
+                  --from-literal=LLM_API_KEY='$(LLM-API-KEY)' \
                   --from-literal=AZURE_MYSQL_HOST='$(AZURE-MYSQL-HOST)' \
                   --from-literal=AZURE_MYSQL_PORT='$(AZURE-MYSQL-PORT)' \
                   --from-literal=AZURE_MYSQL_USER='$(AZURE-MYSQL-USER)' \

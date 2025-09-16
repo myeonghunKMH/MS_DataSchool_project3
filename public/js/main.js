@@ -2,6 +2,10 @@
 
 import { CryptoTradingApp } from "./crypto-trading-app.js";
 import { Utils } from "./utils.js";
+import { MARKET_CODES, COIN_NAMES } from "./constants.js";
+
+// AIAssistant.js 같은 일반 스크립트에서 사용할 수 있도록 전역 변수에 할당
+window.APP_CONSTANTS = { MARKET_CODES, COIN_NAMES };
 
 let app = null;
 
@@ -50,6 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("🚀 암호화폐 거래 앱 초기화 시작");
     app = new CryptoTradingApp();
     await app.initialize();
+    AIAssistant.init();
   } catch (error) {
     console.error("앱 초기화 실패:", error);
     alert(

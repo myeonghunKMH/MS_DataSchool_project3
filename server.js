@@ -18,6 +18,29 @@ const pool = db.pool;
 // QnA 전용 풀 (questions/answers/comments/categories)
 const { qnaPool } = require("./services/database.js");
 const { sendDeletionConfirmationEmail } = require("./services/email.js");
+const mysql = require("mysql2");
+
+// ===== Azure MySQL (뉴스 DB) 연결 설정 =====
+const newsDbConnection = mysql.createPool({
+  host: process.env.AZURE_MYSQL_HOST,
+  port: parseInt(process.env.AZURE_MYSQL_PORT) || 3306,
+  user: process.env.AZURE_MYSQL_USER,
+  password: process.env.AZURE_MYSQL_PASSWORD,
+  database: process.env.AZURE_MYSQL_DATABASE,
+  ssl: { rejectUnauthorized: true },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+newsDbConnection.getConnection((err, conn) => {
+  if (err) {
+    console.error('❌ Azure MySQL (뉴스 DB) 연결 실패:', err);
+  } else {
+    console.log('✅ Azure MySQL (뉴스 DB) 연결 성공!');
+    conn.release();
+  }
+});
 
 const app = express();
 
@@ -261,6 +284,34 @@ registerNews(app);
 // ===== 리포트 라우트 연결(report.js) =====
 const registerReport = require("./report");
 registerReport(app);
+
+// ===== AI 챗봇 프록시 라우트 =====
+app.post("/api/chat", keycloak.protect(), async (req, res) => {
+  const { model, messages } = req.body;
+  const apiKey = process.env.LLM_API_KEY;
+  const apiEndpoint = 'https://chat.itc.today/api/v1/chat/completions';
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "LLM_API_KEY가 서버에 설정되지 않았습니다." });
+  }
+
+  try {
+    const response = await axios.post(
+      apiEndpoint,
+      { model, messages, stream: false },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error("LLM API 프록시 오류:", error.response ? error.response.data : error.message);
+    res.status(error.response?.status || 500).json({ error: "LLM API 호출 중 오류가 발생했습니다." });
+  }
+});
 
 
 // 종료 시 정리
