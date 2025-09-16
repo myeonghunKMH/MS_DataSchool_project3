@@ -5,20 +5,26 @@
     <title>실시간 암호화폐 모의투자</title>
     <link rel="stylesheet" href="css/common.css" />
     <link rel="stylesheet" href="css/realtime.css" />
+    <link rel="stylesheet" href="css/chat-widget.css" />
     <!-- TradingView Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts@5.0.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   </head>
   <body>
-    <!-- 사용자 정보 헤더 -->
+    <!-- 🔧 새로 추가: 사용자 정보 표시 헤더 -->
+    
     <div class="user-header">
       <div class="user-info">
         <span id="user-name">로딩 중...</span>
         <span class="user-status">로그인됨</span>
       </div>
       <div class="header-actions">
-        <button class="header-btn" onclick="window.location.href='/mypage.html'">마이페이지</button>
-        <button class="header-btn" onclick="window.location.href='/logout'">로그아웃</button>
+        <button class="header-btn" onclick="window.location.href='/index.html'">
+          메인페이지
+        </button>
+         <button class="header-btn" onclick="window.location.href='/mypage.html'">
+          MyPage
+        </button>
       </div>
     </div>
     <div class="container">
@@ -110,15 +116,41 @@
             <button id="toggle-grouped" class="tab-button">누적 호가</button>
             <button class="tab-button disabled">호가주문</button>
           </div>
+
+          <!-- 일반 호가창 -->
           <div class="orderbook-container" id="general-orderbook-container">
-            <div class="orderbook-list ask-list" id="general-ask-list"></div>
-            <div class="orderbook-price-info" id="current-trade-price-general"></div>
-            <div class="orderbook-list bid-list" id="general-bid-list"></div>
+
+            <!-- 통합 호가창 (매도 + 매수) -->
+            <div class="orderbook-section unified-section">
+              <div class="orderbook-list unified-list" id="general-unified-list"></div>
+            </div>
+
+            <!-- 체결강도 표시 -->
+            <div class="market-pressure">
+              <div class="pressure-bar">
+                <div class="ask-pressure" id="ask-pressure-bar"></div>
+                <div class="bid-pressure" id="bid-pressure-bar"></div>
+              </div>
+              <div class="pressure-labels">
+                <span class="ask-label">매도압력</span>
+                <span class="pressure-ratio" id="pressure-ratio">50:50</span>
+                <span class="bid-label">매수압력</span>
+              </div>
+            </div>
           </div>
+
+          <!-- 누적 호가창 -->
           <div class="orderbook-container hidden" id="grouped-orderbook-container">
-            <div class="orderbook-list ask-list" id="grouped-ask-list"></div>
-            <div class="orderbook-price-info" id="current-trade-price-grouped"></div>
-            <div class="orderbook-list bid-list" id="grouped-bid-list"></div>
+
+            <!-- 통합 호가창 (매도 + 매수) -->
+            <div class="orderbook-section unified-section">
+              <div class="orderbook-list unified-list cumulative" id="grouped-unified-list"></div>
+            </div>
+
+            <!-- 누적 차트 -->
+            <div class="cumulative-chart">
+              <canvas id="cumulative-depth-chart" width="100%" height="100"></canvas>
+            </div>
           </div>
         </div>
         <div class="trading-panel">
@@ -193,24 +225,48 @@
 
     <!-- 사용자 정보 로딩 스크립트 및 전역 지표함수 (필요시) -->
     <script>
-      async function loadUserInfo() {
-        try {
-          const response = await fetch('/api/user');
-          if (response.ok) {
-            const user = await response.json();
-            document.getElementById('user-name').textContent =
-              user.preferred_username || user.name || user.email || '사용자';
-
-            if (user.deletion_cancelled) {
-              alert('계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다.');
-            }
+      // 사용자 정보 로딩
+    async function loadUserInfo() {
+      try {
+        console.log('사용자 정보 로딩 시작...');
+        const response = await fetch('/api/user');
+        console.log('API 응답 상태:', response.status);
+        
+        if (response.ok) {
+          const user = await response.json();
+          console.log('받은 사용자 데이터:', user);
+          
+          // 사용자명 표시 (이메일에서 @ 앞부분만 추출)
+          const userName = user.username ? user.username.split('@')[0] : '사용자';
+          console.log('표시할 사용자명:', userName);
+          
+          const userNameElement = document.getElementById('user-name');
+          if (userNameElement) {
+            userNameElement.textContent = userName;
+            console.log('사용자명 업데이트 완료');
+          } else {
+            console.error('user-name 엘리먼트를 찾을 수 없습니다');
           }
-        } catch (error) {
-          console.error('사용자 정보 로딩 실패:', error);
-          document.getElementById('user-name').textContent = '사용자';
+          
+          // 삭제 예약 사용자 알림
+          if (user.deletion_cancelled) {
+            alert('계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다.');
+          }
+        } else {
+          console.error('사용자 정보 로딩 실패:', response.status);
+          document.getElementById('user-name').textContent = '로그인 오류';
         }
+      } catch (error) {
+        console.error('사용자 정보 로딩 실패:', error);
+        document.getElementById('user-name').textContent = '네트워크 오류';
       }
-      document.addEventListener('DOMContentLoaded', loadUserInfo);
+    }
+
+    // 페이지 로드 시 사용자 정보 로딩
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM 로드 완료, 사용자 정보 로딩 시작');
+      loadUserInfo();
+    });
 
       let currentIndicators = [];
       function addIndicator(type) {
@@ -234,6 +290,8 @@
       }
     </script>
 
+    <script src="js/TechnicalIndicatorManager.js"></script>
+    <script src="js/AIAssistant.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

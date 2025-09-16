@@ -59,8 +59,7 @@ export class CryptoTradingApp {
 
       this.uiController.updateOrderbook(
         this.state.latestOrderbookData[this.state.activeCoin].general,
-        this.domManager.elements.generalAskList,
-        this.domManager.elements.generalBidList
+        this.domManager.elements.generalUnifiedList
       );
 
       await this.tradingManager.fetchUserBalance();

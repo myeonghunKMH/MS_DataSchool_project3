@@ -30,6 +30,8 @@ class WebSocketManager {
     this.maxReconnectAttempts = 10;
     this.heartbeatInterval = null;
 
+    // 호가창 업데이트 디바운싱을 위한 타이머
+    this.orderbookUpdateTimers = {};
   }
 
   connect() {
@@ -181,8 +183,9 @@ class WebSocketManager {
       `📢 체결 알림 브로드캐스트: 사용자 ${userId}, ${orderDetails.market} ${orderDetails.side}`
     );
 
+    // 해당 사용자에게만 체결 알림 전송
     this.clientWss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
+      if (client.readyState === WebSocket.OPEN && client.userId === userId) {
         try {
           client.send(JSON.stringify(notification));
         } catch (error) {
@@ -246,6 +249,17 @@ function registerRealtime(app, wss) {
     const clientIP = req.socket.remoteAddress;
     console.log(`🔗 클라이언트 연결됨 (IP: ${clientIP})`);
 
+    // 사용자 인증 정보 설정 (세션 또는 토큰에서 추출)
+    // Keycloak 인증된 사용자 정보 가져오기
+    if (req.user && req.user.id) {
+      ws.userId = req.user.id;
+      console.log(`👤 사용자 ${req.user.id} 인증됨`);
+    } else {
+      // 인증되지 않은 경우 기본값 설정 (개발용)
+      ws.userId = null;
+      console.log(`⚠️ 인증되지 않은 클라이언트`);
+    }
+
     const prices = wsManager.getIntegerPrices();
     if (Object.keys(prices).length > 0) {
       ws.send(
@@ -256,8 +270,21 @@ function registerRealtime(app, wss) {
       );
     }
 
+    // 클라이언트로부터 사용자 ID 수신 처리
+    ws.on("message", (message) => {
+      try {
+        const data = JSON.parse(message);
+        if (data.type === "auth" && data.userId) {
+          ws.userId = data.userId;
+          console.log(`👤 클라이언트 사용자 ID 설정: ${data.userId}`);
+        }
+      } catch (error) {
+        console.error("클라이언트 메시지 처리 오류:", error);
+      }
+    });
+
     ws.on("close", () => {
-      console.log(`🔌 클라이언트 연결 끊김 (IP: ${clientIP})`);
+      console.log(`🔌 클라이언트 연결 끊김 (IP: ${clientIP}, 사용자: ${ws.userId})`);
     });
 
     ws.on("error", (error) => {

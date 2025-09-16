@@ -45,10 +45,8 @@ export class DOMManager {
       coinSummary: document.getElementById("coin-summary"),
       chartCanvas: document.getElementById("coinChart"),
 
-      generalAskList: document.getElementById("general-ask-list"),
-      generalBidList: document.getElementById("general-bid-list"),
-      groupedAskList: document.getElementById("grouped-ask-list"),
-      groupedBidList: document.getElementById("grouped-bid-list"),
+      generalUnifiedList: document.getElementById("general-unified-list"),
+      groupedUnifiedList: document.getElementById("grouped-unified-list"),
 
       pendingOrdersList: document.getElementById("pending-orders-list"),
       filledOrdersList: document.getElementById("filled-orders-list"),

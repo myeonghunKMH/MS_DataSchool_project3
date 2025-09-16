@@ -1,0 +1,183 @@
+/* AI Assistant Chat Widget Styles */
+:root {
+    --chat-widget-primary-color: #007bff;
+    --chat-widget-background-color: #ffffff;
+    --chat-widget-header-color: #f8f9fa;
+    --chat-widget-text-color: #333;
+    --chat-widget-user-msg-bg: #007bff;
+    --chat-widget-user-msg-color: #fff;
+    --chat-widget-bot-msg-bg: #f1f1f1;
+    --chat-widget-bot-msg-color: #333;
+    --chat-widget-border-radius: 8px;
+    --chat-widget-box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.chat-widget-resizer {
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    cursor: ns-resize;
+    z-index: 1;
+}
+
+#ai-chat-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--chat-widget-primary-color);
+    color: white;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: var(--chat-widget-box-shadow);
+    transition: transform 0.2s ease-in-out;
+    z-index: 9998;
+}
+
+#ai-chat-button:hover {
+    transform: scale(1.1);
+}
+
+#ai-chat-widget {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 370px;
+    max-width: 90vw;
+    height: 500px;
+    max-height: 70vh;
+    background-color: var(--chat-widget-background-color);
+    border-radius: var(--chat-widget-border-radius);
+    box-shadow: var(--chat-widget-box-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    display: none; /* Initially hidden */
+    z-index: 9999;
+}
+
+#ai-chat-widget.visible {
+    display: flex;
+}
+
+.chat-widget-header {
+    padding: 15px;
+    background-color: var(--chat-widget-header-color);
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+    color: var(--chat-widget-text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-widget-header .close-btn {
+    cursor: pointer;
+    font-size: 20px;
+    color: #888;
+}
+
+.chat-widget-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-message {
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.chat-message.user {
+    background-color: var(--chat-widget-user-msg-bg);
+    color: var(--chat-widget-user-msg-color);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-message.bot {
+    background-color: var(--chat-widget-bot-msg-bg);
+    color: var(--chat-widget-bot-msg-color);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-widget-disclaimer {
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+    padding: 8px 15px 0;
+    margin: 0;
+    border-top: 1px solid #ddd;
+}
+
+.chat-message.loading {
+    align-self: flex-start;
+}
+
+.chat-message.loading span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #aaa;
+    animation: bounce 1s infinite;
+}
+.chat-message.loading span:nth-child(2) { animation-delay: 0.1s; }
+.chat-message.loading span:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+}
+
+
+.chat-widget-input {
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    display: flex;
+    align-items: flex-start; /* 아이콘과 textarea 정렬 */
+}
+
+.chat-widget-input textarea {
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 8px 15px; /* 세로 패딩을 줄여 초기 높이 조정 */
+    font-size: 14px;
+    line-height: 1.4;
+    outline: none;
+    resize: none; /* 사용자가 직접 크기 조절하는 기능 비활성화 */
+    overflow-y: auto; /* 최대 높이 도달 시 스크롤바 생성 */
+    min-height: 20px; /* 1줄 높이 */
+    max-height: 90px; /* 약 5줄 높이 */
+    height: 20px; /* 초기 높이를 1줄로 고정 */
+}
+
+.chat-widget-input button {
+    background-color: var(--chat-widget-primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

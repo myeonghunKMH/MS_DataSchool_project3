@@ -21,6 +21,9 @@ export class WebSocketManager {
     this.ws = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
+
+    // 호가창 업데이트 디바운싱을 위한 타이머
+    this.orderbookUpdateTimers = {};
   }
 
   connect() {
@@ -53,7 +56,33 @@ export class WebSocketManager {
     this.ws.onopen = () => {
       console.log("✅ 웹소켓 연결 성공");
       this.reconnectAttempts = 0; // 연결 성공 시 재시도 횟수 리셋
+
+      // 사용자 인증 정보 전송 (현재 로그인한 사용자 ID)
+      this.sendUserAuth();
     };
+  }
+
+  // 사용자 인증 정보 전송
+  async sendUserAuth() {
+    try {
+      // 현재 로그인한 사용자 정보 가져오기
+      const response = await fetch('/api/user');
+      if (response.ok) {
+        const user = await response.json();
+
+        // 서버에 사용자 ID 전송
+        this.ws.send(JSON.stringify({
+          type: 'auth',
+          userId: user.id
+        }));
+
+        console.log(`👤 사용자 인증 전송: ${user.id}`);
+      } else {
+        console.warn('⚠️ 사용자 정보를 가져올 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('사용자 인증 전송 실패:', error);
+    }
   }
 
   handleReconnection() {
@@ -283,10 +312,10 @@ export class WebSocketManager {
         code === this.state.activeCoin &&
         this.state.activeOrderbookType === "general"
       ) {
-        this.ui.updateOrderbook(
+        this.debouncedUpdateOrderbook(
+          "general",
           data,
-          document.getElementById("general-ask-list"),
-          document.getElementById("general-bid-list")
+          document.getElementById("general-unified-list")
         );
       }
     } else {
@@ -295,13 +324,31 @@ export class WebSocketManager {
         code === this.state.activeCoin &&
         this.state.activeOrderbookType === "grouped"
       ) {
-        this.ui.updateOrderbook(
+        this.debouncedUpdateOrderbook(
+          "grouped",
           data,
-          document.getElementById("grouped-ask-list"),
-          document.getElementById("grouped-bid-list")
+          document.getElementById("grouped-unified-list")
         );
       }
     }
+  }
+
+  // 호가창 업데이트 디바운싱 (30ms 지연으로 빠른 반응성과 안정성 균형)
+  debouncedUpdateOrderbook(type, data, unifiedListElement) {
+    const key = `${this.state.activeCoin}-${type}`;
+
+    // 기존 타이머가 있으면 취소
+    if (this.orderbookUpdateTimers[key]) {
+      clearTimeout(this.orderbookUpdateTimers[key]);
+    }
+
+    // 새로운 타이머 설정 - requestAnimationFrame으로 렌더링 최적화
+    this.orderbookUpdateTimers[key] = setTimeout(() => {
+      requestAnimationFrame(() => {
+        this.ui.updateOrderbook(data, unifiedListElement);
+        delete this.orderbookUpdateTimers[key];
+      });
+    }, 30);
   }
 
   // 연결 상태 확인 메서드

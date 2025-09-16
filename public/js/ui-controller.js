@@ -247,85 +247,438 @@ export class UIController {
     `;
   }
 
-  updateOrderbook(orderbook, askListElement, bidListElement) {
-    if (!orderbook?.orderbook_units || !askListElement || !bidListElement)
+  updateOrderbook(orderbook, unifiedListElement) {
+    if (!orderbook?.orderbook_units || !unifiedListElement)
       return;
 
-    askListElement.innerHTML = "";
-    bidListElement.innerHTML = "";
-
+    // 매수/매도 각각 20개씩 표시
     const asks = orderbook.orderbook_units.sort(
-      (a, b) => b.ask_price - a.ask_price
-    );
+      (a, b) => a.ask_price - b.ask_price  // 매도호가: 낮은 가격부터 (현재가에서 가까운 순)
+    ).slice(0, 20);
+
     const bids = orderbook.orderbook_units.sort(
-      (a, b) => b.bid_price - a.bid_price
-    );
+      (a, b) => b.bid_price - a.bid_price  // 매수호가: 높은 가격부터 (현재가에서 가까운 순)
+    ).slice(0, 20);
 
-    asks.slice(0, 10).forEach((unit) => {
-      const div = document.createElement("div");
-      div.className = "orderbook-unit ask";
-      div.innerHTML = `
-        <span class="orderbook-price ask">${Utils.formatKRW(
-          unit.ask_price
-        )}</span>
-        <span class="orderbook-size">${Utils.formatCoinAmount(
-          unit.ask_size,
-          4
-        )}</span>
-      `;
+    // 체결강도 업데이트
+    this.updateMarketPressure(asks, bids);
 
-      div.onclick = () => {
-        if (this.state.activeTradingType === "limit") {
-          // 매수 시에는 매도호가 클릭 시 해당 가격으로 설정
-          if (this.state.activeTradingSide === "bid") {
-            this.dom.setOrderPrice(unit.ask_price);
-            this.updateOrderTotal();
+    // 호가창 타입에 따른 업데이트
+    const isCumulative = unifiedListElement.classList.contains('cumulative');
 
-            // 시각적 피드백
-            div.style.backgroundColor = "#444";
-            div.style.transform = "scale(1.02)";
-            setTimeout(() => {
-              div.style.backgroundColor = "";
-              div.style.transform = "";
-            }, 200);
-          }
+    if (isCumulative) {
+      // 누적 호가창 업데이트
+      this.updateUnifiedCumulativeOrderbook(unifiedListElement, asks, bids);
+    } else {
+      // 일반 호가창 업데이트
+      this.updateUnifiedGeneralOrderbook(unifiedListElement, asks, bids);
+    }
+  }
+
+  updateUnifiedGeneralOrderbook(unifiedListElement, asks, bids) {
+    // 일반 호가창에서도 개별 수량 비례 막대 표시를 위해 최대값 계산
+    const allUnits = [...asks, ...bids];
+    const maxSize = Math.max(...allUnits.map(unit => Math.max(unit.ask_size || 0, unit.bid_size || 0)));
+
+    // 개별 수량 퍼센티지 추가
+    const asksWithPercentage = asks.map(unit => ({
+      ...unit,
+      individual_percentage: (unit.ask_size / maxSize) * 100
+    }));
+
+    const bidsWithPercentage = bids.map(unit => ({
+      ...unit,
+      individual_percentage: (unit.bid_size / maxSize) * 100
+    }));
+
+    // 통합 리스트 업데이트: 매도(위) + 매수(아래)
+    this.updateUnifiedOrderbookList(unifiedListElement, asksWithPercentage, bidsWithPercentage, 'general');
+  }
+
+  updateUnifiedCumulativeOrderbook(unifiedListElement, asks, bids) {
+    // 누적 데이터 계산
+    const cumulativeAsks = this.calculateCumulative(asks, 'ask');
+    const cumulativeBids = this.calculateCumulative(bids, 'bid');
+
+    // 통합 리스트 업데이트
+    this.updateUnifiedOrderbookList(unifiedListElement, cumulativeAsks, cumulativeBids, 'cumulative');
+
+    // 누적 차트 업데이트
+    this.updateCumulativeChart(cumulativeAsks, cumulativeBids);
+  }
+
+  updateUnifiedOrderbookList(listElement, asks, bids, mode = 'general') {
+    // 총 아이템 수: 매도 30개 + 매수 30개
+    const totalItems = 60;
+
+    // DOM 요소 캐시
+    if (!listElement._unifiedItems) {
+      listElement._unifiedItems = [];
+      for (let i = 0; i < totalItems; i++) {
+        const div = document.createElement("div");
+        listElement.appendChild(div);
+        listElement._unifiedItems.push(div);
+      }
+    }
+
+    const items = listElement._unifiedItems;
+    const currentPrice = this.getCurrentPrice();
+
+    // 매도호가 표시 (역순: 높은 가격부터)
+    const reversedAsks = [...asks].reverse();
+    for (let i = 0; i < 30; i++) {
+      const item = items[i];
+      if (i < reversedAsks.length) {
+        const unit = reversedAsks[i];
+        const price = unit.ask_price || unit.price;
+        item.className = 'orderbook-unit ask-item';
+
+        // 현재가와 일치하면 특별 스타일 적용
+        if (Math.abs(price - currentPrice) < 1000) {
+          item.classList.add('current-price-highlight');
         }
-      };
-      askListElement.appendChild(div);
-    });
 
-    bids.slice(0, 10).forEach((unit) => {
-      const div = document.createElement("div");
-      div.className = "orderbook-unit bid";
-      div.innerHTML = `
-        <span class="orderbook-price bid">${Utils.formatKRW(
-          unit.bid_price
-        )}</span>
-        <span class="orderbook-size">${Utils.formatCoinAmount(
-          unit.bid_size,
-          4
-        )}</span>
-      `;
-
-      div.onclick = () => {
-        if (this.state.activeTradingType === "limit") {
-          // 매도 시에는 매수호가 클릭 시 해당 가격으로 설정
-          if (this.state.activeTradingSide === "ask") {
-            this.dom.setOrderPrice(unit.bid_price);
-            this.updateOrderTotal();
-
-            // 시각적 피드백
-            div.style.backgroundColor = "#444";
-            div.style.transform = "scale(1.02)";
-            setTimeout(() => {
-              div.style.backgroundColor = "";
-              div.style.transform = "";
-            }, 200);
-          }
+        if (mode === 'general') {
+          this.updateGeneralItem(item, unit, 'ask', 0);
+        } else {
+          this.updateCumulativeItem(item, unit, 'ask', 0);
         }
-      };
-      bidListElement.appendChild(div);
+        item.style.display = 'grid';
+      } else {
+        item.style.display = 'none';
+      }
+    }
+
+    // 매수호가 표시 (정순: 높은 가격부터)
+    for (let i = 0; i < 30; i++) {
+      const item = items[30 + i];
+      if (i < bids.length) {
+        const unit = bids[i];
+        const price = unit.bid_price || unit.price;
+        item.className = 'orderbook-unit bid-item';
+
+        // 현재가와 일치하면 특별 스타일 적용
+        if (Math.abs(price - currentPrice) < 1000) {
+          item.classList.add('current-price-highlight');
+        }
+
+        if (mode === 'general') {
+          this.updateGeneralItem(item, unit, 'bid', 0);
+        } else {
+          this.updateCumulativeItem(item, unit, 'bid', 0);
+        }
+        item.style.display = 'grid';
+      } else {
+        item.style.display = 'none';
+      }
+    }
+  }
+
+  // 현재가 가져오기
+  getCurrentPrice() {
+    const tickerData = this.state.latestTickerData[this.state.activeCoin];
+    return tickerData ? tickerData.trade_price : 160000000; // 기본값
+  }
+
+  calculateCumulative(units, type) {
+    const totalSize = units.reduce((sum, unit) => {
+      const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
+      return sum + unit[sizeKey];
+    }, 0);
+
+    // 최대 개별 수량 찾기 (막대 스케일링용)
+    const maxIndividualSize = Math.max(...units.map(unit => {
+      const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
+      return unit[sizeKey];
+    }));
+
+    // 매수/매도별로 다른 누적 방식
+    let cumulativeSize = 0;
+    const result = [];
+
+    if (type === 'ask') {
+      // 매도호가: 현재가에서 멀어질수록 누적 증가 (위로 갈수록)
+      for (let i = units.length - 1; i >= 0; i--) {
+        const unit = units[i];
+        const sizeKey = 'ask_size';
+        cumulativeSize += unit[sizeKey];
+
+        // 개별 수량 기준 막대 크기 (최대 수량 대비 비율)
+        const individualPercentage = (unit[sizeKey] / maxIndividualSize) * 100;
+        // 누적 수량 기준 막대 크기
+        const cumulativePercentage = Math.min((cumulativeSize / totalSize) * 100, 100);
+
+        result.unshift({
+          ...unit,
+          cumulative_size: cumulativeSize,
+          percentage: cumulativePercentage,
+          individual_percentage: individualPercentage
+        });
+      }
+    } else {
+      // 매수호가: 현재가에서 멀어질수록 누적 증가 (아래로 갈수록)
+      for (let i = 0; i < units.length; i++) {
+        const unit = units[i];
+        const sizeKey = 'bid_size';
+        cumulativeSize += unit[sizeKey];
+
+        // 개별 수량 기준 막대 크기 (최대 수량 대비 비율)
+        const individualPercentage = (unit[sizeKey] / maxIndividualSize) * 100;
+        // 누적 수량 기준 막대 크기
+        const cumulativePercentage = Math.min((cumulativeSize / totalSize) * 100, 100);
+
+        result.push({
+          ...unit,
+          cumulative_size: cumulativeSize,
+          percentage: cumulativePercentage,
+          individual_percentage: individualPercentage
+        });
+      }
+    }
+
+    return result;
+  }
+
+  updateSpreadInfo(asks, bids) {
+    const spreadInfoGeneral = document.getElementById('spread-info');
+    const spreadInfoGrouped = document.getElementById('spread-info-grouped');
+
+    if (asks.length > 0 && bids.length > 0) {
+      const bestAsk = asks[asks.length - 1].ask_price; // 가장 낮은 매도가
+      const bestBid = bids[0].bid_price; // 가장 높은 매수가
+      const spread = bestAsk - bestBid;
+      const spreadPercentage = ((spread / bestBid) * 100).toFixed(3);
+
+      // 현재가는 중간값으로 계산
+      const currentPrice = (bestAsk + bestBid) / 2;
+      const priceChange = this.state.latestTickerData[this.state.activeCoin]?.change_rate || 0;
+      const changeClass = priceChange >= 0 ? 'positive' : 'negative';
+
+      [spreadInfoGeneral, spreadInfoGrouped].forEach(element => {
+        if (element) {
+          const priceValue = element.querySelector('.price-value');
+          const priceChangeElement = element.querySelector('.price-change');
+          const spreadAmount = element.querySelector('span:last-child');
+
+          if (priceValue) priceValue.textContent = Utils.formatKRW(currentPrice);
+          if (priceChangeElement) {
+            priceChangeElement.textContent = `${(priceChange * 100).toFixed(2)}%`;
+            priceChangeElement.className = `price-change ${changeClass}`;
+          }
+          if (spreadAmount) spreadAmount.textContent = `${Utils.formatKRW(spread)} (${spreadPercentage}%)`;
+        }
+      });
+    }
+  }
+
+  updateMarketPressure(asks, bids) {
+    const askPressureBar = document.getElementById('ask-pressure-bar');
+    const bidPressureBar = document.getElementById('bid-pressure-bar');
+    const pressureRatio = document.getElementById('pressure-ratio');
+
+    if (asks.length > 0 && bids.length > 0) {
+      const totalAskSize = asks.reduce((sum, unit) => sum + unit.ask_size, 0);
+      const totalBidSize = bids.reduce((sum, unit) => sum + unit.bid_size, 0);
+      const totalSize = totalAskSize + totalBidSize;
+
+      const askPercent = (totalAskSize / totalSize) * 100;
+      const bidPercent = (totalBidSize / totalSize) * 100;
+
+      if (askPressureBar) askPressureBar.style.width = `${askPercent}%`;
+      if (bidPressureBar) bidPressureBar.style.width = `${bidPercent}%`;
+      if (pressureRatio) {
+        pressureRatio.innerHTML = `매도 ${totalAskSize.toFixed(3)} | 매수 ${totalBidSize.toFixed(3)}`;
+      }
+    }
+  }
+
+  updateOrderbookList(listElement, units, type, mode = 'general') {
+    const maxItems = 30; // 더 많은 호가 표시
+
+    // DOM 요소 캐시 - 한 번만 생성하고 재사용
+    if (!listElement._orderbookItems) {
+      listElement._orderbookItems = [];
+      for (let i = 0; i < maxItems; i++) {
+        const div = document.createElement("div");
+        div.className = `orderbook-unit ${type}`;
+
+        listElement.appendChild(div);
+        listElement._orderbookItems.push(div);
+
+        // 이벤트 리스너 등록
+        div.addEventListener('click', () => {
+          if (div._unitData && div._priceData) {
+            this.handleOrderbookClick(div._unitData, div._priceData, type, div);
+          }
+        });
+      }
+    }
+
+    const items = listElement._orderbookItems;
+
+    // 각 아이템 업데이트
+    for (let i = 0; i < maxItems; i++) {
+      const div = items[i];
+
+      if (i < units.length) {
+        const unit = units[i];
+        const priceKey = type === 'ask' ? 'ask_price' : 'bid_price';
+        const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
+        const price = unit[priceKey];
+        const size = unit[sizeKey];
+
+        // 압력 바 너비 계산 (상대적 크기)
+        const maxSize = Math.max(...units.map(u => u[sizeKey]));
+        const pressureWidth = ((size / maxSize) * 100).toFixed(1);
+
+        // 내용 업데이트
+        if (mode === 'cumulative') {
+          this.updateCumulativeItem(div, unit, type, pressureWidth);
+        } else {
+          this.updateGeneralItem(div, unit, type, pressureWidth);
+        }
+
+        // 클릭 핸들러를 위한 데이터 저장
+        div._unitData = unit;
+        div._priceData = price;
+
+        // 압력 바 너비 설정
+        const before = div.querySelector('::before') || div;
+        if (before.style) {
+          before.style.setProperty('--pressure-width', `${pressureWidth}%`);
+        }
+
+        // 표시
+        div.style.display = 'grid';
+      } else {
+        // 숨기기
+        div.style.display = 'none';
+        div._unitData = null;
+        div._priceData = null;
+      }
+    }
+  }
+
+  updateGeneralItem(div, unit, type, pressureWidth) {
+    const priceKey = type === 'ask' ? 'ask_price' : 'bid_price';
+    const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
+
+    // 업비트 스타일: 수량 | 호가 | 호가주문
+    const price = unit[priceKey];
+    const size = unit[sizeKey];
+    const priceChange = this.calculatePriceChange(price);
+
+    div.innerHTML = `
+      <div class="orderbook-item size-item">${Utils.formatCoinAmount(size, 3)}</div>
+      <div class="orderbook-item price-item">${Utils.formatKRW(price)}</div>
+      <div class="orderbook-item order-item">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+    `;
+
+    // 압력 바 너비 설정 (개별 수량 기준)
+    const individualWidth = unit.individual_percentage || pressureWidth;
+    div.style.setProperty('--pressure-width', individualWidth + '%');
+  }
+
+  updateCumulativeItem(div, unit, type, pressureWidth) {
+    const priceKey = type === 'ask' ? 'ask_price' : 'bid_price';
+    const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
+
+    // 업비트 누적호가 스타일: 호가 | 변동률 | 수량 | 금액 | 누적
+    const price = unit[priceKey];
+    const size = unit[sizeKey];
+    const priceChange = this.calculatePriceChange(price);
+    const amount = price * size; // 금액 = 호가 × 수량
+    const cumulativeAmount = unit.cumulative_size ? unit.cumulative_size * price : 0;
+
+    div.innerHTML = `
+      <div class="orderbook-item price-item">${Utils.formatKRW(price)}</div>
+      <div class="orderbook-item change-item">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+      <div class="orderbook-item size-item">${Utils.formatCoinAmount(size, 3)}</div>
+      <div class="orderbook-item amount-item">${Utils.formatKRW(amount).replace('원', '').replace(',', '.')}</div>
+      <div class="orderbook-item cumulative-item">${Utils.formatKRW(cumulativeAmount).replace('원', '').replace(',', '.')}</div>
+    `;
+
+    // 압력 바 너비 설정 (개별 수량 기준으로 비례 표현)
+    const individualWidth = unit.individual_percentage || 0;
+    div.style.setProperty('--cumulative-width', individualWidth + '%');
+    div.style.setProperty('--pressure-width', individualWidth + '%');
+  }
+
+  calculatePriceChange(price) {
+    // 현재가 대비 변동률 계산
+    const currentPrice = this.state.latestTickerData[this.state.activeCoin]?.trade_price || price;
+    if (currentPrice === price) return 0;
+    return (price - currentPrice) / currentPrice;
+  }
+
+  updateCumulativeChart(cumulativeAsks, cumulativeBids) {
+    const canvas = document.getElementById('cumulative-depth-chart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas.getBoundingClientRect();
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // 간단한 누적 차트 그리기
+    const totalItems = Math.max(cumulativeAsks.length, cumulativeBids.length);
+    if (totalItems === 0) return;
+
+    const stepWidth = width / totalItems;
+
+    // 매도 (빨간색)
+    ctx.fillStyle = 'rgba(244, 67, 54, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(0, height);
+    cumulativeAsks.forEach((ask, index) => {
+      const x = stepWidth * index;
+      const y = height - (ask.percentage / 100) * height;
+      ctx.lineTo(x, y);
     });
+    ctx.lineTo(width, height);
+    ctx.fill();
+
+    // 매수 (초록색)
+    ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(0, height);
+    cumulativeBids.forEach((bid, index) => {
+      const x = stepWidth * index;
+      const y = height - (bid.percentage / 100) * height;
+      ctx.lineTo(x, y);
+    });
+    ctx.lineTo(width, height);
+    ctx.fill();
+  }
+
+  handleOrderbookClick(unit, price, type, div) {
+    if (this.state.activeTradingType !== "limit") return;
+
+    let shouldSetPrice = false;
+
+    if (type === 'ask' && this.state.activeTradingSide === "bid") {
+      // 매수 시에는 매도호가 클릭
+      shouldSetPrice = true;
+    } else if (type === 'bid' && this.state.activeTradingSide === "ask") {
+      // 매도 시에는 매수호가 클릭
+      shouldSetPrice = true;
+    }
+
+    if (shouldSetPrice) {
+      this.dom.setOrderPrice(price);
+      this.updateOrderTotal();
+
+      // 부드러운 시각적 피드백 - 스케일 없이 배경색만
+      div.style.transition = 'background-color 0.1s ease';
+      div.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+
+      setTimeout(() => {
+        div.style.backgroundColor = "";
+        div.style.transition = "";
+      }, 150);
+    }
   }
 
   // 🔧 거래 타입/사이드 변경 시 현재가 설정 개선
@@ -521,14 +874,12 @@ export class UIController {
     if (this.state.activeOrderbookType === "general") {
       this.updateOrderbook(
         this.state.latestOrderbookData[code].general,
-        this.dom.elements.generalAskList,
-        this.dom.elements.generalBidList
+        this.dom.elements.generalUnifiedList
       );
     } else {
       this.updateOrderbook(
         this.state.latestOrderbookData[code].grouped,
-        this.dom.elements.groupedAskList,
-        this.dom.elements.groupedBidList
+        this.dom.elements.groupedUnifiedList
       );
     }
 
@@ -567,4 +918,5 @@ export class UIController {
       console.error("사용자 데이터 불러오기 오류:", error);
     }
   }
+
 }
