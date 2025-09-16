@@ -100,7 +100,7 @@ canvas {
   gap: 20px;
 }
 
-/* === 업비트 스타일 호가창 래퍼 === */
+/* 좌측 하단: 호가창 */
 .orderbook-wrapper {
   background: #181a20;
   border-radius: 4px;
