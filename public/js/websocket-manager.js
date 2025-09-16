@@ -24,7 +24,12 @@ export class WebSocketManager {
   }
 
   connect() {
-    this.ws = new WebSocket("ws://localhost:3000");
+    // 배포 환경에 맞는 WebSocket URL 동적 생성
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}`;
+
+    this.ws = new WebSocket(wsUrl);
 
     this.ws.onmessage = (event) => {
       if (event.data instanceof Blob) {
