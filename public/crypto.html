@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ITC | 지표 사전 (페이지 전환형)</title>
+  <title>ITC | 지표 사전</title>
   <meta name="description" content="RSI, MACD, Bollinger Bands 등 주요 테크니컬 지표의 정의·계산·해석을 정리한 지표 사전입니다." />
   <style>
     :root { color-scheme: dark; --bg:#0b0b0b; --card:#141414; --muted:#bfcfcf; --accent:#7cc7ff; --accent-2:#9fe1ff; }
@@ -20,26 +20,28 @@
     .card{
       background:var(--card); border:1px solid #262626; border-radius:14px; padding:18px 16px;
       box-shadow:0 8px 22px rgba(0,0,0,.18);
+      color:#e0e0e0;
     }
     h1{ margin:0 0 12px; font-size:clamp(20px,3vw,28px); }
     h2{ margin:0 0 12px; font-size:1.6rem; }
+    h3 { margin: 0 0 8px; font-size:1.3rem; color:#9bd3ff; }
     p.lead{ margin:0 0 18px; color:#cfcfcf; line-height:1.6; }
-    /* 큰 타일 스타일 */
     .tiles { display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:stretch; }
     .tile {
       padding:32px; border-radius:16px; background:linear-gradient(180deg,#0e0e0e 0,#0a0a0a 100%);
       border:1px solid #232323; text-align:left; display:flex; flex-direction:column; justify-content:space-between;
       min-height:260px;
+      cursor:pointer;
+      user-select:none;
+      color: #c9d9e8;
     }
     .tile h3{ font-size:2rem; color:#9bd3ff; margin:0 0 6px; }
     .tile p{ color:#c9d9e8; margin:0 0 14px; }
     .cta{ display:inline-block; padding:14px 18px; border-radius:12px; background:var(--accent);
-      color:#021423; font-weight:800; text-decoration:none; width:max-content; }
-    /* to ensure large screens look good on mobile too */
+      color:#021423; font-weight:800; text-decoration:none; width:max-content; user-select:none; }
     @media (max-width: 800px){
       .tiles { grid-template-columns: 1fr; }
     }
-    /* 비주얼/접근성 보조 (필요시 유지) */
     .hidden { display:none !important; }
     .topbar { position:fixed; left:0; right:0; top:0; height:64px;
       display:flex; align-items:center; gap:12px; padding:8px 20px;
@@ -47,79 +49,190 @@
       border-bottom:1px solid rgba(255,255,255,0.02); z-index:50; color:#e8e8e8;
     }
     .topbar .title { font-weight:800; margin-left:8px; font-size:1.1rem; color:#fff; }
-    /* 기본 동작 보존(상세 페이지 진입) */
     .content-page { display:none; opacity:0; transform:translateY(6px); transition:opacity .18s ease, transform .18s ease; }
     .content-page.active { display:block; opacity:1; transform:none; }
     a:focus, button:focus { outline: 3px solid rgba(124,199,255,0.25); outline-offset:2px; }
     table{ width:100%; border-collapse:collapse; background:#101010; margin:10px 0; font-size:0.96rem; }
     th,td{ padding:10px 12px; border:1px solid #2d2d2d; text-align:left; vertical-align:top; }
     th{ background:#171717; font-weight:700; }
+    .section-title { color:var(--accent-2); margin:10px 0 6px; font-size:1.05rem; }
+    .muted { color:#cbdbe8; }
+    .summary-box { background:#101217; border:1px solid #222; padding:12px; border-radius:8px; color:#cbdbe8; margin-top:12px; }
+    ul.intro-list { margin:8px 0 0 20px; color:#cfcfcf; line-height:1.5; }
+    .callout {
+      border-left:4px solid #ffd34d; background:#19160a; color:#ffe8a6;
+      padding:12px 14px; border-radius:8px; margin:12px 0 0;
+      font-size:0.9rem;
+    }
+    /* intro-crypto-basic 내부 grid */
+    #intro-crypto-basic .grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+      margin-top:18px;
+    }
+    #intro-crypto-basic .card.intro-card {
+      padding:16px 14px;
+      user-select:none;
+      cursor:pointer;
+    }
+    @media (max-width: 980px){
+      #intro-crypto-basic .grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
-
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 <body>
-  <header><a href="/"><img src="https://via.placeholder.com/240x48?text=ITC+Logo" alt="ITC 로고"></a></header>
+  <header><a href="index.html"><img src="/images/logo.png" alt="ITC 로고"></a></header>
   <div id="topbar" class="topbar hidden" aria-hidden="true">
     <button id="backToToc" class="back" aria-label="목차로 돌아가기">← 목차로 돌아가기</button>
     <div id="topbarTitle" class="title" aria-live="polite"></div>
   </div>
+
   <main class="page" id="main-content" role="main">
-    <!-- 2개 대형 타일: 암호화폐 이해 / 지표 설명 -->
     <section id="landing">
+      <section id="intro-crypto-basic" style="margin-bottom:24px;">
+        <h1>🪙 암호화폐 기초</h1>
+        <p class="lead">암호화폐의 개념, 주식과의 차이, 대표 자산을 한눈에 정리했습니다.<br>아래 카드를 순서대로 확인해 보세요.</p>
+
+        <div class="grid" aria-label="암호화폐 기초 정보">
+          <article class="card intro-card" id="sec-what" tabindex="0" data-target="crypto-overview" role="button" aria-label="암호화폐란 자세히 보기">
+            <h3>1️⃣ 암호화폐란?</h3>
+            <ul class="intro-list">
+              <li>블록체인 기술 위에서 운영되는 <strong>디지털 자산</strong></li>
+              <li>탈중앙 네트워크로 누구나 참여 가능, 거래 기록은 공개 원장에 저장</li>
+              <li>2009년 비트코인 등장 이후 다양한 목적·기능의 코인 등장</li>
+            </ul>
+            <div class="callout">
+              <strong>블록체인이란?</strong><br>
+              여러 컴퓨터(노드)가 거래를 묶어 ‘블록’으로 기록하고 시간 순서대로 연결해 모두가 공유·검증하는 분산 원장 기술입니다.
+            </div>
+          </article>
+
+          <article class="card intro-card" tabindex="0" data-target="crypto-overview" role="button" aria-label="암호화폐 vs 주식 자세히 보기">
+            <h3>2️⃣ 암호화폐 vs 주식</h3>
+            <table>
+              <thead><tr><th>구분</th><th>암호화폐</th><th>주식</th></tr></thead>
+              <tbody>
+                <tr><td>거래 시간</td><td>24시간 365일</td><td>장중 (휴일 불가)</td></tr>
+                <tr><td>가격 변동성</td><td>매우 높음</td><td>일일 변동폭 제한</td></tr>
+                <tr><td>중앙기관</td><td>없음 (P2P)</td><td>있음 (거래소/감독기관)</td></tr>
+                <tr><td>투명성</td><td>블록체인 공개 원장</td><td>거래소 시스템</td></tr>
+                <tr><td>보관</td><td>개인지갑 (핫/콜드)</td><td>증권사 계좌</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="card intro-card" tabindex="0" data-target="crypto-overview" role="button" aria-label="대표 코인 예시 자세히 보기" style="grid-column:1 / -1;">
+            <h3>3️⃣ 대표적인 암호화폐 예시</h3>
+            <table>
+              <thead><tr><th>종류</th><th>설명</th><th>비유</th><th>주의점</th></tr></thead>
+              <tbody>
+                <tr><td><strong>비트코인 (BTC)</strong></td><td>최초, 가치 저장</td><td>💰 디지털 금</td><td>거시 변수 민감</td></tr>
+                <tr><td><strong>이더리움 (ETH)</strong></td><td>스마트 컨트랙트 플랫폼</td><td>📱 스마트폰 OS</td><td>가스비·업그레이드 이슈</td></tr>
+                <tr><td><strong>스테이블 (USDT/USDC)</strong></td><td>달러 연동</td><td>💵 디지털 달러</td><td>발행사 신뢰</td></tr>
+                <tr><td><strong>결제형 (XRP/LTC)</strong></td><td>빠른 결제·송금</td><td>💳 송금 서비스</td><td>규제 리스크</td></tr>
+                <tr><td><strong>서비스 토큰</strong></td><td>플랫폼 내 사용</td><td>🚀 스타트업 주식</td><td>유행·보안 리스크</td></tr>
+              </tbody>
+            </table>
+          </article>
+        </div>
+      </section>
+
       <div class="tiles" aria-label="섹션 목록">
-        <!-- 암호화폐 이해 -->
-        <section class="tile" id="tile-crypto" role="article" tabindex="0" aria-label="암호화폐 이해">
+        <section class="tile" id="tile-crypto" role="article" tabindex="0" aria-label="암호화폐 이해" data-target="crypto-overview">
           <h3>암호화폐 이해</h3>
           <p>블록체인, 토큰, 합의 알고리즘 등 기초 개념 요약</p>
           <a class="cta" data-target="crypto-overview" href="#crypto-overview" aria-label="암호화폐 이해 바로가기">바로보기</a>
         </section>
-        <!-- 지표 설명 -->
-        <section class="tile" id="tile-dict" role="article" tabindex="0" aria-label="지표 설명">
+        <section class="tile" id="tile-dict" role="article" tabindex="0" aria-label="지표 설명" data-target="dictionary">
           <h3>지표 설명</h3>
           <p>RSI, MACD, Bollinger Bands 등 지표별 정의·계산·해석</p>
-          <a class="cta" data-target="dictionary" href="#dictionary" aria-label="지표 설명 바로가기">지표 사전 바로보기</a>
+          <a class="cta" data-target="dictionary" href="#dictionary" aria-label="지표 설명 바로가기">바로보기</a>
         </section>
       </div>
     </section>
-    <!-- 상세 페이지 섹션 (필요 시 확장) -->
+
+    <!-- 암호화폐 이해 상세 -->
     <section id="crypto-overview" class="content-page" aria-labelledby="crypto-overview-title" tabindex="-1" role="region">
-      <h2 id="crypto-overview-title" style="margin:0 0 8px;">암호화폐 이해</h2>
-      <p class="lead" style="margin:0 0 12px; color:#cbdbe8;">
-        블록체인, 토큰, 합의 알고리즘, 스마트 컨트랙트 등 기초 개념의 요약입니다.
-      </p>
+      <h2 id="crypto-overview-title">암호화폐 이해</h2>
+      <p class="lead muted">코인의 등장 배경과 합의 알고리즘(PoW·PoS), 그리고 1세대·2세대·3세대의 사회적 비유까지 핵심을 정리합니다.</p>
+      <div class="section-title">1. 역사</div>
+      <ul class="muted" style="padding-left:20px; line-height:1.6;">
+        <li><strong>등장 배경</strong> — 2008년 금융위기 이후 중앙화 시스템 취약성에 대한 대안으로 관심 증가.</li>
+        <li><strong>비트코인 (2009)</strong> — 가치 저장 중심의 디지털 자산.</li>
+        <li><strong>이더리움 (2015)</strong> — 스마트 컨트랙트로 플랫폼화, DApp·DeFi 확산.</li>
+      </ul>
+      <div class="summary-box">핵심: 목적에 따라 가치 저장·플랫폼·결제용 등으로 분화.</div>
+
+      <hr style="border:none; border-top:1px solid #222; margin:12px 0;">
+      <div class="section-title">2. 채굴 / 합의 방식 </div>
+      <h3 style="margin:10px 0 6px; color:var(--accent-2);">PoW — 작업증명 (Mining)</h3>
+      <p class="muted" style="margin:0 0 8px;">PoW는 '연산 경쟁'으로 합의를 달성합니다. 채굴자들이 해시 난제를 풀어 블록을 제안하고, 먼저 푼 채굴자가 보상을 받습니다.</p>
       <table>
         <tr><th>항목</th><th>설명</th></tr>
-        <tr><td>블록체인</td><td>분산 원장 기술로 거래 기록을 블록 단위로 연결하여 저장</td></tr>
-        <tr><td>토큰 vs 코인</td><td>코인은 자체 블록체인을 가진 화폐; 토큰은 플랫폼 위에 발행</td></tr>
-        <tr><td>합의 알고리즘</td><td>PoW, PoS 등 네트워크 상태를 결정하는 방법</td></tr>
+        <tr><td>핵심 아이디어</td><td>많은 연산(해시) 자원을 사용해 난제를 해결하는 노드가 블록 보상 획득</td></tr>
+        <tr><td>동작 흐름</td><td>트랜잭션 수집 → 블록 후보 생성 → nonce 탐색(연산 경쟁) → 블록 전파 → 네트워크 검증/추가</td></tr>
+        <tr><td>보안 원리</td><td>공격자가 네트워크를 장악하려면 막대한 연산 자원과 비용이 필요 → 공격 비용 증가로 보안 확보</td></tr>
+        <tr><td>장점</td><td>오랜 기간 검증된 모델, 명확한 인센티브 구조, 높은 탈중앙화 잠재력</td></tr>
+        <tr><td>단점/주의</td><td>전력 소모 큼(환경 이슈), 채굴풀 집중으로 인한 중앙화 우려, 장비·난이도에 따른 수익성 변동</td></tr>
+        <tr><td>대표 사례</td><td>비트코인(BTC)</td></tr>
       </table>
+
+      <hr style="border:none; border-top:1px solid #222; margin:12px 0;">
+      <h3 style="margin:10px 0 6px; color:var(--accent-2);">PoS — 지분증명 (Staking)</h3>
+      <p class="muted" style="margin:0 0 8px;">PoS는 '지분 예치'를 통해 검증자를 선발해 합의를 달성합니다. 연산 경쟁이 아닌 경제적 이해관계로 보안을 유지합니다.</p>
+      <table>
+        <tr><th>항목</th><th>설명</th></tr>
+        <tr><td>핵심 아이디어</td><td>코인을 예치한 노드(검증자)가 무작위/지분 비율에 따라 블록 제안 기회 획득</td></tr>
+        <tr><td>동작 흐름</td><td>사용자 예치 → 검증자 후보 풀 → 알고리즘에 따라 제안자/검증자 선정 → 서명·확정 → 보상 분배</td></tr>
+        <tr><td>보안 원리</td><td>부정행위 시 예치 지분을 깎는 슬래싱으로 악의적 행동 억제</td></tr>
+        <tr><td>장점</td><td>에너지 효율적, 확장성·처리속도 개선 가능, 스테이킹 보상으로 참여 유도</td></tr>
+        <tr><td>단점/주의</td><td>지분 집중으로 인한 중앙화 위험, 스테이킹 잠금에 따른 유동성 제약, 보상·슬래싱 규칙 확인 필요</td></tr>
+        <tr><td>대표 사례</td><td>이더리움(ETH, Merge 이후 PoS 전환), 다수의 신규 체인</td></tr>
+      </table>
+      <div class="summary-box">요약: PoW는 연산 경쟁(채굴)으로 보안 확보 — 전력 소모 큼. PoS는 지분 기반 보안 — 에너지 효율적이나 지분 집중 리스크 존재.</div>
+
+      <hr style="border:none; border-top:1px solid #222; margin:12px 0;">
+      <div class="section-title">3. 1세대 · 2세대 · 3세대</div>
+      <p class="muted" style="margin:6px 0 10px;">아래 표는 요청하신 대로 세대와 대표 코인을 사회적 아날로지로 대응한 것입니다.</p>
+      <table>
+        <tr><th>세대</th><th>대표</th><th>사회 비유</th><th>핵심 역할</th></tr>
+        <tr><td>1세대</td><td>비트코인 (BTC)</td><td>금</td><td>희소성 기반의 가치 저장(디지털 금). 보안·불변성 중시, 결제보다는 저장 목적.</td></tr>
+        <tr><td>2세대</td><td>이더리움 (ETH)</td><td>은행 + 플랫폼</td><td>스마트 컨트랙트로 계약·서비스 실행. DeFi/NFT 등 생태계 제공.</td></tr>
+        <tr><td>3세대</td><td>리플 (XRP 중심)</td><td>통신망 / 결제 인프라</td><td>빠른 결제·정산, 낮은 수수료로 실사용 결제 인프라를 지향. 은행 연계 강조.</td></tr>
+      </table>
+      <div class="summary-box">실무 팁: 목적에 맞춰 기술을 선택하세요 — 저장(비트코인), 플랫폼 서비스(이더리움), 실사용 결제(리플/3세대). 성능 향상은 종종 중앙화·규제 의존성 증가를 수반합니다.</div>
+      <div style="margin-top:12px; font-size:0.9rem; color:#cbdbe8;">
+        참고: 각 체인의 상세 규칙(보상·슬래싱·잠금 기간 등)과 최신 상태는 프로젝트 공식 문서를 통해 확인하세요.
+      </div>
     </section>
+
     <section id="dictionary" class="content-page" aria-labelledby="dictionary-title" tabindex="-1" role="region">
       <h2 id="dictionary-title" style="margin:0 0 8px;">기술지표 설명</h2>
       <p class="lead" style="margin:0 0 12px; color:#cbdbe8;">
         RSI, MACD, Bollinger Bands 등 지표별 정의·계산·해석을 정리합니다.
       </p>
       <div class="tiles" style="margin-top:12px;">
-        <section class="tile" aria-label="RSI 자세히보기" role="article">
+        <section class="tile" aria-label="RSI 자세히보기" role="article" data-target="rsi" tabindex="0">
           <h3>RSI</h3>
           <p>가격 모멘텀의 강도를 0~100으로 표시.</p>
           <a class="cta" data-target="rsi" href="#rsi">자세히 보기 →</a>
         </section>
-        <section class="tile" aria-label="MACD 자세히보기" role="article">
+        <section class="tile" aria-label="MACD 자세히보기" role="article" data-target="macd" tabindex="0">
           <h3>MACD</h3>
           <p>단기·장기 EMA 차이로 모멘텀 전환을 포착.</p>
           <a class="cta" data-target="macd" href="#macd">자세히 보기 →</a>
         </section>
-        <section class="tile" aria-label="Bollinger Bands 자세히보기" role="article">
+        <section class="tile" aria-label="Bollinger Bands 자세히보기" role="article" data-target="bb" tabindex="0">
           <h3>Bollinger Bands</h3>
           <p>가격의 변동성과 상대적 위치를 파악하는 밴드형 지표.</p>
           <a class="cta" data-target="bb" href="#bb">자세히 보기 →</a>
         </section>
       </div>
     </section>
+
     <section id="rsi" class="content-page" aria-labelledby="rsi-title" tabindex="-1" role="region">
       <h2 id="rsi-title">RSI (Relative Strength Index)</h2>
       <p class="small">가격 모멘텀의 강도를 0~100 범위로 표시하는 오실레이터. 기본 기간은 14입니다.</p>
@@ -127,10 +240,11 @@
         <tr><th>항목</th><th>설명</th></tr>
         <tr><td>정의/목적</td><td>최근 상승폭과 하락폭의 평균을 비교해 과매수/과매도 상태를 판단</td></tr>
         <tr><td>계산</td><td>RS = 평균 상승 / 평균 하락, RSI = 100 - (100 / (1 + RS))</td></tr>
-        <tr><td>해석</td><td>일반적으로 RSI > 70: 과매수, RSI < 30: 과매도</td></tr>
+        <tr><td>해석</td><td>일반적으로 RSI &gt; 70: 과매수, RSI &lt; 30: 과매도</td></tr>
       </table>
       <canvas id="rsiChart" style="max-width: 100%; height: 300px; margin-top: 1rem;"></canvas>
     </section>
+
     <section id="macd" class="content-page" aria-labelledby="macd-title" tabindex="-1" role="region">
       <h2 id="macd-title">MACD (Moving Average Convergence/Divergence)</h2>
       <p class="small">추세와 모멘텀 변화를 포착하는 지표. 기본 설정은 EMA(12), EMA(26), Signal EMA(9).</p>
@@ -141,7 +255,7 @@
       </table>
       <canvas id="macdChart" style="max-width: 100%; height: 300px; margin-top: 1rem;"></canvas>
     </section>
-    <!-- 새로 추가된 Bollinger Bands 상세 섹션 -->
+
     <section id="bb" class="content-page" aria-labelledby="bb-title" tabindex="-1" role="region">
       <h2 id="bb-title">Bollinger Bands</h2>
       <p class="small">가격의 변동성과 상대적 위치를 파악하는 밴드형 지표. 기본은 SMA(20), K=2.</p>
@@ -154,249 +268,195 @@
       <canvas id="bbChart" style="max-width: 100%; height: 300px; margin-top: 1rem;"></canvas>
     </section>
   </main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0"></script>
+<script>
+(function(){
+  var landing = document.getElementById('landing');
+  var contentPages = Array.from(document.querySelectorAll('.content-page'));
+  var topbar = document.getElementById('topbar');
+  var backToTocBtn = document.getElementById('backToToc');
+  var topbarTitle = document.getElementById('topbarTitle');
+  var charts = {};
 
-  <script>
-  (function(){
-    // SPA 네비게이션 로직
-    var landing = document.getElementById('landing');
-    var contentPages = Array.from(document.querySelectorAll('.content-page'));
-    var topbar = document.getElementById('topbar');
-    var backToTocBtn = document.getElementById('backToToc');
-    var topbarTitle = document.getElementById('topbarTitle');
-    
-    // 차트 객체 저장용
-    var charts = {};
-
-    // 차트 생성 함수
-    function createRSIChart(){
-      var ctx = document.getElementById('rsiChart').getContext('2d');
-      return new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14'],
-          datasets: [{
-            label: 'RSI',
-            data: [45, 50, 55, 60, 70, 80, 75, 65, 55, 40, 30, 25, 20, 30],
-            borderColor: 'rgba(124,199,255,1)',
-            backgroundColor: 'rgba(124,199,255,0.3)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 3,
-            pointHoverRadius: 6
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              min: 0, max: 100,
-              title: { display:true, text: 'RSI Level' },
-              ticks: { stepSize: 10 }
-            }
-          },
-          plugins: {
-            legend: { display:true }
-          }
-        }
-      });
-    }
-
-    function createMACDChart(){
-      var ctx = document.getElementById('macdChart').getContext('2d');
-      return new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10'],
-          datasets: [
-            {
-              type: 'line',
-              label: 'MACD',
-              data: [0.5, 0.7, 0.4, 0.6, 0.9, 1.3, 1.1, 0.8, 0.6, 0.4],
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.3,
-              yAxisID: 'y'
-            },
-            {
-              type: 'line',
-              label: 'Signal',
-              data: [0.4, 0.6, 0.5, 0.55, 0.8, 1.1, 1.0, 0.75, 0.55, 0.5],
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 2,
-              borderDash: [5,5],
-              fill: false,
-              tension: 0.3,
-              yAxisID: 'y'
-            },
-            {
-              type: 'bar',
-              label: 'Histogram',
-              data: [0.1, 0.1, -0.1, 0.05, 0.1, 0.2, 0.1, 0.05, 0.05, -0.1],
-              backgroundColor: 'rgba(255, 206, 86, 0.7)',
-              yAxisID: 'y'
-            }
-          ]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: { display:true, text: 'Value' },
+  function createRSIChart(){
+    var el = document.getElementById('rsiChart');
+    if(!el) return null;
+    var ctx = el.getContext('2d');
+    return new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7','Day 8','Day 9','Day 10','Day 11','Day 12','Day 13','Day 14'],
+        datasets:[{
+          label:'RSI',
+          data:[45,50,55,60,70,80,75,65,55,40,30,25,20,30],
+          borderColor:'rgba(124,199,255,1)',
+          backgroundColor:'rgba(124,199,255,0.3)',
+          fill:true, tension:0.3, pointRadius:3
+        }]
+      },
+      options:{
+        scales:{ y:{ min:0, max:100, title:{display:true, text:'RSI Level'}, ticks:{stepSize:10} } },
+        plugins:{
+          legend:{display:true},
+          annotation:{
+            annotations:{
+              overboughtBox:{ type:'box', yMin:70, yMax:90, xMin:4, xMax:7, backgroundColor:'rgba(255,0,0,0.3)', borderColor:'red', borderWidth:1, label:{content:'과매수', enabled:true, position:'start', backgroundColor:'rgba(255,0,0,0.25)', color:'#fff', font:{size:14, weight:'bold'}, padding:6 } },
+              oversoldBox:{ type:'box', yMin:10, yMax:30, xMin:10, xMax:14, backgroundColor:'rgba(0,0,255,0.2)', borderColor:'blue', borderWidth:1, label:{content:'과매도', enabled:true, position:'start', backgroundColor:'rgba(0,0,255,0.15)', color:'#fff', font:{size:14, weight:'bold'}, padding:6 } }
             }
           }
-        }
-      });
-    }
-
-    function createBBChart(){
-      var ctx = document.getElementById('bbChart').getContext('2d');
-      var days = Array.from({length: 20}, (_,i)=>`Day ${i+1}`);
-      var middle = [50, 51, 49, 52, 53, 54, 53, 52, 54, 55, 56, 58, 57, 59, 60, 59, 61, 62, 60, 61];
-      var upper = middle.map(m => m + 2);
-      var lower = middle.map(m => m - 2);
-      var price = [51, 53, 48, 50, 55, 56, 52, 50, 57, 58, 60, 61, 58, 60, 62, 60, 63, 64, 59, 60];
-
-      return new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: days,
-          datasets: [
-            {
-              label: 'Price',
-              data: price,
-              borderColor: 'rgba(75, 192, 192, 1)',
-              fill: false,
-              tension: 0.3,
-              pointRadius: 3,
-              borderWidth: 2,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Middle Band (SMA)',
-              data: middle,
-              borderColor: 'rgba(255, 159, 64, 1)',
-              borderWidth: 1.5,
-              fill: false,
-              tension: 0.3,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Upper Band',
-              data: upper,
-              borderColor: 'rgba(255, 205, 86, 1)',
-              borderWidth: 1,
-              borderDash: [5,5],
-              fill: '+1',
-              tension: 0.3,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Lower Band',
-              data: lower,
-              borderColor: 'rgba(255, 205, 86, 1)',
-              borderWidth: 1,
-              borderDash: [5,5],
-              fill: '-1',
-              tension: 0.3,
-              yAxisID: 'y',
-            }
-          ]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: { display:true, text: 'Price' }
-            }
-          },
-          plugins: {
-            filler: {
-              propagate: true
-            }
-          }
-        }
-      });
-    }
-
-    // 현재 페이지에 맞는 차트 초기화
-    function initChartByPage(id){
-      if(id === 'rsi'){
-        if(!charts.rsi){
-          charts.rsi = createRSIChart();
-        }
-      } else if(id === 'macd'){
-        if(!charts.macd){
-          charts.macd = createMACDChart();
-        }
-      } else if(id === 'bb'){
-        if(!charts.bb){
-          charts.bb = createBBChart();
         }
       }
-    }
-
-    // 초기 화면: 랜딩만 보이게
-    function showLanding(push){
-      contentPages.forEach(function(p){ p.classList.remove('active'); p.setAttribute('aria-hidden','true'); });
-      landing.style.display = '';
-      topbar.classList.add('hidden'); topbar.setAttribute('aria-hidden','true');
-      if(push){ try { history.pushState({page:'landing'}, '', location.pathname); } catch(e){} }
-      try { window.scrollTo({top:0, behavior:'auto'}); } catch(e){ window.scrollTo(0,0); }
-    }
-    // 페이지 전환
-    function showPage(id, push){
-      var page = document.getElementById(id);
-      if(!page) return;
-      landing.style.display = 'none';
-      contentPages.forEach(function(p){
-        if(p.id === id){ p.classList.add('active'); p.removeAttribute('aria-hidden'); }
-        else { p.classList.remove('active'); p.setAttribute('aria-hidden','true'); }
-      });
-      topbar.classList.remove('hidden'); topbar.setAttribute('aria-hidden','false');
-      var title = page.querySelector('h2') ? page.querySelector('h2').innerText : '';
-      topbarTitle.textContent = title;
-      if(push){ try { history.pushState({page:id}, '', '#' + id); } catch(e){} }
-      else { try { history.replaceState({page:id}, '', '#' + id); } catch(e){} }
-      setTimeout(function(){ page.focus(); }, 80);
-
-      initChartByPage(id); // 차트 초기화
-    }
-    // 클릭 핸들링
-    document.querySelectorAll('.cta').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.preventDefault();
-        var target = btn.getAttribute('data-target');
-        if(target) showPage(target, true);
-      });
     });
-    // Back 버튼
-    backToTocBtn.addEventListener('click', function(e){
+  }
+
+  function createMACDChart(){
+    var el = document.getElementById('macdChart');
+    if(!el) return null;
+    var ctx = el.getContext('2d');
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels:['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7','Day 8','Day 9','Day 10'],
+        datasets:[
+          { type:'line', label:'MACD', data:[0.5,0.7,0.4,0.6,0.9,1.3,1.1,0.8,0.6,0.4], borderColor:'rgba(255,99,132,1)', borderWidth:2, fill:false, tension:0.3 },
+          { type:'line', label:'Signal', data:[0.4,0.6,0.5,0.55,0.8,1.1,1.0,0.75,0.55,0.5], borderColor:'rgba(54,162,235,1)', borderDash:[5,5], borderWidth:2, fill:false, tension:0.3 },
+          { type:'bar', label:'Histogram', data:[0.1,0.1,-0.1,0.05,0.1,0.2,0.1,0.05,0.05,-0.1], backgroundColor:'rgba(255,206,86,0.7)' }
+        ]
+      },
+      options:{ scales:{ y:{ beginAtZero:false, title:{display:true, text:'Value'} } } }
+    });
+  }
+
+  function createBBChart(){
+    var el = document.getElementById('bbChart');
+    if(!el) return null;
+    var ctx = el.getContext('2d');
+    var days = Array.from({length:20}, (_,i)=>'Day '+(i+1));
+    var middle = [50,51,49,52,53,54,53,52,54,55,56,58,57,59,60,59,61,62,60,61];
+    var upper = middle.map(m=>m+2), lower = middle.map(m=>m-2);
+    var price = [51,53,48,50,55,56,52,50,57,58,60,61,58,60,62,60,63,64,59,60];
+    return new Chart(ctx, {
+      type:'line',
+      data:{
+        labels:days,
+        datasets:[
+          { label:'Price', data:price, borderColor:'rgba(75,192,192,1)', borderWidth:2, fill:false, tension:0.3 },
+          { label:'Middle Band (SMA)', data:middle, borderColor:'rgba(255,159,64,1)', borderWidth:1.5, fill:false, tension:0.3 },
+          { label:'Upper Band', data:upper, borderColor:'rgba(255,205,86,1)', borderDash:[5,5], borderWidth:1, fill:'+1' },
+          { label:'Lower Band', data:lower, borderColor:'rgba(255,205,86,1)', borderDash:[5,5], borderWidth:1, fill:'-1' }
+        ]
+      },
+      options:{ scales:{ y:{ beginAtZero:false, title:{display:true, text:'Price'} } }, plugins:{ filler:{ propagate:true } } }
+    });
+  }
+
+  function initChartByPage(id){
+    if(id === 'rsi' && !charts.rsi) charts.rsi = createRSIChart();
+    if(id === 'macd' && !charts.macd) charts.macd = createMACDChart();
+    if(id === 'bb' && !charts.bb) charts.bb = createBBChart();
+  }
+
+  function showLanding(push){
+    contentPages.forEach(p=>{
+      p.classList.remove('active');
+      p.setAttribute('aria-hidden','true');
+    });
+    landing.style.display = '';
+    // 여기서 intro-crypto-basic 보여주기
+    const intro = document.getElementById('intro-crypto-basic');
+    if(intro) intro.style.display = '';
+    topbar.classList.add('hidden');
+    topbar.setAttribute('aria-hidden','true');
+    if(push){
+      try{history.pushState({page:'landing'}, '', location.pathname);} catch(e){}
+    }
+    try{window.scrollTo({top:0, behavior:'auto'});} catch(e){window.scrollTo(0,0);}
+  }
+
+  function showPage(id, push){
+    var page = document.getElementById(id);
+    if(!page) return;
+    landing.style.display = 'none';
+    contentPages.forEach(p=>{
+      if(p.id === id){
+        p.classList.add('active');
+        p.removeAttribute('aria-hidden');
+      }else{
+        p.classList.remove('active');
+        p.setAttribute('aria-hidden','true');
+      }
+    });
+    // 상세페이지에 들어가면 intro-crypto-basic 숨기기
+    const intro = document.getElementById('intro-crypto-basic');
+    if(intro) intro.style.display='none';
+    topbar.classList.remove('hidden');
+    topbar.setAttribute('aria-hidden','false');
+    var title = page.querySelector('h2') ? page.querySelector('h2').innerText : '';
+    topbarTitle.textContent = title;
+    if(push){
+      try{history.pushState({page:id}, '', '#'+id);} catch(e){}
+    }else{
+      try{history.replaceState({page:id}, '', '#'+id);} catch(e){}
+    }
+    setTimeout(() => { if(page.focus) page.focus(); }, 80);
+    initChartByPage(id);
+  }
+
+  document.querySelectorAll('.cta').forEach(btn=>{
+    btn.addEventListener('click', e=>{
       e.preventDefault();
-      showLanding(true);
+      var target = btn.getAttribute('data-target');
+      if(target) showPage(target, true);
     });
-    // 초기 로드 처리
-    window.addEventListener('load', function(){
-      var hash = location.hash.replace('#','');
-      if(hash){
-        var el = document.getElementById(hash);
-        if(el && el.classList.contains('content-page')){
-          showPage(hash, false);
-        } else {
-          showLanding(false);
+  })
+
+  function attachClickable(selector){
+    document.querySelectorAll(selector).forEach(el=>{
+      var target = el.getAttribute('data-target') || (el.querySelector('.cta') && el.querySelector('.cta').getAttribute('data-target'));
+      if(!target) return;
+      if(!el.hasAttribute('role')) el.setAttribute('role','button');
+      if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
+      el.addEventListener('click', e=>{
+        if(e.target.closest && e.target.closest('.cta')) return; // 중복 클릭 방지
+        showPage(target, true);
+      });
+      el.addEventListener('keypress', e=>{
+        if(e.key==='Enter' || e.key===' '){
+          e.preventDefault();
+          showPage(target, true);
         }
-      } else {
-        showLanding(false);
-      }
-    });
-    // 히스토리 popstate
-    window.addEventListener('popstate', function(e){
-      var state = e.state;
-      if(!state){ showLanding(false); return; }
-      if(state.page === 'landing'){ showLanding(false); }
-      else if(state.page){ showPage(state.page, false); }
-      else { showLanding(false); }
-    });
-  })();
-  </script>
+      })
+    })
+  }
+  attachClickable('.tile');
+  attachClickable('.intro-card');
+
+  backToTocBtn.addEventListener('click', e=>{
+    e.preventDefault();
+    showLanding(true);
+  });
+
+  window.addEventListener('load', ()=>{
+    contentPages = Array.from(document.querySelectorAll('.content-page'));
+    var hash = location.hash.replace('#','');
+    if(hash){
+      var el = document.getElementById(hash);
+      if(el && el.classList.contains('content-page')) showPage(hash, false);
+      else showLanding(false);
+    }else{
+      showLanding(false);
+    }
+  });
+
+  window.addEventListener('popstate', e=>{
+    var state = e.state;
+    if(!state){ showLanding(false); return; }
+    if(state.page === 'landing') showLanding(false);
+    else if(state.page) showPage(state.page, false);
+    else showLanding(false);
+  });
+})();
+</script>
 </body>
 </html>
