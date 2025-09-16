@@ -1,144 +1,311 @@
 <!doctype html>
 <html lang="ko">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>튜토리얼 | ITC</title>
   <link rel="stylesheet" href="/style.css" />
   <style>
-    :root{
+    :root {
       color-scheme: dark;
-      --accent:#ffd166;
-      --stroke:#2b2b2b;
-      --glow:255,255,255;
+      --accent: #ffd166;
+      --stroke: #2b2b2b;
+      --glow: 255, 255, 255;
     }
 
-    body{
-      margin:0; color:#eaeaea;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    body {
+      margin: 0;
+      color: #eaeaea;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
-        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
-        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        radial-gradient(1200px 600px at 50% -10%, rgba(255, 255, 255, .12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255, 255, 255, .08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255, 255, 255, .03) 0 2px, rgba(0, 0, 0, 0) 2px 8px),
         linear-gradient(#151515, #0a0a0a);
       background-attachment: fixed;
     }
 
     /* ===== Header ===== */
-    header{
-      position:fixed; top:12px; left:12px; right:12px; z-index:10;
-      display:flex; align-items:center; justify-content:space-between;
+    header {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .brand img{
-      width:120px; height:auto;
-      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
-              drop-shadow(0 0 20px rgba(var(--glow),.18));
+
+    .brand img {
+      width: 120px;
+      height: auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow), .22)) drop-shadow(0 0 20px rgba(var(--glow), .18));
     }
-    .navbtn{
-      display:inline-flex; align-items:center;
-      height:36px; padding:0 14px; border-radius:10px;
-      background:rgba(255,255,255,.03);
-      border:1px solid var(--stroke); color:#f3f3f3; font-weight:700;
-      text-decoration:none; transition:.22s;
+
+    .navbtn {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--stroke);
+      color: #f3f3f3;
+      font-weight: 700;
+      text-decoration: none;
+      transition: .22s;
     }
-    .navbtn:hover{
-      border-color:rgba(var(--glow),.32);
-      box-shadow:0 0 12px rgba(var(--glow),.22);
-      transform:translateY(-1px); color:#fff;
+
+    .navbtn:hover {
+      border-color: rgba(var(--glow), .32);
+      box-shadow: 0 0 12px rgba(var(--glow), .22);
+      transform: translateY(-1px);
+      color: #fff;
     }
 
     /* ===== Layout ===== */
-    main{
-      width:min(1100px,92vw);
-      margin:130px auto 48px;
-      display:flex; flex-direction:column; gap:22px;
+    main {
+      width: min(1100px, 92vw);
+      margin: 130px auto 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
     }
 
-    /* ===== Typewriter 영역 (index.html 동일) ===== */
-    #typewriter{
-      display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;
-      height:clamp(110px,16vw,140px);
-      justify-content:center;
-    }
-    #line1{
-      font-size:clamp(24px,3.6vw,40px); font-weight:900; letter-spacing:.3px;
-      /* 밝은 메탈릭 그라데이션 적용 */
-      background:linear-gradient(95deg,
-        rgba(255,255,255,1) 0%,
-        rgba(240,240,240,.85) 20%,
-        rgba(255,255,255,.95) 50%,
-        rgba(210,210,210,.65) 70%,
-        rgba(255,255,255,1) 100%);
-      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-      filter: drop-shadow(0 12px 36px rgba(var(--glow),.22))
-              drop-shadow(0 0 24px rgba(var(--glow),.20));
-      white-space:nowrap;
+    /* ===== Typewriter 영역 ===== */
+    #typewriter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      height: clamp(110px, 16vw, 140px);
+      justify-content: center;
     }
 
-    #line2{
-      font-size:clamp(14px,2.2vw,19px); color:#cfcfcf; font-weight:500;
-      white-space:nowrap;
+    #line1 {
+      font-size: clamp(24px, 3.6vw, 40px);
+      font-weight: 900;
+      letter-spacing: .3px;
+      background: linear-gradient(95deg,
+          rgba(255, 255, 255, 1) 0%,
+          rgba(240, 240, 240, .85) 20%,
+          rgba(255, 255, 255, .95) 50%,
+          rgba(210, 210, 210, .65) 70%,
+          rgba(255, 255, 255, 1) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow), .22)) drop-shadow(0 0 24px rgba(var(--glow), .20));
+      white-space: nowrap;
+    }
+
+    #line2 {
+      font-size: clamp(14px, 2.2vw, 19px);
+      color: #cfcfcf;
+      font-weight: 500;
+      white-space: nowrap;
     }
 
     /* ===== Cards ===== */
-    .grid{
-      display:grid; gap:16px;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      align-items:stretch;
-    }
-    @media (max-width:980px){ .grid{ grid-template-columns:repeat(2,1fr); } }
-    @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
-
-    .card{
-      position:relative; flex-direction:column; display:grid; grid-template-rows:auto 1fr auto;
-      background:linear-gradient(180deg,rgba(255, 255, 255, 0.192),rgba(255,255,255,.0));
-      border:1px solid var(--stroke); border-radius:16px;
-      box-shadow:0 8px 22px rgba(0,0,0,.35);
-      overflow:hidden; transition:.28s;
-    }
-    .card:hover{
-      transform:translateY(-4px);
-      box-shadow:0 12px 26px rgba(0,0,0,.45), 0 0 16px rgba(var(--glow),.15);
+    .grid {
+      display: grid;
+      gap: 50px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 240px));
+      justify-content: center;
     }
 
-    .thumb{
-      aspect-ratio:10/9;
-      display:flex; align-items:center; justify-content:center;
-      background:#0d0d0d;
+    .card {
+      max-width: 240px;
+      position: relative;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .01) 40%, rgba(255, 255, 255, 0));
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 255, 255, .05);
+      display: grid;
+      overflow: hidden;
+      grid-template-rows: auto 1fr auto;
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease, filter .28s ease, opacity .28s ease;
     }
-    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    .body{ padding:14px; }
-    .kicker{ font-size:12px; color:var(--accent); letter-spacing:.08em; text-transform:uppercase; }
-    .card h3{ margin:8px 0 6px; font-size:clamp(16px,2.2vw,20px); font-weight:800; }
-    .desc{ color:#b0b0b0; font-size:14px; line-height:1.55; margin:0; }
-
-    .actions{ padding:12px 14px 16px; }
-    .btn{
-      width:100%; display:flex; align-items:center; justify-content:center;
-      height:40px; border-radius:10px;
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--stroke);
-      color:#f2f2f2; font-weight:800; text-decoration:none;
-      transition:.2s;
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 46px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .06));
+      pointer-events: none;
     }
-    .btn:hover{
-      border-color:var(--accent);
-      background:rgba(255,255,255,.12);
-      color:#fff;
+
+    .card.is-dim {
+      opacity: .55;
+      filter: grayscale(.08) brightness(.88);
+    }
+
+    .card.is-focus {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, .45), 0 0 18px rgba(var(--glow), .18);
+      border-color: rgba(var(--glow), .28);
+      opacity: 1;
+      filter: none;
+    }
+
+    .cards-wrap {
+      position: relative;
+      padding: 8px 60px;
+    }
+
+    .grid-nav {
+      pointer-events: none;
+    }
+
+    .arrow {
+      pointer-events: auto;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #fff;
+      background: rgba(0, 0, 0, .55);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, .25);
+      transition: .2s;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .arrow:hover {
+      background: rgba(0, 0, 0, .75);
+      box-shadow: 0 0 18px rgba(255, 255, 255, .5);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .arrow:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .arrow.prev {
+      left: -52px;
+    }
+
+    .arrow.next {
+      right: -52px;
+    }
+
+    .arrow svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    @media (max-width:640px) {
+      .arrow.prev {
+        left: -36px;
+      }
+
+      .arrow.next {
+        right: -36px;
+      }
+    }
+
+    .thumb {
+      aspect-ratio: 10/9;
+      background:
+        linear-gradient(170deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 60%),
+        linear-gradient(to right, #303030, #121212);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(18px, 2.4vw, 26px);
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      text-shadow: 0 0 22px rgba(var(--glow), .38), 0 4px 18px rgba(var(--glow), .12);
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .body {
+      padding: 14px;
+    }
+
+    .kicker {
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .card h3 {
+      margin: 8px 0 6px;
+      font-size: clamp(16px, 2.2vw, 20px);
+      font-weight: 800;
+    }
+
+    .desc {
+      color: #b0b0b0;
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 14px 14px;
+      margin-top: auto;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--stroke);
+      color: #f2f2f2;
+      border-radius: 11px;
+      height: 40px;
+      padding: 0 14px;
+      text-decoration: none;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: .24s;
+    }
+
+    .btn:hover {
+      border-color: rgba(var(--glow), .30);
+      box-shadow: 0 0 12px rgba(var(--glow), .20), 0 10px 20px rgba(0, 0, 0, .35);
+      color: #fff;
+      transform: translateY(-1px);
     }
 
     /* ===== Footer ===== */
-    footer{
-      margin:20px 0 36px; text-align:center;
-      color:#9a9a9a; font-size:12px; line-height:1.4;
+    footer {
+      margin: 20px 0 36px;
+      text-align: center;
+      color: #9a9a9a;
+      font-size: 12px;
+      line-height: 1.4;
     }
   </style>
 </head>
+
 <body>
   <header>
     <a class="brand" href="index.html"><img src="images/logo.png" alt="ITC 로고" /></a>
-    <a class="navbtn" href="index.html">← 돌아가기</a>
+    <a class="navbtn" href="index.html">← Back</a>
   </header>
 
   <main>
@@ -149,41 +316,100 @@
     </div>
 
     <!-- 카드 Grid -->
-    <section class="grid">
-      <article class="card">
-        <div class="thumb"><img src="images/scenario1.png" alt="폭락장 시나리오" /></div>
-        <div class="body">
-          <div class="kicker">폭락장</div>
-          <h3>급락 & 패닉셀 대응</h3>
-          <p class="desc">가격이 급락하며 뉴스에 민감하게 반응하는 폭락장에서 손절/리스크 관리와 뉴스 대응을 학습합니다.</p>
-        </div>
-        <div class="actions"><a class="btn" href="scenarios/scenario1.html">시작하기</a></div>
-      </article>
+    <section class="cards-wrap">
+      <div class="grid" id="cardGrid">
+        <article class="card">
+          <div class="thumb"><img src="images/scenario1.png" alt="폭락장 시나리오" /></div>
+          <div class="body">
+            <div class="kicker">폭락장</div>
+            <h3>급락 & 패닉셀 대응</h3>
+            <p class="desc">가격이 급락하며 뉴스에 민감하게 반응하는 폭락장에서 손절/리스크 관리와 뉴스 대응을 학습합니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="scenarios/scenario1.html">시작하기</a></div>
+        </article>
 
-      <article class="card">
-        <div class="thumb"><img src="images/scenario2.png" alt="상승장 시나리오" /></div>
-        <div class="body">
-          <div class="kicker">상승장</div>
-          <h3>급등 & FOMO 상황</h3>
-          <p class="desc">긍정적인 뉴스와 투자 심리로 급등하는 시장에서 익절 전략과 조정 대비 방법을 연습합니다.</p>
-        </div>
-        <div class="actions"><a class="btn" href="scenarios/scenario2.html">시작하기</a></div>
-      </article>
+        <article class="card">
+          <div class="thumb"><img src="images/scenario2.png" alt="상승장 시나리오" /></div>
+          <div class="body">
+            <div class="kicker">상승장</div>
+            <h3>급등 & FOMO 상황</h3>
+            <p class="desc">긍정적인 뉴스와 투자 심리로 급등하는 시장에서 익절 전략과 조정 대비 방법을 연습합니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="scenarios/scenario2.html">시작하기</a></div>
+        </article>
 
-      <article class="card">
-        <div class="thumb"><img src="images/scenario3.png" alt="유지장 시나리오" /></div>
-        <div class="body">
-          <div class="kicker">유지장</div>
-          <h3>횡보 & 거래량 감소</h3>
-          <p class="desc">거래량이 줄고 관망세가 이어지는 횡보장에서 단기 매매와 변동성 예측을 학습합니다.</p>
-        </div>
-        <div class="actions"><a class="btn" href="scenarios/scenario3.html">시작하기</a></div>
-      </article>
+        <article class="card">
+          <div class="thumb"><img src="images/scenario3.png" alt="유지장 시나리오" /></div>
+          <div class="body">
+            <div class="kicker">유지장</div>
+            <h3>횡보 & 거래량 감소</h3>
+            <p class="desc">거래량이 줄고 관망세가 이어지는 횡보장에서 단기 매매와 변동성 예측을 학습합니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="scenarios/scenario3.html">시작하기</a></div>
+        </article>
+      </div>
+
+      <div class="grid-nav">
+        <button class="arrow prev" aria-label="이전">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
+          </svg>
+        </button>
+        <button class="arrow next" aria-label="다음">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+          </svg>
+        </button>
+      </div>
     </section>
   </main>
 
   <footer>
     제공되는 정보는 학습/연습을 위한 참고 자료이며, 실제 투자 결과와 손실에 대한 책임을 지지 않습니다.
   </footer>
+
+  <script>
+    (function () {
+      const grid = document.getElementById('cardGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const prevBtn = document.querySelector('.arrow.prev');
+      const nextBtn = document.querySelector('.arrow.next');
+
+      let idx = 1; // 3개 중 중앙 카드 강조
+
+      function applyFocus() {
+        cards.forEach((c, i) => {
+          c.classList.toggle('is-focus', i === idx);
+          c.classList.toggle('is-dim', i !== idx);
+        });
+      }
+      function move(dir) {
+        idx = (idx + dir + cards.length) % cards.length;
+        applyFocus();
+      }
+
+      applyFocus();
+      prevBtn.addEventListener('click', () => move(-1));
+      nextBtn.addEventListener('click', () => move(+1));
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') move(-1);
+        if (e.key === 'ArrowRight') move(+1);
+      });
+      cards.forEach((card, i) => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn')) return;
+          idx = i; applyFocus();
+        });
+        card.addEventListener('mouseenter', () => { idx = i; applyFocus(); });
+        card.addEventListener('touchstart', (e) => {
+          if (!card.classList.contains('is-focus')) {
+            e.preventDefault();
+            idx = i; applyFocus();
+          }
+        }, { passive: false });
+      });
+    })();
+  </script>
 </body>
+
 </html>
