@@ -93,8 +93,7 @@ export class EventManager {
       this.dom.elements.groupedOrderbookContainer.classList.add("hidden");
       this.ui.updateOrderbook(
         this.state.latestOrderbookData[this.state.activeCoin]?.general,
-        this.dom.elements.generalAskList,
-        this.dom.elements.generalBidList
+        this.dom.elements.generalUnifiedList
       );
     });
 
@@ -106,8 +105,7 @@ export class EventManager {
       this.dom.elements.groupedOrderbookContainer.classList.remove("hidden");
       this.ui.updateOrderbook(
         this.state.latestOrderbookData[this.state.activeCoin]?.grouped,
-        this.dom.elements.groupedAskList,
-        this.dom.elements.groupedBidList
+        this.dom.elements.groupedUnifiedList
       );
     });
   }

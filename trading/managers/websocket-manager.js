@@ -96,14 +96,11 @@ class WebSocketManager {
       { ticket: uuidv4() },
       { type: "ticker", codes: CONFIG.MARKET_CODES },
       { type: "orderbook", codes: CONFIG.MARKET_CODES, level: 0 },
-      { type: "orderbook", codes: ["KRW-BTC"], level: 1000000 },
-      { type: "orderbook", codes: ["KRW-ETH"], level: 10000 },
-      { type: "orderbook", codes: ["KRW-XRP"], level: 1 },
       { format: "DEFAULT" },
     ];
 
     this.upbitWs.send(JSON.stringify(requestMessage));
-    console.log("📡 업비트 웹소켓 구독 요청 전송 완료");
+    console.log("📡 업비트 웹소켓 구독 요청 전송 완료 (level: 0 = 30호가)");
   }
 
   async handleMessage(event) {
@@ -197,10 +194,9 @@ class WebSocketManager {
       },
     };
 
-    // 해당 사용자에게만 체결 알림 전송 (접속한 계정만)
+    // 해당 사용자에게만 체결 알림 전송
     this.clientWss.clients.forEach((client) => {
-      // 추후 사용자 인증 시스템 구현시 해당 사용자에게만 전송하도록 수정 필요
-      if (client.readyState === WebSocket.OPEN) {
+      if (client.readyState === WebSocket.OPEN && client.userId === userId) {
         try {
           client.send(JSON.stringify(notification));
         } catch (error) {

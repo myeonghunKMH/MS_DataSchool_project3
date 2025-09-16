@@ -115,25 +115,40 @@
             <button class="tab-button disabled">호가주문</button>
           </div>
 
+          <!-- 일반 호가창 -->
           <div class="orderbook-container" id="general-orderbook-container">
-            <div class="orderbook-list ask-list" id="general-ask-list"></div>
-            <div
-              class="orderbook-price-info"
-              id="current-trade-price-general"
-            ></div>
-            <div class="orderbook-list bid-list" id="general-bid-list"></div>
+
+            <!-- 통합 호가창 (매도 + 매수) -->
+            <div class="orderbook-section unified-section">
+              <div class="orderbook-list unified-list" id="general-unified-list"></div>
+            </div>
+
+            <!-- 체결강도 표시 -->
+            <div class="market-pressure">
+              <div class="pressure-bar">
+                <div class="ask-pressure" id="ask-pressure-bar"></div>
+                <div class="bid-pressure" id="bid-pressure-bar"></div>
+              </div>
+              <div class="pressure-labels">
+                <span class="ask-label">매도압력</span>
+                <span class="pressure-ratio" id="pressure-ratio">50:50</span>
+                <span class="bid-label">매수압력</span>
+              </div>
+            </div>
           </div>
 
-          <div
-            class="orderbook-container hidden"
-            id="grouped-orderbook-container"
-          >
-            <div class="orderbook-list ask-list" id="grouped-ask-list"></div>
-            <div
-              class="orderbook-price-info"
-              id="current-trade-price-grouped"
-            ></div>
-            <div class="orderbook-list bid-list" id="grouped-bid-list"></div>
+          <!-- 누적 호가창 -->
+          <div class="orderbook-container hidden" id="grouped-orderbook-container">
+
+            <!-- 통합 호가창 (매도 + 매수) -->
+            <div class="orderbook-section unified-section">
+              <div class="orderbook-list unified-list cumulative" id="grouped-unified-list"></div>
+            </div>
+
+            <!-- 누적 차트 -->
+            <div class="cumulative-chart">
+              <canvas id="cumulative-depth-chart" width="100%" height="100"></canvas>
+            </div>
           </div>
         </div>
 
