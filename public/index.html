@@ -244,20 +244,60 @@
       50%{ transform:translateY(-10px); }
     }
 
+    /* ===== TTS Audio Icon ===== */
+    .tts-icon{
+      position:absolute;
+      top:-5px;
+      right:-5px;
+      width:24px;
+      height:24px;
+      background:rgba(255,209,102,0.9);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:all 0.2s ease;
+      box-shadow:0 2px 8px rgba(255,209,102,0.3);
+      z-index:1;
+    }
+
+    .tts-icon:hover{
+      background:rgba(255,209,102,1);
+      transform:scale(1.1);
+      box-shadow:0 4px 12px rgba(255,209,102,0.5);
+    }
+
+    .tts-icon.playing{
+      animation:audio-pulse 1s ease-in-out infinite;
+    }
+
+    .tts-icon svg{
+      width:14px;
+      height:14px;
+      fill:#1a1a1a;
+    }
+
+    @keyframes audio-pulse{
+      0%, 100%{ transform:scale(1); }
+      50%{ transform:scale(1.15); }
+    }
+
     .tutorial-bubble{
       position:fixed;
       background:linear-gradient(145deg, rgba(255,255,255,0.98), rgba(245,245,245,0.95));
       color:#1a1a1a;
-      padding:20px 24px;
+      padding:24px 28px;
       border-radius:20px;
-      max-width:380px;
+      max-width:420px;
+      min-width:320px;
       box-shadow:
         0 15px 40px rgba(0,0,0,0.3),
         0 0 30px rgba(255,209,102,0.2);
       z-index:10001;
       opacity:0;
       transform:translateY(10px);
-      transition:all 0.3s ease 0.2s; /* 원본 딜레이 복원 */
+      transition:all 0.3s ease 0.2s;
       display:none;
     }
 
@@ -312,9 +352,11 @@
 
     .bubble-text{
       font-size:15px;
-      line-height:1.6;
+      line-height:1.7;
       color:#333;
-      margin:0 0 16px 0;
+      margin:0 0 20px 0;
+      word-break:keep-all;
+      overflow-wrap:break-word;
     }
 
     .tutorial-controls{
@@ -528,6 +570,11 @@
   
   <div class="tutorial-mascot" id="tutorialMascot">
     <img class="mascot-img" id="mascotImg" src="" alt="마스코트">
+    <div class="tts-icon" id="ttsIcon" title="음성으로 듣기">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+      </svg>
+    </div>
   </div>
   
   <div class="tutorial-bubble" id="tutorialBubble">
@@ -571,11 +618,12 @@
       typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 320));
     })();
 
-    // ===== JAVASCRIPT TUTORIAL SYSTEM 전체 수정 =====
+    // ===== TUTORIAL SYSTEM WITH TTS =====
     class TutorialSystem {
       constructor() {
         this.currentStep = 0;
         this.isActive = false;
+        this.currentAudio = null;
         
         this.elements = {
           overlay: document.getElementById('tutorialOverlay'),
@@ -588,7 +636,8 @@
           nextBtn: document.getElementById('nextBtn'),
           skipBtn: document.getElementById('skipBtn'),
           progress: document.getElementById('tutorialProgress'),
-          helpButton: document.getElementById('helpButton')
+          helpButton: document.getElementById('helpButton'),
+          ttsIcon: document.getElementById('ttsIcon')
         };
 
         this.steps = [
@@ -596,46 +645,45 @@
             target: null,
             mascot: 'coin_good1',
             title: '안녕하세요! ITC에 오신 걸 환영해요!',
-            text: '저는 여러분의 암호화폐 투자 학습을 도와드릴 코인이에요. 지금부터 ITC의 주요 기능들을 소개해드릴게요! 모의투자이니 실제 돈이 들어가지 않는다는 점 잊지 마세요!',
+            text: '저는 여러분의 암호화폐 투자 학습을 도와드릴 코인이에요.\n지금부터 ITC의 주요 기능들을 소개해드릴게요!\n모의투자이니 실제 돈이 들어가지 않는다는 점 잊지 마세요!',
             position: 'center'
           },
           {
             target: '[data-card="game"]',
             mascot: 'coin_good1',
             title: '🎮 과거 데이터 시뮬레이션',
-            text: '실제 과거 암호화폐 데이터로 게임처럼 투자를 연습할 수 있어요. 초보자분들은 먼저 이 기능으로 전략을 익히는 걸 추천드려요!',
+            text: '실제 과거 암호화폐 데이터로 게임처럼 투자를 연습할 수 있어요.\n초보자분들은 먼저 이 기능으로 전략을 익히는 걸 추천드려요!',
             position: 'right'
           },
           {
             target: '[data-card="news"]',
             mascot: 'coin_soso1',
             title: '📰 암호화폐 뉴스',
-            text: '최신 암호화폐 관련 뉴스를 한눈에 확인할 수 있어요. 시장 동향을 파악하는데 도움을 줄 거예요. 다만, 투자 결정은 실제 돈과 상관없이 신중히!',
+            text: '최신 암호화폐 관련 뉴스를 한눈에 확인할 수 있어요.\n시장 동향을 파악하는데 도움을 줄 거예요.\n다만, 투자 결정은 실제 돈과 상관없이 신중히!',
             position: 'right'
           },
           {
             target: '[data-card="crypto"]',
             mascot: 'coin_sad1',
             title: '📚 암호화폐 백과사전',
-            text: '모르는 용어나 기술 때문에 당황하지 마세요. 여기서 쉽게 찾아보고 학습할 수 있어요!',
+            text: '모르는 용어나 기술 때문에 당황하지 마세요.\n여기서 쉽게 찾아보고 학습할 수 있어요!',
             position: 'left'
           },
           {
             target: '[data-card="realtime"]',
             mascot: 'coin_good1',
             title: '📈 실시간 모의 투자',
-            text: 'BTC, ETH, XRP로 실제와 같은 트레이딩 UI를 체험해보세요. 실제 시장과 차이가 있을 수 있으니 충분히 연습한 후 도전하세요!',
+            text: 'BTC, ETH, XRP로 실제와 같은 트레이딩 UI를 체험해보세요.\n실제 시장과 차이가 있을 수 있으니 충분히 연습한 후 도전하세요!',
             position: 'left'
           },
           {
             target: null,
             mascot: 'coin_good1',
             title: '준비되셨나요?',
-            text: '이제 ITC에서 안전하게 암호화폐 투자를 학습해보세요! 화살표 키나 좌우 버튼으로 카드를 탐색할 수 있어요. 즐겁게 배우고, 행운을 빌어요! 🚀',
+            text: 'ITC에서 안전하고 재미있게 암호화폐 투자를 배워보세요!\n마이페이지에서는 실시간 모의 투자 연습을 기반으로 나만의 리포트를 확인할 수 있답니다.\n그럼 즐겁게 배우고, 행운을 빌어요! 🚀',
             position: 'center'
           }
         ];
-
 
         this.init();
       }
@@ -647,6 +695,7 @@
         });
         this.elements.nextBtn.addEventListener('click', () => this.nextStep());
         this.elements.skipBtn.addEventListener('click', () => this.end());
+        this.elements.ttsIcon.addEventListener('click', () => this.playTTS());
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape' && this.isActive) this.end();
         });
@@ -678,18 +727,18 @@
 
         this.elements.mascotImg.src = `/images/${step.mascot}.png`;
         this.elements.bubbleTitle.textContent = step.title;
-        this.elements.bubbleText.textContent = step.text;
+        this.elements.bubbleText.innerHTML = step.text.replace(/\n/g, '<br>');
         
         const isLastStep = this.currentStep === this.steps.length - 1;
 
         if (isLastStep) {
           this.elements.nextBtn.textContent = '시작하기';
           this.elements.nextBtn.classList.add('finish');
-          this.elements.skipBtn.style.display = 'none'; // 마지막 단계에서 건너뛰기 버튼 숨기기
+          this.elements.skipBtn.style.display = 'none';
         } else {
           this.elements.nextBtn.textContent = '다음';
           this.elements.nextBtn.classList.remove('finish');
-          this.elements.skipBtn.style.display = 'inline-block'; // 다른 단계에서는 버튼 보이기
+          this.elements.skipBtn.style.display = 'inline-block';
         }
 
         this.elements.bubble.classList.add('active');
@@ -717,12 +766,11 @@
           if (position === 'left') {
               mascotLeft = rect.left - mascotSize - gap;
               bubbleLeft = mascotLeft - bubbleWidth - 15;
-          } else { // 'right'
+          } else {
               mascotLeft = rect.right + gap;
               bubbleLeft = mascotLeft + mascotSize + 15;
           }
 
-          // 오버레이 제거
           this.elements.overlay.style.background = 'transparent';
           
           this.elements.spotlight.style.cssText = `left: ${rect.left - 10}px; top: ${rect.top - 10}px; width: ${rect.width + 20}px; height: ${rect.height + 20}px; display: block;`;
@@ -732,7 +780,6 @@
 
           document.querySelectorAll('.card').forEach(card => {
               if (card === element) {
-                  // 메인페이지 hover와 완전 동일한 효과
                   card.classList.add('is-focus');
                   card.classList.remove('is-dim');
                   card.style.opacity = '1';
@@ -742,7 +789,6 @@
                   card.style.borderColor = 'rgba(255,209,102,.45)';
                   card.style.background = 'linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03) 40%, rgba(255,255,255,.01))';
               } else {
-                  // 다른 카드들 - dim 효과만 적용
                   card.classList.add('is-dim');
                   card.classList.remove('is-focus');
                   card.style.opacity = '';
@@ -758,7 +804,6 @@
       }      
 
       showCenter() {
-          // 센터 모드에서는 반투명 검은 배경 유지
           this.elements.overlay.style.background = 'rgba(0,0,0,0.85)';
           
           const mascotSize = window.innerWidth < 640 ? 100 : 140;
@@ -773,7 +818,6 @@
           this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: calc(50% - 30px); transform: translateY(-50%);`;
           this.elements.bubble.className = 'tutorial-bubble active right';
           
-          // 모든 카드 원래대로 복원
           document.querySelectorAll('.card').forEach(card => {
               card.classList.remove('is-focus', 'is-dim');
               card.style.opacity = '';
@@ -787,7 +831,45 @@
           requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
       }
 
+      playTTS() {
+        // 이전 오디오가 재생 중이면 정지
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.elements.ttsIcon.classList.remove('playing');
+        }
+
+        // 현재 단계에 맞는 TTS 파일 재생 (1.mp3 ~ 6.mp3)
+        const audioFile = `/voice/${this.currentStep + 1}.mp3`;
+        this.currentAudio = new Audio(audioFile);
+        
+        this.currentAudio.addEventListener('loadstart', () => {
+          this.elements.ttsIcon.classList.add('playing');
+        });
+
+        this.currentAudio.addEventListener('ended', () => {
+          this.elements.ttsIcon.classList.remove('playing');
+        });
+
+        this.currentAudio.addEventListener('error', (e) => {
+          console.warn(`TTS 파일을 찾을 수 없습니다: ${audioFile}`);
+          this.elements.ttsIcon.classList.remove('playing');
+        });
+
+        this.currentAudio.play().catch(e => {
+          console.warn('오디오 재생에 실패했습니다:', e);
+          this.elements.ttsIcon.classList.remove('playing');
+        });
+      }
+
       nextStep() {
+        // 다음 단계로 넘어갈 때 현재 재생 중인 오디오 정지
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.elements.ttsIcon.classList.remove('playing');
+        }
+        
         this.elements.bubble.classList.remove('show');
         setTimeout(() => {
           if (this.currentStep < this.steps.length - 1) {
@@ -801,6 +883,14 @@
 
       end() {
         this.isActive = false;
+        
+        // TTS 오디오 정지
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.elements.ttsIcon.classList.remove('playing');
+        }
+        
         this.elements.overlay.classList.remove('active');
         this.elements.spotlight.style.display = 'none';
         this.elements.bubble.classList.remove('show', 'active');
@@ -808,13 +898,11 @@
         this.elements.progress.classList.remove('active');
         document.querySelectorAll('.card').forEach(card => {
             card.classList.remove('is-focus', 'is-dim');
-            // 튜토리얼 종료 시 인라인 스타일 제거
             card.style.filter = '';
             card.style.boxShadow = '';
             card.style.background = '';
             card.style.borderColor = '';
             card.style.transform = '';
-            // 카드 내부 요소들도 초기화
             const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
             cardElements.forEach(el => {
                 el.style.backgroundColor = '';

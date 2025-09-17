@@ -896,11 +896,11 @@
         .pill-btn {
             flex: 1;
             padding: 12px 0;
-            background: #202020;
-            border: 1px solid #414141;
+            background: #473f36;
+            border: 1px solid #473f36;
             border-radius: 9999px;
             /* 완전 둥근 pill */
-            color: #b1b1b1;
+            color: #c8c8c8;
             font-weight: 700;
             font-size: var(--font-md);
             cursor: pointer;
@@ -908,9 +908,19 @@
         }
 
         .pill-btn:hover {
-            background: #2c2c2c;
-            border-color: #5a5a5a;
+            background: #5c5246;
+            border-color: #5c5246;
             color: var(--active);
+        }
+
+        #news-popup #news-orderConfirm.buy-btn {
+            background: #992d2f !important;
+            color: #fff !important;
+        }
+
+        #news-popup #news-orderConfirm.sell-btn {
+            background: #115191 !important;
+            color: #fff !important;
         }
 
         .currency-krw {
@@ -1892,7 +1902,7 @@
                     return newsTime > prevTime && newsTime <= currentTime;
                 });
                 if (matched) {
-                    this.showNewsPopup(matched);
+                    this.showNewsPopup(matched, false);  // 시뮬 중 발생은 상호작용 가능
                     this.addNewsToTimeline(matched);
                 }
             }
@@ -1922,10 +1932,10 @@
                         <strong>${news.time}${actionTag}</strong><br>${news.title}
                     </div>
                 `;
-                div.onclick = () => this.showNewsPopup(news);
+                div.onclick = () => this.showNewsPopup(news, true);
             }
 
-            showNewsPopup(news) {
+            showNewsPopup(news, readonly = false) {
                 this.pauseSimulation();
                 this.currentNews = news;
 
@@ -1942,9 +1952,16 @@
                 document.getElementById("overlay").style.display = "block";
                 document.getElementById("news-popup").style.display = "block";
 
-                // 초기 상태
-                document.getElementById("news-popup-choice").style.display = "flex";
-                document.getElementById("news-trade-form").style.display = "none";
+                const currentSimTime = this.historicalData[this.currentMarket]?.[this.currentDataIndex]?.timestamp || 0;
+                const newsTime = new Date(news.time.replace(" ", "T") + "+09:00").getTime();
+
+                if (readonly || news._userAction) {
+                    document.getElementById("news-popup-choice").style.display = "none";
+                    document.getElementById("news-trade-form").style.display = "none";
+                } else {
+                    document.getElementById("news-popup-choice").style.display = "flex";
+                    document.getElementById("news-trade-form").style.display = "none";
+                }
 
                 // 매수 버튼
                 document.getElementById("news-popup-buy").onclick = () => {
@@ -1971,7 +1988,6 @@
 
                     document.getElementById("news-popup").style.display = "none";
                     document.getElementById("overlay").style.display = "none";
-                    this.startSimulation();
                 };
 
                 // 입력 이벤트 → 총액 자동 계산
@@ -1993,7 +2009,13 @@
                     if (val > 100) val = 100;
                     this.setNewsOrderAmount(val);
                 };
+                document.getElementById("overlay").onclick = () => {
+                    this.currentNews._userAction = "hold";
+                    this.addNewsToTimeline(this.currentNews);
 
+                    document.getElementById("news-popup").style.display = "none";
+                    document.getElementById("overlay").style.display = "none";
+                };
                 // 확인 버튼
                 document.getElementById("news-orderConfirm").onclick = () => {
                     const amount = parseFloat(document.getElementById("news-orderAmount").value);

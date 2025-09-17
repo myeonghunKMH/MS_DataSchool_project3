@@ -16,43 +16,79 @@
     header img.logo{ width:120px; height:auto; filter:drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
     .btn-nav{ display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; font-weight:600; font-size:14px; border:1px solid rgba(255,255,255,.14); background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); box-shadow:0 10px 28px rgba(0,0,0,.35); }
     .btn-nav:hover{ transform:translateY(-1px); background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05)); border-color:rgba(255,255,255,.22); }
-    nav{ display:flex; gap:10px; }
-    .navbtn{ display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px; border-radius:10px; background:#121212; border:1px solid #262626; color:#e8e8e8; font-weight:700; }
-    .navbtn img{ width:16px; height:16px; }
     .wrap{ max-width:1200px; margin:0 auto; padding:90px 16px 48px; }
     .grid{ display:grid; gap:14px; }
     .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
     .grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     @media (max-width:1024px){ .grid.cols-4{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:760px){ .grid.cols-4,.grid.cols-2{ grid-template-columns:1fr; } }
-    .card{ background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:16px 16px 14px; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:12px 12px 10px;
+      box-shadow:0 8px 20px rgba(0,0,0,.30);
+    }
     .title{ font-size:14px; color:#bdbdbd; margin-bottom:8px; }
     .kpi{ display:flex; align-items:flex-end; gap:8px; }
-    .kpi .value{ font-size:28px; font-weight:800; }
+    .kpi .value{ font-size:26px; font-weight:800; }
     .kpi .sub{ font-size:12px; color:#9ec; padding:2px 8px; border-radius:999px; background:rgba(70,215,198,.12); border:1px solid rgba(70,215,198,.28); }
+
     .table{ width:100%; border-collapse:collapse; font-size:14px; }
     .table th, .table td{ padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); }
     .table th{ color:#bdbdbd; font-weight:600; }
     .muted{ color:#a8a8a8; }
-    .gain{ color:#3bd1b8; }
-    .loss{ color:#ff7f7f; }
-    footer{ margin:40px 0 20px; text-align:center; color:#9a9a9a; font-size:13px; }
-    .print-btn{ position:fixed; bottom:20px; right:20px; z-index:30; border-radius:999px; padding:10px 14px; font-weight:600; font-size:14px; border:1px solid rgba(255,255,255,.15); background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:0 10px 28px rgba(0,0,0,.35); cursor:pointer; }
-    #ai-chat-button { bottom: 80px; }
-    #ai-chat-widget { bottom: 150px; }
+
+    /* + 빨강, - 파랑g */
+    .gain{ color:#FF6B6B; }  /* 양수 */
+    .loss{ color:#84ceff; }  /* 음수 */
+
+    .table-container{
+      max-height: 210px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:10px;
+    }
+    .table-container thead th{ position:sticky; top:0; background:#121212; z-index:1; }
+    .table-container::-webkit-scrollbar{ width:8px; }
+    .table-container::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:8px; }
+    .table-container::-webkit-scrollbar-track{ background:transparent; }
+
+    /* 값이 비어있으면 서브텍스트(작대기) 자동 숨김 */
+    .kpi .sub:empty { display: none; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <!-- BTC/ETH/XRP 전용 팔레트 + HEX→RGBA 유틸 -->
+  <script>
+    // HEX → rgba()
+    function hexA(hex, a=1){
+      const h = hex.replace('#','');
+      const v = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+      const n = parseInt(v, 16);
+      const r = (n>>16)&255, g=(n>>8)&255, b=n&255;
+      return `rgba(${r},${g},${b},${a})`;
+    }
+    // 심볼 팔레트(대문자 기준)
+    const PALETTE = {
+      BTC: '#FFC98A',
+      ETH: '#FF8FB3',
+      XRP: '#7CC7A3',
+    };
+  </script>
 </head>
 <body>
   <header>
     <div class="left"><a href="index.html"><img class="logo" src="/images/logo.png" alt="ITC" /></a></div>
     <div class="right">
-      <a class="navbtn" href="guide.html"><img src="/images/Document.png">가이드</a>
+      <a class="btn-nav" href="guide.html">가이드</a>
       <a class="btn-nav" href="/mypage.html">마이페이지</a>
     </div>
   </header>
 
-  <button class="print-btn" onclick="window.print()">📄 PDF로 저장</button>
+  <button class="btn-nav" style="position:fixed;bottom:20px;left:20px;z-index:30" onclick="window.print()">📄 PDF로 저장</button>
 
   <main class="wrap">
     <h1 style="margin:0 4px 6px; font-size:28px;">개인화된 사용자 리포트</h1>
@@ -60,9 +96,9 @@
 
     <!-- KPI -->
     <div class="grid cols-4">
-      <div class="card"><div class="title">이번 달 내 거래 횟수</div><div class="kpi"><div class="value" id="kpi_trades">—</div><div class="sub" id="kpi_trades_diff">—</div></div></div>
-      <div class="card"><div class="title">이번 달 손익(실현)</div><div class="kpi"><div class="value" id="kpi_pnl">—</div><div class="sub" id="kpi_pnl_diff">—</div></div></div>
-      <div class="card"><div class="title">내 수익률 (월간)</div><div class="kpi"><div class="value" id="kpi_return">—</div><div class="sub" id="kpi_return_rank">—</div></div></div>
+      <div class="card"><div class="title">이번 달 내 거래 횟수</div><div class="kpi"><div class="value" id="kpi_trades">—</div><div class="sub" id="kpi_trades_diff"></div></div></div>
+      <div class="card"><div class="title">이번 달 수익</div><div class="kpi"><div class="value" id="kpi_pnl">—</div><div class="sub" id="kpi_pnl_diff"></div></div></div>
+      <div class="card"><div class="title">이번 달 수익률</div><div class="kpi"><div class="value" id="kpi_return">—</div><div class="sub" id="kpi_return_rank"></div></div></div>
       <div class="card"><div class="title">가장 많이 거래한 종목</div><div class="kpi"><div class="value" id="kpi_top_symbol">—</div><div class="sub" id="kpi_top_symbol_share">—</div></div></div>
     </div>
 
@@ -77,26 +113,38 @@
       <div class="card"><div class="title">내가 거래한 종목 수량</div><canvas id="chart_my_top_symbols" height="120"></canvas></div>
       <div class="card">
         <div class="title">최근 체결 히스토리</div>
-        <table class="table" id="table_recent">
-          <thead><tr><th>일시</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-container">
+          <table class="table" id="table_recent">
+            <thead><tr><th>일시</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
 
   <script>
     const fmtKRW = v => '₩' + Number(v||0).toLocaleString('ko-KR');
-    const fmtPct = v => (v>=0?'+':'') + Number(v||0).toFixed(1) + '%';
+    const fmtPct = v => (v>=0?'+ ':'- ') + Math.abs(Number(v||0).toFixed(1)) + '%';
     const fmtDT  = ts => {
       const d = new Date(ts);
       return isNaN(d.getTime()) ? String(ts) : d.toLocaleString('ko-KR', { dateStyle:'short', timeStyle:'short' });
     };
-    const sideKR = s => {
-      const map = { buy:'매수', sell:'매도', bid:'매수', ask:'매도' };
-      return map[(s||'').toLowerCase()] || (s||'').toUpperCase();
-    };
-    const cleanSymbol = sym => (sym||'').replace(/^KRW[-/]/, '');
+    const sideKR = s => ({buy:'매수',sell:'매도',bid:'매수',ask:'매도'})[(s||'').toLowerCase()] || (s||'').toUpperCase();
+    const cleanSymbol = sym => (sym||'').replace(/^KRW[-/]/,'');
+
+    /* ====== Y축 범위 계산 (패딩 포함) ====== */
+    function calcRange(arr, pad=0.08){
+      const vals = (arr||[]).map(Number).filter(v => Number.isFinite(v));
+      if (!vals.length) return {};
+      const mn = Math.min(...vals), mx = Math.max(...vals);
+      if (mn === mx) {
+        const d = mn === 0 ? 1 : Math.abs(mn)*0.05;
+        return { suggestedMin: mn - d, suggestedMax: mx + d };
+      }
+      const span = mx - mn, p = span*pad;
+      return { suggestedMin: mn - p, suggestedMax: mx + p };
+    }
 
     async function loadReport(){
       const r = await fetch('/api/user/report', { credentials:'include' });
@@ -104,29 +152,56 @@
       const data = await r.json();
       const { days=[], my={} } = data;
 
-      // KPI
+      /* ===== KPI ===== */
+      // 거래 횟수
       document.getElementById('kpi_trades').textContent = Number(my.monthlyTrades||0).toLocaleString('ko-KR');
-      document.getElementById('kpi_trades_diff').textContent = (my.monthlyTradesDiff>=0?'+':'') + (my.monthlyTradesDiff||0) + '건';
+      // +0건 숨김
+      const tradesDiffEl = document.getElementById('kpi_trades_diff');
+      const diff = my.monthlyTradesDiff;
+      if (diff == null || diff === 0) {
+        tradesDiffEl.textContent = '';
+        tradesDiffEl.style.display = 'none';
+      } else {
+        tradesDiffEl.textContent = (diff>0?'+':'') + diff + '건';
+        tradesDiffEl.style.display = '';
+      }
 
-      const monthlyPnL = my.monthlyPnL || 0;
-      const monthlyPnLDiff = my.monthlyPnLDiff || 0;
-      document.getElementById('kpi_pnl').textContent = fmtKRW(monthlyPnL);
-      document.getElementById('kpi_pnl').classList.add(monthlyPnL>=0?'gain':'loss');
-      document.getElementById('kpi_pnl_diff').textContent = (monthlyPnLDiff>=0?'+':'') + fmtKRW(Math.abs(monthlyPnLDiff));
-      document.getElementById('kpi_pnl_diff').classList.add(monthlyPnLDiff>=0?'gain':'loss');
+      // 이번 달 수익(원화) = equityCurve 마지막 - 첫값 (평가 기준)
+      const eq = my.equityCurve || [];
+      const mtdMoney = (eq?.length >= 2) ? Math.round((eq.at(-1) - eq[0])) : 0;
+      const pnlEl = document.getElementById('kpi_pnl');
+      pnlEl.textContent = (mtdMoney >= 0 ? '+' : '- ') + fmtKRW(Math.abs(mtdMoney));
+      pnlEl.classList.remove('gain','loss');
+      pnlEl.classList.add(mtdMoney>=0?'gain':'loss'); // + 빨강 / - 파랑
 
-      document.getElementById('kpi_return').textContent = fmtPct(my.monthlyReturnPct||0);
-      document.getElementById('kpi_return_rank').textContent = (my.returnRankPctile!=null) ? `상위 ${my.returnRankPctile}%` : '—';
+      // 서브텍스트 숨김
+      const pnlDiffEl = document.getElementById('kpi_pnl_diff');
+      pnlDiffEl.textContent = '';
+      pnlDiffEl.style.display = 'none';
 
+      // 내 수익률(월간) = equityCurve 기반으로 직접 계산 (그래프와 일치)
+      const monthlyReturnPct = (eq.length>=2 && eq[0])
+        ? ((eq.at(-1) - eq[0]) / eq[0]) * 100
+        : 0;
+      const returnEl = document.getElementById('kpi_return');
+      returnEl.textContent = fmtPct(monthlyReturnPct);
+      returnEl.classList.remove('gain','loss');
+      returnEl.classList.add(monthlyReturnPct>=0 ? 'gain' : 'loss'); // + 빨강 / - 파랑
+
+      // 수익률 서브텍스트(백분위): 값 있을 때만 표시
+      const rankEl = document.getElementById('kpi_return_rank');
+      rankEl.textContent = (my.returnRankPctile!=null) ? `상위 ${my.returnRankPctile}%` : '';
+
+      // 최다 거래 종목
       if (my.topSymbols?.length){
         document.getElementById('kpi_top_symbol').textContent = cleanSymbol(my.topSymbols[0].symbol);
         document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
       }
 
-      // 최근 체결 테이블
+      /* ===== 최근 체결 히스토리 ===== */
       const tbody = document.querySelector('#table_recent tbody');
       tbody.innerHTML = '';
-      (my.recentFills||[]).forEach(f=>{
+      (my.recentFills||[]).slice(0,20).forEach(f=>{
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${fmtDT(f.ts||f.created_at)}</td>
@@ -137,19 +212,40 @@
         tbody.appendChild(tr);
       });
 
-      // 차트 공통 옵션
+      /* ===== 차트 공통 옵션 ===== */
       const baseGrid = { color:'rgba(255,255,255,.12)' };
       const baseTicks = { color:'#cfcfcf', font:{ size:11 } };
       const tooltip = { enabled:true, intersect:false, mode:'index' };
 
-      // 총자산 변화
+      /* ===== 총자산 변화 (Y축 자동) ===== */
+      const equityData = my.equityCurve || [];
+      const yRangeEquity = calcRange(equityData, 0.08);
+
       new Chart(document.getElementById('chart_equity'), {
         type:'line',
-        data:{ labels:days, datasets:[{ label:'총자산(₩)', data:my.equityCurve||[], fill:true, borderWidth:2, pointRadius:0, tension:.35 }]},
-        options:{ plugins:{ legend:{display:false}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } } }
+        data:{
+          labels:days,
+          datasets:[{
+            label:'총자산(₩)',
+            data:equityData,
+            fill:true,
+            borderWidth:2,
+            borderColor:'#4bc0c0',
+            backgroundColor:'rgba(75,192,192,0.25)',
+            pointRadius:0,
+            tension:.35
+          }]
+        },
+        options:{
+          plugins:{ legend:{display:false}, tooltip },
+          scales:{
+            x:{ grid:{display:false}, ticks:baseTicks },
+            y:{ grid:baseGrid, ticks:baseTicks, beginAtZero:false, ...yRangeEquity }
+          }
+        }
       });
 
-      // 수익률 비교
+      /* ===== 수익률 비교 (통합 범위) ===== */
       const myReturn = my.returnSeries||[];
       const peerReturn = my.peerAvgReturnSeries||null;
       const marketBaseline = my.marketReturnSeries || new Array(days.length).fill(0);
@@ -163,19 +259,56 @@
         datasets.push({ type:'line', label:'기준선(0%)', data:marketBaseline, borderDash:[5,5], borderColor:'#aaa', borderWidth:2, pointRadius:0, tension:.35 });
       }
 
+      const allReturnVals = [...myReturn, ...(peerReturn||[]), ...(marketBaseline||[])];
+      const yRangeReturn = calcRange(allReturnVals, 0.12);
+
       new Chart(document.getElementById('chart_return_compare'), {
         type:'line',
         data:{ labels:days, datasets },
-        options:{ plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip },
-          scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } } }
+        options:{
+          plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip },
+          scales:{
+            x:{ grid:{display:false}, ticks:baseTicks },
+            y:{ grid:baseGrid, ticks:baseTicks, beginAtZero:false, ...yRangeReturn }
+          }
+        }
       });
 
-      // 내가 거래한 종목
+      /* ===== 내가 거래한 종목 (BTC/ETH/XRP만 개별 색 적용) ===== */
+      const labelsTop = (my.topSymbols||[]).map(d=>cleanSymbol(d.symbol).toUpperCase());
+      const dataTop   = (my.topSymbols||[]).map(d=>Math.round(d.share*100));
+
       new Chart(document.getElementById('chart_my_top_symbols'), {
         type:'bar',
-        data:{ labels:(my.topSymbols||[]).map(d=>cleanSymbol(d.symbol)), datasets:[{ label:'거래 비중(%)', data:(my.topSymbols||[]).map(d=>Math.round(d.share*100)) }] },
-        options:{ indexAxis:'y', plugins:{ legend:{display:false}, tooltip },
-          scales:{ x:{ grid:baseGrid, ticks:baseTicks, max:100 }, y:{ grid:{display:false}, ticks:baseTicks } } }
+        data:{
+          labels: labelsTop,
+          datasets:[{
+            label:'거래 비중(%)',
+            data: dataTop,
+            backgroundColor: (ctx) => {
+              const label = ctx.chart.data.labels[ctx.dataIndex];
+              const hex = PALETTE[label];
+              return hex ? hexA(hex, 0.70) : undefined;
+            },
+            borderColor: (ctx) => {
+              const label = ctx.chart.data.labels[ctx.dataIndex];
+              return PALETTE[label] || undefined;
+            },
+            hoverBackgroundColor: (ctx) => {
+              const label = ctx.chart.data.labels[ctx.dataIndex];
+              return PALETTE[label] || undefined;
+            },
+            borderWidth: 2,
+          }]
+        },
+        options:{
+          indexAxis:'y',
+          plugins:{ legend:{display:false}, tooltip },
+          scales:{
+            x:{ grid:{ color:'rgba(255,255,255,.12)' }, ticks:{ color:'#cfcfcf', font:{ size:11 } }, max:100 },
+            y:{ grid:{ display:false }, ticks:{ color:'#cfcfcf', font:{ size:11 } } }
+          }
+        }
       });
     }
 
