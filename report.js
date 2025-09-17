@@ -219,8 +219,9 @@ const toKSTDateKey = (dt) => {
 /* ================= Helpers: 수치/유틸 ================= */
 const round1 = v => Math.round((Number(v)||0)*10)/10;
 const safePct = (num,den) => (den && Math.abs(den)>1e-9) ? (num/den)*100 : 0;
-const stripKRW = s => String(s||'').replace(/^KRW[-/]/,'');
-const addKRW = s => s?.startsWith('KRW-') ? s : `KRW-${s}`;
+const norm = s => String(s || '').trim().toUpperCase();
+const stripKRW = s => norm(s).replace(/^KRW[-/]/i, '');
+const addKRW   = s => norm(s).startsWith('KRW-') ? norm(s) : `KRW-${norm(s)}`;
 
 /* ================= Helpers: 포지션/로트 ================= */
 function bootstrapState(rows, initCash){
