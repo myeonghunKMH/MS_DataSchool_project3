@@ -60,6 +60,11 @@ app.use(keycloak.middleware({ logout: "/logout" }));
 app.get('/mypage.html', keycloak.protect());
 app.get('/realtime.html', keycloak.protect());
 app.get('/crypto.html', keycloak.protect());
+app.get('/news.html', keycloak.protect());
+app.get('/historical.html', keycloak.protect());
+app.get('/scenario1.html', keycloak.protect());
+app.get('/scenario2.html', keycloak.protect());
+app.get('/scenario3.html', keycloak.protect());
 app.use(express.static("public"));
 
 // ---------------------- 공통 헬퍼 ----------------------
