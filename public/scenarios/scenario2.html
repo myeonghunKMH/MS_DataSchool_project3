@@ -19,7 +19,7 @@
 
         :root {
             --bg: #212121;
-            --panel: #1f1f1f;
+            --panel: #161616;
             --panel-2: #1f1f1f;
             --line: #424242;
             --hairline: #5e5e5e;
@@ -764,7 +764,7 @@
 
         .status-bar {
             padding: 10px 20px;
-            background: #2d3748;
+            background: #222222;
             display: flex;
             justify-content: space-between;
             /* 좌/우 균형 */
@@ -825,11 +825,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #1a1f2e;
+            background: #2e2e2e;
             border-radius: 8px;
             padding: 30px;
             min-width: 400px;
-            border: 1px solid #2d3748;
+            border: 1px solid #000000;
         }
 
         .modal-header {
@@ -851,7 +851,7 @@
         }
 
         .order-summary {
-            background: #2d3748;
+            background: #222222;
             padding: 15px;
             border-radius: 4px;
             margin-bottom: 20px;
@@ -917,6 +917,58 @@
             color: #ffd166;
             font-weight: 800;
             font-size: 0.8em;
+        }
+
+        /* 뉴스 팝업 제목 밑줄 */
+        #news-popup-title {
+            border-bottom: 1px solid #444;
+            border-top: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        /* 뉴스 팝업 날짜 색상 변경 */
+        #news-popup-date {
+            color: #4f4f4f !important;
+            font-weight: bold;
+        }
+
+        #news-popup {
+            width: 500px !important;
+            max-width: 90%;
+            max-height: none !important;
+            overflow-y: visible !important;
+        }
+
+        /* 뉴스 팝업 입력 영역 공통 */
+        #news-popup .form-input,
+        #news-popup .percentage-input,
+        #news-popup .percentage-btn {
+            background: #565048 !important;
+            /* 팝업 배경(#1a1f2e)보다 밝게 */
+            color: #ffffff !important;
+            border: 1px solid #444 !important;
+            border-radius: 6px;
+        }
+
+        /* 버튼 그룹 컨테이너는 투명 처리 (배경 번짐 제거) */
+        #news-popup .percentage-controls,
+        #news-popup .percentage-input-group {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* 입력창 placeholder 색상 */
+        #news-popup .form-input::placeholder,
+        #news-popup .percentage-input::placeholder {
+            color: #aaa !important;
+        }
+
+        /* 총액 표시 input (readonly) 강조 */
+        #news-popup #news-orderTotal {
+            background: #565048 !important;
+            color: #ffd166 !important;
+            /* 강조 색상 */
+            font-weight: bold;
         }
 
         @media (max-width: 1200px) {
@@ -1092,8 +1144,9 @@
                         border:1px solid #444; padding:25px; border-radius:8px;
                         z-index:2000; text-align:left; width:600px; max-height:70vh; overflow-y:auto;
                         color:#242424; font-weight:bold;">
-        <h3 id="news-popup-title" style="margin-bottom:10px; font-size:1.4rem;"></h3>
-        <div id="news-popup-date" style="font-size:0.9rem; color:#ffffff; margin-bottom:15px; font-weight:bold;"></div>
+        <h3 id="news-popup-title"
+            style="margin-bottom:10px; font-size:1.4rem; border-bottom:1px solid #444; padding-bottom:5px;"></h3>
+        <div id="news-popup-date" style="font-size:0.9rem; color:#000; margin-bottom:15px; font-weight:bold;"></div>
         <p id="news-popup-desc" style="margin:10px 0; line-height:1.5; white-space:pre-line;"></p>
         <!-- 1단계: 선택 버튼 (항상 보임, 기존 스타일 복원) -->
         <div id="news-popup-choice" style="display:flex; gap:10px; margin-top:15px;">
@@ -1883,7 +1936,7 @@
                     hour: "2-digit", minute: "2-digit", timeZone: "Asia/Seoul"
                 });
 
-                document.getElementById("news-popup-title").innerText = `📰${news.title}`;
+                document.getElementById("news-popup-title").innerText = `[뉴스] ${news.title}`;
                 document.getElementById("news-popup-date").innerText = `${dateStr}`;
                 document.getElementById("news-popup-desc").innerText = news.description || "";
                 document.getElementById("overlay").style.display = "block";
