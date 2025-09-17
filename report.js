@@ -83,10 +83,12 @@ module.exports = function registerReport(app) {
 
       /* ===== Top 거래 종목(최근 15일) ===== */
       const [topRows] = await tradingPool.query(
-        `SELECT market, SUM(price*quantity) AS vol
-           FROM (${UNION_SQL}) t
-          WHERE t.user_id=? AND t.created_at>=? AND t.created_at<?
-          GROUP BY market ORDER BY vol DESC LIMIT 5`,
+        `SELECT UPPER(TRIM(market)) AS market, SUM(price*quantity) AS vol 
+        FROM (${UNION_SQL}) t 
+        WHERE t.user_id=? AND t.created_at>=? AND t.created_at<? 
+        GROUP BY UPPER(TRIM(market)) 
+        ORDER BY vol DESC 
+        LIMIT 5`,
         [userId, startUTC_15d, endUTC_15d]
       );
       const volSum = topRows.reduce((s, r) => s + Number(r.vol || 0), 0);
