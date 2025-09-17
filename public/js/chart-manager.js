@@ -40,6 +40,13 @@ export class ChartManager {
     this._isIndicatorCreating = false;
     this._chartCreationQueue = [];
 
+    // 보조지표 상태 추적을 위한 속성 추가
+    this._activeIndicators = {
+      RSI: false,
+      MACD: false,
+      BB: false
+    };
+
     // 🔍 디버깅용 상태 추적
     this._debugMode = true;
     this._syncEvents = [];
@@ -790,6 +797,9 @@ export class ChartManager {
     this.setupInfiniteScroll();
     this.lastCandleData = candleData;
     this.lastVolumeData = volumeData;
+
+    // 이전에 활성화된 보조지표들 자동 복원
+    this.restoreActiveIndicators();
   }
 
   // 🔧 보조지표 계산 메서드들
@@ -1916,11 +1926,13 @@ export class ChartManager {
     try {
       if (type === "RSI") {
         if (!this.rsiChart) {
+          this._activeIndicators.RSI = true; // 상태 추적
           await this.createRSIChart();
           return this.rsiSeries;
         }
       } else if (type === "MACD") {
         if (!this.macdChart) {
+          this._activeIndicators.MACD = true; // 상태 추적
           await this.createMACDChart();
           return {
             macd: this.macdSeries,
@@ -1929,6 +1941,7 @@ export class ChartManager {
           };
         }
       } else if (type === "BB") {
+        this._activeIndicators.BB = true; // 상태 추적
         this.preserveCurrentViewport();
 
         const bbData = this.calculateBollingerBands(this.lastCandleData, 20, 2);
@@ -1980,12 +1993,14 @@ export class ChartManager {
 
   removeIndicator(type) {
     if (type === "RSI" && this.rsiChart) {
+      this._activeIndicators.RSI = false; // 상태 업데이트
       this.rsiChart.remove();
       this.rsiChart = null;
       this.rsiSeries = null;
       console.log("RSI 차트 제거됨");
       return true;
     } else if (type === "MACD" && this.macdChart) {
+      this._activeIndicators.MACD = false; // 상태 업데이트
       this.macdChart.remove();
       this.macdChart = null;
       this.macdSeries = null;
@@ -1994,6 +2009,7 @@ export class ChartManager {
       console.log("MACD 차트 제거됨");
       return true;
     } else if (type === "BB" && this.indicatorSeries["BB"]) {
+      this._activeIndicators.BB = false; // 상태 업데이트
       const bb = this.indicatorSeries["BB"];
       this.priceChart.removeSeries(bb.upper);
       this.priceChart.removeSeries(bb.middle);
@@ -2252,6 +2268,117 @@ export class ChartManager {
     if (this.customCrosshair?.container) {
       this.customCrosshair.container.remove();
       this.customCrosshair = null;
+    }
+  }
+
+  // 활성화된 보조지표들을 자동으로 복원하는 메서드
+  async restoreActiveIndicators() {
+    console.log("🔄 활성화된 보조지표 복원 시작:", this._activeIndicators);
+
+    const promises = [];
+
+    // RSI가 활성화되어 있었다면 다시 생성
+    if (this._activeIndicators.RSI && !this.rsiChart) {
+      console.log("📊 RSI 차트 복원 중...");
+      promises.push(this.createRSIChart());
+
+      // UI 체크박스 상태 동기화
+      const rsiCheckbox = document.querySelector('input[data-indicator="RSI"]');
+      if (rsiCheckbox) rsiCheckbox.checked = true;
+
+      // RSI 차트 컨테이너 표시
+      const rsiChartElement = document.getElementById("rsiChart");
+      if (rsiChartElement) rsiChartElement.classList.remove("hidden");
+    }
+
+    // MACD가 활성화되어 있었다면 다시 생성
+    if (this._activeIndicators.MACD && !this.macdChart) {
+      console.log("📊 MACD 차트 복원 중...");
+      promises.push(this.createMACDChart());
+
+      // UI 체크박스 상태 동기화
+      const macdCheckbox = document.querySelector('input[data-indicator="MACD"]');
+      if (macdCheckbox) macdCheckbox.checked = true;
+
+      // MACD 차트 컨테이너 표시
+      const macdChartElement = document.getElementById("macdChart");
+      if (macdChartElement) macdChartElement.classList.remove("hidden");
+    }
+
+    // BB가 활성화되어 있었다면 다시 생성
+    if (this._activeIndicators.BB && !this.indicatorSeries["BB"]) {
+      console.log("📊 볼린저밴드 복원 중...");
+      promises.push(this.restoreBollingerBands());
+
+      // UI 체크박스 상태 동기화
+      const bbCheckbox = document.querySelector('input[data-indicator="BB"]');
+      if (bbCheckbox) bbCheckbox.checked = true;
+    }
+
+    // 모든 보조지표 복원을 병렬로 처리
+    if (promises.length > 0) {
+      try {
+        await Promise.all(promises);
+        console.log("✅ 모든 활성화된 보조지표 복원 완료");
+
+        // 복원 후 뷰포트 동기화
+        setTimeout(() => {
+          this.forceSyncAllViewports();
+        }, 200);
+      } catch (error) {
+        console.error("❌ 보조지표 복원 중 오류:", error);
+      }
+    } else {
+      console.log("ℹ️ 복원할 활성화된 보조지표가 없습니다");
+    }
+  }
+
+  // 볼린저밴드 복원을 위한 별도 메서드
+  async restoreBollingerBands() {
+    if (!this.priceChart || !this.lastCandleData) return;
+
+    try {
+      this.preserveCurrentViewport();
+
+      const bbData = this.calculateBollingerBands(this.lastCandleData, 20, 2);
+
+      this.bbUpperSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
+        color: "rgba(255, 255, 255, 0.5)",
+        lineWidth: 1,
+        title: "BB Upper",
+      });
+
+      this.bbMiddleSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
+        color: "rgba(255, 255, 255, 0.3)",
+        lineWidth: 1,
+        title: "BB Middle",
+      });
+
+      this.bbLowerSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
+        color: "rgba(255, 255, 255, 0.5)",
+        lineWidth: 1,
+        title: "BB Lower",
+      });
+
+      this.bbUpperSeries.setData(bbData.upper);
+      this.bbMiddleSeries.setData(bbData.middle);
+      this.bbLowerSeries.setData(bbData.lower);
+
+      this.indicatorSeries["BB"] = {
+        upper: this.bbUpperSeries,
+        middle: this.bbMiddleSeries,
+        lower: this.bbLowerSeries,
+      };
+
+      if (this._preservedViewport?.logicalRange) {
+        this.priceChart
+          .timeScale()
+          .setVisibleLogicalRange(this._preservedViewport.logicalRange);
+      }
+
+      console.log("✅ 볼린저밴드 복원 완료");
+    } catch (error) {
+      console.error("❌ 볼린저밴드 복원 실패:", error);
     }
   }
 }
