@@ -25,11 +25,21 @@
     .grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     @media (max-width:1024px){ .grid.cols-4{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:760px){ .grid.cols-4,.grid.cols-2{ grid-template-columns:1fr; } }
-    .card{ background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:16px 16px 14px; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+
+    /* ↓ 카드 높이 살짝 축소 */
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;              /* 18px → 14px */
+      padding:12px 12px 10px;          /* 16/16/14 → 12/12/10 */
+      box-shadow:0 8px 20px rgba(0,0,0,.30); /* 살짝 완화 */
+    }
+
     .title{ font-size:14px; color:#bdbdbd; margin-bottom:8px; }
     .kpi{ display:flex; align-items:flex-end; gap:8px; }
-    .kpi .value{ font-size:28px; font-weight:800; }
+    .kpi .value{ font-size:26px; font-weight:800; } /* 28 → 26로 아주 소폭 */
     .kpi .sub{ font-size:12px; color:#9ec; padding:2px 8px; border-radius:999px; background:rgba(70,215,198,.12); border:1px solid rgba(70,215,198,.28); }
+
     .table{ width:100%; border-collapse:collapse; font-size:14px; }
     .table th, .table td{ padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); }
     .table th{ color:#bdbdbd; font-weight:600; }
@@ -40,6 +50,27 @@
     .print-btn{ position:fixed; bottom:20px; right:20px; z-index:30; border-radius:999px; padding:10px 14px; font-weight:600; font-size:14px; border:1px solid rgba(255,255,255,.15); background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:0 10px 28px rgba(0,0,0,.35); cursor:pointer; }
     #ai-chat-button { bottom: 80px; }
     #ai-chat-widget { bottom: 150px; }
+
+    /* ↓ 최근 체결 히스토리: 스크롤(위아래 슬라이드) 컨테이너 */
+    .table-container{
+      max-height: 210px;     /* 필요하면 260~340px 사이로 조절 */
+      overflow-y: auto;
+      overflow-x: hidden;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:10px;
+    }
+    /* 헤더 고정(스크롤 시 가독성) */
+    .table-container thead th{
+      position: sticky;
+      top: 0;
+      background: #121212;
+      z-index: 1;
+    }
+    /* 스크롤바 얇게 */
+    .table-container{ scrollbar-width: thin; }
+    .table-container::-webkit-scrollbar{ width:8px; }
+    .table-container::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:8px; }
+    .table-container::-webkit-scrollbar-track{ background:transparent; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
@@ -77,10 +108,13 @@
       <div class="card"><div class="title">내가 거래한 종목 수량</div><canvas id="chart_my_top_symbols" height="120"></canvas></div>
       <div class="card">
         <div class="title">최근 체결 히스토리</div>
-        <table class="table" id="table_recent">
-          <thead><tr><th>일시</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <!-- 스크롤(위아래 슬라이드) 컨테이너 -->
+        <div class="table-container">
+          <table class="table" id="table_recent">
+            <thead><tr><th>일시</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -123,10 +157,10 @@
         document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
       }
 
-      // 최근 체결 테이블
+      /* 최근 체결 히스토리: 최대 20개만 표시 */
       const tbody = document.querySelector('#table_recent tbody');
       tbody.innerHTML = '';
-      (my.recentFills||[]).forEach(f=>{
+      (my.recentFills||[]).slice(0,20).forEach(f=>{
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${fmtDT(f.ts||f.created_at)}</td>
