@@ -33,6 +33,7 @@ export class EventManager {
     this.setupOrderListButtonEvents();
     this.setupDropdownEvents();
     this.setupIndicatorCloseButtons();
+    this.setupClearAllIndicatorsButton();
   }
 
   setupTradeHistoryTabEvents() {
@@ -363,6 +364,9 @@ export class EventManager {
   removeMovingAverage(period) {
     if (this.chart?.removeMovingAverage) {
       this.chart.removeMovingAverage(period);
+      // 🔧 상태에서 이동평균선 제거
+      this.state.activeIndicators.movingAverages.delete(period.toString());
+      console.log(`MA${period} 이동평균선이 제거되었습니다.`, this.state.activeIndicators);
     }
   }
 
@@ -377,6 +381,9 @@ export class EventManager {
     if (this.chart && typeof this.chart.addMovingAverage === "function") {
       const maSeries = this.chart.addMovingAverage(period);
       if (maSeries) {
+        // 🔧 상태에 이동평균선 추가 저장
+        this.state.activeIndicators.movingAverages.add(period.toString());
+
         // 전역 currentIndicators에 추가 (HTML의 clearAllIndicators와 호환)
         if (typeof window !== "undefined" && window.currentIndicators) {
           window.currentIndicators.push({
@@ -385,7 +392,7 @@ export class EventManager {
             period: period,
           });
         }
-        console.log(`MA${period} 이동평균선이 추가되었습니다.`);
+        console.log(`MA${period} 이동평균선이 추가되었습니다.`, this.state.activeIndicators);
       }
     }
   }
@@ -398,16 +405,23 @@ export class EventManager {
       if (rsiContainer) {
         rsiContainer.classList.remove('hidden');
         this.chart.addIndicator('RSI');
+        // 🔧 상태에 기술지표 추가 저장
+        this.state.activeIndicators.technicalIndicators.add(type);
       }
     } else if (type === 'MACD') {
       const macdContainer = document.getElementById('macdChart');
       if (macdContainer) {
         macdContainer.classList.remove('hidden');
         this.chart.addIndicator('MACD');
+        // 🔧 상태에 기술지표 추가 저장
+        this.state.activeIndicators.technicalIndicators.add(type);
       }
     } else if (type === 'BB') {
       this.chart.addIndicator('BB');
+      // 🔧 상태에 기술지표 추가 저장
+      this.state.activeIndicators.technicalIndicators.add(type);
     }
+    console.log(`${type} 지표가 추가되었습니다.`, this.state.activeIndicators);
   }
 
   hideIndicatorChart(type) {
@@ -416,16 +430,23 @@ export class EventManager {
       if (rsiContainer) {
         rsiContainer.classList.add('hidden');
         this.chart.removeIndicator('RSI');
+        // 🔧 상태에서 기술지표 제거
+        this.state.activeIndicators.technicalIndicators.delete(type);
       }
     } else if (type === 'MACD') {
       const macdContainer = document.getElementById('macdChart');
       if (macdContainer) {
         macdContainer.classList.add('hidden');
         this.chart.removeIndicator('MACD');
+        // 🔧 상태에서 기술지표 제거
+        this.state.activeIndicators.technicalIndicators.delete(type);
       }
     } else if (type === 'BB') {
       this.chart.removeIndicator('BB');
+      // 🔧 상태에서 기술지표 제거
+      this.state.activeIndicators.technicalIndicators.delete(type);
     }
+    console.log(`${type} 지표가 제거되었습니다.`, this.state.activeIndicators);
   }
 
   // 🔧 차트 타입 변경 메서드
@@ -487,21 +508,89 @@ export class EventManager {
       if (e.target.classList.contains('indicator-close')) {
         const targetChart = e.target.dataset.target;
         const container = document.getElementById(targetChart);
-        
+
         if (container) {
           container.classList.add('hidden');
-          
+
           // 체크박스도 해제
           const indicator = container.dataset.indicator;
           const checkbox = document.querySelector(`input[data-indicator="${indicator}"]`);
           if (checkbox) {
             checkbox.checked = false;
           }
-          
+
           // 차트에서 지표 제거
           this.chart.removeIndicator(indicator);
+
+          // 🔧 상태에서 기술지표 제거
+          this.state.activeIndicators.technicalIndicators.delete(indicator);
+          console.log(`${indicator} 지표가 닫기 버튼으로 제거되었습니다.`, this.state.activeIndicators);
         }
       }
     });
+  }
+
+  // 🔧 모든 지표 끄기 버튼 이벤트 설정
+  setupClearAllIndicatorsButton() {
+    const clearAllBtn = document.getElementById('clear-all-indicators');
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        this.clearAllIndicators();
+      });
+    }
+  }
+
+  // 🔧 모든 지표 끄기 기능
+  clearAllIndicators() {
+    console.log("모든 지표 끄기 시작...");
+
+    // 모든 이동평균선 제거
+    const activeMA = [...this.state.activeIndicators.movingAverages];
+    activeMA.forEach(period => {
+      console.log(`MA${period} 제거 중...`);
+
+      // 차트에서 제거
+      if (this.chart?.removeMovingAverage) {
+        this.chart.removeMovingAverage(parseInt(period));
+      }
+
+      // 체크박스 해제
+      const checkbox = document.querySelector(`input[data-ma="${period}"]`);
+      if (checkbox) {
+        checkbox.checked = false;
+      }
+    });
+
+    // 모든 기술지표 제거
+    const activeTechnical = [...this.state.activeIndicators.technicalIndicators];
+    activeTechnical.forEach(indicator => {
+      console.log(`${indicator} 지표 제거 중...`);
+
+      // 차트에서 제거
+      if (this.chart?.removeIndicator) {
+        this.chart.removeIndicator(indicator);
+      }
+
+      // 체크박스 해제
+      const checkbox = document.querySelector(`input[data-indicator="${indicator}"]`);
+      if (checkbox) {
+        checkbox.checked = false;
+      }
+
+      // 지표 차트 UI 숨기기
+      if (indicator === "RSI") {
+        const rsiChart = document.getElementById("rsiChart");
+        if (rsiChart) rsiChart.classList.add("hidden");
+      } else if (indicator === "MACD") {
+        const macdChart = document.getElementById("macdChart");
+        if (macdChart) macdChart.classList.add("hidden");
+      }
+    });
+
+    // 상태 초기화
+    this.state.activeIndicators.movingAverages.clear();
+    this.state.activeIndicators.technicalIndicators.clear();
+
+    console.log("모든 지표 끄기 완료!", this.state.activeIndicators);
   }
 }

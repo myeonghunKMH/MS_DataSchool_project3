@@ -19,6 +19,12 @@ export class TradingState {
     this.currentUser = null;
     this.isAuthenticated = false;
 
+    // 🔧 기술지표 상태 관리 추가
+    this.activeIndicators = {
+      movingAverages: new Set(), // MA5, MA10, MA20, MA50, MA100, MA200
+      technicalIndicators: new Set(), // RSI, MACD, BB
+    };
+
     this.initializeData();
   }
 

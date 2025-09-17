@@ -883,9 +883,12 @@ export class UIController {
       );
     }
 
-    // 🔧 코인 전환 시 차트 다시 렌더링 (추가된 코드)
+    // 🔧 코인 전환 시 차트 및 기술지표 다시 렌더링
     if (this.chart) {
-      this.chart.fetchAndRender();
+      this.chart.fetchAndRender().then(() => {
+        // 차트 렌더링 완료 후 기술지표 복원
+        this.restoreActiveIndicators();
+      });
     }
 
     // 🔧 코인 전환 시 현재가로 가격 설정 (호가 단위 적용)
@@ -898,6 +901,44 @@ export class UIController {
     }
 
     this.updateTradingPanel();
+  }
+
+  // 🔧 활성 기술지표 복원 메서드
+  async restoreActiveIndicators() {
+    if (!this.chart) return;
+
+    console.log("기술지표 복원 시작:", this.state.activeIndicators);
+
+    // 이동평균선 복원
+    for (const maPeriod of this.state.activeIndicators.movingAverages) {
+      console.log(`MA${maPeriod} 복원 중...`);
+      await this.chart.addMovingAverage(parseInt(maPeriod));
+
+      // UI 체크박스 상태 동기화
+      const checkbox = document.querySelector(`input[data-ma="${maPeriod}"]`);
+      if (checkbox) checkbox.checked = true;
+    }
+
+    // 기술지표 복원
+    for (const indicator of this.state.activeIndicators.technicalIndicators) {
+      console.log(`${indicator} 지표 복원 중...`);
+      await this.chart.addIndicator(indicator);
+
+      // UI 체크박스 상태 동기화
+      const checkbox = document.querySelector(`input[data-indicator="${indicator}"]`);
+      if (checkbox) checkbox.checked = true;
+
+      // 지표 차트 UI 상태 동기화
+      if (indicator === "RSI") {
+        const rsiChart = document.getElementById("rsiChart");
+        if (rsiChart) rsiChart.classList.remove("hidden");
+      } else if (indicator === "MACD") {
+        const macdChart = document.getElementById("macdChart");
+        if (macdChart) macdChart.classList.remove("hidden");
+      }
+    }
+
+    console.log("기술지표 복원 완료");
   }
 
   async fetchUserData() {
