@@ -703,114 +703,88 @@
       }
 
       highlightElement(element, position) {
-        const rect = element.getBoundingClientRect();
-        const mascotSize = window.innerWidth < 640 ? 100 : 140;
-        const bubbleHeight = this.elements.bubble.offsetHeight; // .active가 있으므로 바로 높이 계산 가능
-        const bubbleWidth = this.elements.bubble.offsetWidth;
-        const gap = 20;
+          const rect = element.getBoundingClientRect();
+          const mascotSize = window.innerWidth < 640 ? 100 : 140;
+          const bubbleHeight = this.elements.bubble.offsetHeight;
+          const bubbleWidth = this.elements.bubble.offsetWidth;
+          const gap = 20;
 
-        const mascotTop = rect.top + (rect.height / 2) - (mascotSize / 2);
-        const bubbleTop = mascotTop + (mascotSize / 2) - (bubbleHeight / 2);
+          const mascotTop = rect.top + (rect.height / 2) - (mascotSize / 2);
+          const bubbleTop = mascotTop + (mascotSize / 2) - (bubbleHeight / 2) - 30;
 
-        let mascotLeft, bubbleLeft;
+          let mascotLeft, bubbleLeft;
 
-        if (position === 'left') {
-            mascotLeft = rect.left - mascotSize - gap;
-            bubbleLeft = mascotLeft - bubbleWidth - 15;
-        } else { // 'right'
-            mascotLeft = rect.right + gap;
-            bubbleLeft = mascotLeft + mascotSize + 15;
-        }
+          if (position === 'left') {
+              mascotLeft = rect.left - mascotSize - gap;
+              bubbleLeft = mascotLeft - bubbleWidth - 15;
+          } else { // 'right'
+              mascotLeft = rect.right + gap;
+              bubbleLeft = mascotLeft + mascotSize + 15;
+          }
 
-        this.elements.spotlight.style.cssText = `left: ${rect.left - 10}px; top: ${rect.top - 10}px; width: ${rect.width + 20}px; height: ${rect.height + 20}px; display: block;`;
-        this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: ${mascotTop}px;`;
-        this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: ${bubbleTop}px;`;
-        this.elements.bubble.className = `tutorial-bubble active ${position}`;
+          // 오버레이 제거
+          this.elements.overlay.style.background = 'transparent';
+          
+          this.elements.spotlight.style.cssText = `left: ${rect.left - 10}px; top: ${rect.top - 10}px; width: ${rect.width + 20}px; height: ${rect.height + 20}px; display: block;`;
+          this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: ${mascotTop}px;`;
+          this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: ${bubbleTop}px;`;
+          this.elements.bubble.className = `tutorial-bubble active ${position}`;
 
-        document.querySelectorAll('.card').forEach(card => {
-            if (card === element) {
-                card.classList.add('is-focus');
-                card.classList.remove('is-dim');
-                // 튜토리얼용 매우 강한 밝기 효과 - 카드 내용이 확실히 보이도록
-                card.style.filter = 'brightness(3.5) contrast(1.8) saturate(1.5)';
-                card.style.boxShadow = '0 30px 80px rgba(0,0,0,.9), 0 0 80px rgba(255,255,255,1), 0 0 120px rgba(255,209,102,.8), inset 0 0 50px rgba(255,255,255,.4)';
-                card.style.background = 'linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,.15) 40%, rgba(255,255,255,.08))';
-                card.style.borderColor = 'rgba(255,209,102,1)';
-                card.style.transform = 'translateY(-12px) scale(1.08)';
-                // 카드 내부 텍스트도 더 밝게
-                const cardElements = card.querySelectorAll('h3, .desc, .btn');
-                cardElements.forEach(el => {
-                    if (el.classList.contains('btn')) {
-                        el.style.backgroundColor = 'rgba(255,255,255,.15)';
-                        el.style.color = '#fff';
-                        el.style.borderColor = 'rgba(255,209,102,.8)';
-                    } else {
-                        el.style.color = '#fff';
-                        el.style.textShadow = '0 2px 8px rgba(0,0,0,.5)';
-                    }
-                });
-                // 썸네일도 더 밝게 하지만 텍스트는 보이도록
-                const thumb = card.querySelector('.thumb');
-                if (thumb) {
-                    thumb.style.background = 'linear-gradient(170deg, rgba(255,255,255,.4), rgba(255,255,255,.1) 60%), linear-gradient(to right, #505050, #303030)';
-                    thumb.style.color = '#000';
-                    thumb.style.textShadow = '0 0 10px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.3)';
-                }
-            } else {
-                card.classList.add('is-dim');
-                card.classList.remove('is-focus');
-                card.style.filter = 'brightness(0.25) contrast(0.7) grayscale(0.3)';
-                card.style.boxShadow = '';
-                card.style.background = '';
-                card.style.borderColor = '';
-                card.style.transform = '';
-                // 다른 카드들의 스타일 초기화
-                const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
-                cardElements.forEach(el => {
-                    el.style.backgroundColor = '';
-                    el.style.color = '';
-                    el.style.borderColor = '';
-                    el.style.textShadow = '';
-                    el.style.background = '';
-                });
-            }
-        });
+          document.querySelectorAll('.card').forEach(card => {
+              if (card === element) {
+                  // 메인페이지 hover와 완전 동일한 효과
+                  card.classList.add('is-focus');
+                  card.classList.remove('is-dim');
+                  card.style.opacity = '1';
+                  card.style.filter = 'brightness(1.25) contrast(1.1)';
+                  card.style.transform = 'translateY(-8px) scale(1.04)';
+                  card.style.boxShadow = '0 20px 50px rgba(0,0,0,.6), 0 0 30px rgba(255,209,102,.35), 0 0 60px rgba(255,255,255,.15)';
+                  card.style.borderColor = 'rgba(255,209,102,.45)';
+                  card.style.background = 'linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03) 40%, rgba(255,255,255,.01))';
+              } else {
+                  // 다른 카드들 - dim 효과만 적용
+                  card.classList.add('is-dim');
+                  card.classList.remove('is-focus');
+                  card.style.opacity = '';
+                  card.style.filter = '';
+                  card.style.transform = '';
+                  card.style.boxShadow = '';
+                  card.style.borderColor = '';
+                  card.style.background = '';
+              }
+          });
 
-        requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
-      }
+          requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
+      }      
 
       showCenter() {
-        const mascotSize = window.innerWidth < 640 ? 100 : 140;
-        const bubbleWidth = this.elements.bubble.offsetWidth;
-        const gap = 30;
-        const totalWidth = mascotSize + bubbleWidth + gap;
-        const mascotLeft = (window.innerWidth / 2) - (totalWidth / 2);
-        const bubbleLeft = mascotLeft + mascotSize + gap;
+          // 센터 모드에서는 반투명 검은 배경 유지
+          this.elements.overlay.style.background = 'rgba(0,0,0,0.85)';
+          
+          const mascotSize = window.innerWidth < 640 ? 100 : 140;
+          const bubbleWidth = this.elements.bubble.offsetWidth;
+          const gap = 30;
+          const totalWidth = mascotSize + bubbleWidth + gap;
+          const mascotLeft = (window.innerWidth / 2) - (totalWidth / 2);
+          const bubbleLeft = mascotLeft + mascotSize + gap;
 
-        this.elements.spotlight.style.display = 'none';
-        this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: 50%; transform: translateY(-50%);`;
-        this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: 50%; transform: translateY(-50%);`;
-        this.elements.bubble.className = 'tutorial-bubble active right';
-        document.querySelectorAll('.card').forEach(card => {
-            card.classList.remove('is-focus', 'is-dim');
-            // 센터 모드에서도 인라인 스타일 제거
-            card.style.filter = '';
-            card.style.boxShadow = '';
-            card.style.background = '';
-            card.style.borderColor = '';
-            card.style.transform = '';
-            // 카드 내부 요소들도 초기화
-            const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
-            cardElements.forEach(el => {
-                el.style.backgroundColor = '';
-                el.style.color = '';
-                el.style.borderColor = '';
-                el.style.textShadow = '';
-                el.style.background = '';
-            });
-        });
-        
-        requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
+          this.elements.spotlight.style.display = 'none';
+          this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: 50%; transform: translateY(-50%);`;
+          this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: calc(50% - 30px); transform: translateY(-50%);`;
+          this.elements.bubble.className = 'tutorial-bubble active right';
+          
+          // 모든 카드 원래대로 복원
+          document.querySelectorAll('.card').forEach(card => {
+              card.classList.remove('is-focus', 'is-dim');
+              card.style.opacity = '';
+              card.style.filter = '';
+              card.style.transform = '';
+              card.style.boxShadow = '';
+              card.style.borderColor = '';
+              card.style.background = '';
+          });
+          
+          requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
       }
 
       nextStep() {
