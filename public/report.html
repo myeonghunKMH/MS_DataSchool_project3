@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>리포트 | ITC</title>
   <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/chat-widget.css" />
   <style>
+
     :root { color-scheme: dark; }
     body{
       background:#0b0b0b; color:#eaeaea; margin:0;
@@ -88,6 +91,13 @@
       border:1px solid rgba(255,255,255,.15);
       background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03));
       box-shadow:0 10px 28px rgba(0,0,0,.35); cursor:pointer;
+    }
+    /* AI Chat Button Position Override */
+    #ai-chat-button {
+      bottom: 80px; /* PDF 버튼 위에 위치하도록 조정 */
+    }
+    #ai-chat-widget {
+      bottom: 150px; /* 채팅창 위치 조정 */
     }
   </style>
   <!-- Chart.js -->
@@ -260,5 +270,9 @@
       document.querySelector('.muted').textContent = '리포트 로딩 실패: 로그인 또는 데이터 상태를 확인하세요.';
     });
   </script>
+
+  <!-- AI Assistant Scripts -->
+  <script src="js/ReportAIAssistant.js" defer></script>
+  <script src="js/report-ai-init.js" defer></script>
 </body>
 </html>
