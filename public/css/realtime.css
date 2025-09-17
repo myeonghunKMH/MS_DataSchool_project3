@@ -1217,6 +1217,19 @@ canvas {
   margin-bottom: 10px;
 }
 
+/* TradingView 로고 숨기기 - 안전한 방법 */
+/* 좌측 하단 특정 위치의 TradingView 로고만 숨김 */
+div[style*="position: absolute"][style*="left: 4px"][style*="bottom: 4px"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* TradingView 링크가 포함된 요소 숨김 (더 구체적으로) */
+a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* 반응형 개선 */
 @media (max-width: 768px) {
   .indicator-controls {

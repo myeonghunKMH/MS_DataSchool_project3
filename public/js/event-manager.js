@@ -321,10 +321,23 @@ export class EventManager {
     // 이동평균선 토글
     const maToggle = document.getElementById("ma-toggle");
     const maPanel = document.getElementById("ma-panel");
+    const maContainer = maToggle?.parentElement; // dropdown-container
 
-    maToggle?.addEventListener("click", () => {
+    maToggle?.addEventListener("click", (e) => {
+      e.stopPropagation(); // 이벤트 버블링 방지
       maPanel.classList.toggle("hidden");
+
+      // 다른 드롭다운 닫기
+      const techPanel = document.getElementById("technical-panel");
+      if (techPanel && !techPanel.classList.contains("hidden")) {
+        techPanel.classList.add("hidden");
+      }
     });
+
+    // 🔧 이동평균선 드롭다운 외부 클릭 시 닫기
+    if (maContainer && maPanel) {
+      this.setupDropdownAutoClose(maContainer, maPanel);
+    }
 
     // 이동평균선 체크박스들
     maPanel?.addEventListener("change", (e) => {
@@ -341,12 +354,23 @@ export class EventManager {
     // 보조지표 토글
     const techToggle = document.getElementById("technical-toggle");
     const techPanel = document.getElementById("technical-panel");
+    const techContainer = techToggle?.parentElement; // dropdown-container
 
-    techToggle?.addEventListener("click", () => {
+    techToggle?.addEventListener("click", (e) => {
+      e.stopPropagation(); // 이벤트 버블링 방지
       techPanel.classList.toggle("hidden");
+
+      // 다른 드롭다운 닫기
+      if (maPanel && !maPanel.classList.contains("hidden")) {
+        maPanel.classList.add("hidden");
+      }
     });
 
-    // 보조지표 체크박스들
+    // 🔧 보조지표 드롭다운 외부 클릭 시 닫기
+    if (techContainer && techPanel) {
+      this.setupDropdownAutoClose(techContainer, techPanel);
+    }
+
     // 보조지표 체크박스들
     techPanel?.addEventListener("change", (e) => {
       if (e.target.type === "checkbox" && e.target.dataset.indicator) {
@@ -357,6 +381,56 @@ export class EventManager {
           this.hideIndicatorChart(indicator);
         }
       }
+    });
+
+    // 🔧 전체 문서 클릭 시 모든 드롭다운 닫기
+    document.addEventListener("click", (e) => {
+      const isDropdownClick = e.target.closest(".dropdown-container");
+      if (!isDropdownClick) {
+        // 모든 드롭다운 닫기
+        if (maPanel) maPanel.classList.add("hidden");
+        if (techPanel) techPanel.classList.add("hidden");
+      }
+    });
+  }
+
+  // 🔧 드롭다운 자동 닫기 설정 (마우스 leave 시)
+  setupDropdownAutoClose(container, panel) {
+    let leaveTimeout;
+
+    // 마우스가 컨테이너를 벗어날 때
+    container.addEventListener("mouseleave", () => {
+      // 약간의 지연을 두어 사용자가 실수로 마우스를 벗어났을 때를 고려
+      leaveTimeout = setTimeout(() => {
+        if (!panel.classList.contains("hidden")) {
+          panel.classList.add("hidden");
+        }
+      }, 300); // 300ms 지연
+    });
+
+    // 마우스가 다시 컨테이너에 들어오면 닫기 취소
+    container.addEventListener("mouseenter", () => {
+      if (leaveTimeout) {
+        clearTimeout(leaveTimeout);
+        leaveTimeout = null;
+      }
+    });
+
+    // 패널 내에서 마우스 이동 시에도 닫기 취소
+    panel.addEventListener("mouseenter", () => {
+      if (leaveTimeout) {
+        clearTimeout(leaveTimeout);
+        leaveTimeout = null;
+      }
+    });
+
+    // 패널을 벗어날 때도 닫기 (더 즉각적으로)
+    panel.addEventListener("mouseleave", () => {
+      leaveTimeout = setTimeout(() => {
+        if (!panel.classList.contains("hidden")) {
+          panel.classList.add("hidden");
+        }
+      }, 200); // 패널에서 벗어날 때는 더 빠르게
     });
   }
 
