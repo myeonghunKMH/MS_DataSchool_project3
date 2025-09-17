@@ -83,10 +83,12 @@ module.exports = function registerReport(app) {
 
       /* ===== Top 거래 종목(최근 15일) ===== */
       const [topRows] = await tradingPool.query(
-        `SELECT market, SUM(price*quantity) AS vol
-           FROM (${UNION_SQL}) t
-          WHERE t.user_id=? AND t.created_at>=? AND t.created_at<?
-          GROUP BY market ORDER BY vol DESC LIMIT 5`,
+        `SELECT UPPER(TRIM(market)) AS market, SUM(price*quantity) AS vol 
+        FROM (${UNION_SQL}) t 
+        WHERE t.user_id=? AND t.created_at>=? AND t.created_at<? 
+        GROUP BY UPPER(TRIM(market)) 
+        ORDER BY vol DESC 
+        LIMIT 5`,
         [userId, startUTC_15d, endUTC_15d]
       );
       const volSum = topRows.reduce((s, r) => s + Number(r.vol || 0), 0);
@@ -219,8 +221,9 @@ const toKSTDateKey = (dt) => {
 /* ================= Helpers: 수치/유틸 ================= */
 const round1 = v => Math.round((Number(v)||0)*10)/10;
 const safePct = (num,den) => (den && Math.abs(den)>1e-9) ? (num/den)*100 : 0;
-const stripKRW = s => String(s||'').replace(/^KRW[-/]/,'');
-const addKRW = s => s?.startsWith('KRW-') ? s : `KRW-${s}`;
+const norm = s => String(s || '').trim().toUpperCase();
+const stripKRW = s => norm(s).replace(/^KRW[-/]/i, '');
+const addKRW   = s => norm(s).startsWith('KRW-') ? norm(s) : `KRW-${norm(s)}`;
 
 /* ================= Helpers: 포지션/로트 ================= */
 function bootstrapState(rows, initCash){

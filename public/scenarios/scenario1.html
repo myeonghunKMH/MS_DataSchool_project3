@@ -1887,7 +1887,7 @@
           return newsTime > prevTime && newsTime <= currentTime;
         });
         if (matched) {
-          this.showNewsPopup(matched);
+          this.showNewsPopup(matched, false);
           this.addNewsToTimeline(matched);
         }
       }
@@ -1917,10 +1917,10 @@
                         <strong>${news.time}${actionTag}</strong><br>${news.title}
                     </div>
                 `;
-        div.onclick = () => this.showNewsPopup(news);
+        div.onclick = () => this.showNewsPopup(news, true);
       }
 
-      showNewsPopup(news) {
+      showNewsPopup(news, readonly = false) {
         this.pauseSimulation();
         this.currentNews = news;
 
@@ -1937,9 +1937,16 @@
         document.getElementById("overlay").style.display = "block";
         document.getElementById("news-popup").style.display = "block";
 
-        // 초기 상태
-        document.getElementById("news-popup-choice").style.display = "flex";
-        document.getElementById("news-trade-form").style.display = "none";
+        const currentSimTime = this.historicalData[this.currentMarket]?.[this.currentDataIndex]?.timestamp || 0;
+        const newsTime = new Date(news.time.replace(" ", "T") + "+09:00").getTime();
+
+        if (readonly || news._userAction) {
+          document.getElementById("news-popup-choice").style.display = "none";
+          document.getElementById("news-trade-form").style.display = "none";
+        } else {
+          document.getElementById("news-popup-choice").style.display = "flex";
+          document.getElementById("news-trade-form").style.display = "none";
+        }
 
         // 매수 버튼
         document.getElementById("news-popup-buy").onclick = () => {
@@ -1966,7 +1973,6 @@
 
           document.getElementById("news-popup").style.display = "none";
           document.getElementById("overlay").style.display = "none";
-          this.startSimulation();
         };
 
         // 입력 이벤트 → 총액 자동 계산
@@ -1994,7 +2000,6 @@
 
           document.getElementById("news-popup").style.display = "none";
           document.getElementById("overlay").style.display = "none";
-          this.startSimulation();
         };
         // 확인 버튼
         document.getElementById("news-orderConfirm").onclick = () => {
