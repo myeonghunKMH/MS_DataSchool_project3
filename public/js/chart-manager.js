@@ -469,18 +469,19 @@ export class ChartManager {
         horzLines: { color: "rgba(255, 255, 255, 0.1)" },
       },
       crosshair: {
-        mode: LightweightCharts.CrosshairMode.Normal,
+        mode: LightweightCharts.CrosshairMode.Normal, // 🔧 하이브리드 모드
         vertLine: {
-          color: "#6A7985",
-          width: 1,
-          style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
-          labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+          color: "transparent", // 🔧 세로선 투명 (커스텀이 담당)
+          width: 0,
+          style: LightweightCharts.LineStyle.Solid,
+          labelVisible: false, // 세로선 라벨 숨김
         },
         horzLine: {
-          color: "#6A7985",
+          color: "#6A7985", // 🔧 가로선 표시 (TradingView 담당)
           width: 1,
-          style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+          style: LightweightCharts.LineStyle.Dashed,
           labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+          labelVisible: true, // Y축 값 표시
         },
       },
       handleScroll: {
@@ -701,7 +702,7 @@ export class ChartManager {
       syncTimeScale(range, "volume");
     });
 
-    // 4. 개선된 크로스헤어 동기화 (모든 차트 완벽 동기화)
+    // 4. 개선된 크로스헤어 동기화 - 하이브리드 모드 (가로선은 활성 차트에만)
     const syncCrosshair = (param, source = "price") => {
       if (this._crosshairSyncing) return;
       this._crosshairSyncing = true;
@@ -710,41 +711,29 @@ export class ChartManager {
         if (param.point) {
           const x = param.point.x;
 
-          // 모든 차트에 동일한 X 좌표로 크로스헤어 설정
+          // 🔧 다른 차트들은 가로선 없이 X좌표만 동기화 (투명 크로스헤어)
           if (source !== "price" && this.priceChart) {
-            this.priceChart.setCrosshairPosition(
-              x,
-              priceContainer.clientHeight / 2
-            );
+            this.priceChart.setCrosshairPosition(x, priceContainer.clientHeight / 2);
           }
           if (source !== "volume" && this.volumeChart) {
-            this.volumeChart.setCrosshairPosition(
-              x,
-              volumeContainer.clientHeight / 2
-            );
+            this.volumeChart.setCrosshairPosition(x, volumeContainer.clientHeight / 2);
           }
-          if (this.rsiChart) {
-            const rsiContainer = document.querySelector(
-              "#rsiChart .chart-content"
-            );
+          if (source !== "rsi" && this.rsiChart) {
+            const rsiContainer = document.querySelector("#rsiChart .chart-content");
             if (rsiContainer) {
-              this.rsiChart.setCrosshairPosition(
-                x,
-                rsiContainer.clientHeight / 2
-              );
+              this.rsiChart.setCrosshairPosition(x, rsiContainer.clientHeight / 2);
             }
           }
-          if (this.macdChart) {
-            const macdContainer = document.querySelector(
-              "#macdChart .chart-content"
-            );
+          if (source !== "macd" && this.macdChart) {
+            const macdContainer = document.querySelector("#macdChart .chart-content");
             if (macdContainer) {
-              this.macdChart.setCrosshairPosition(
-                x,
-                macdContainer.clientHeight / 2
-              );
+              this.macdChart.setCrosshairPosition(x, macdContainer.clientHeight / 2);
             }
           }
+
+          // 🔧 마우스 오버된 차트만 가로선 표시, 나머지는 투명처리
+          this.updateCrosshairVisibility(source);
+
         } else {
           // 모든 차트에서 크로스헤어 제거
           if (source !== "price" && this.priceChart)
@@ -753,6 +742,9 @@ export class ChartManager {
             this.volumeChart.clearCrosshairPosition();
           if (this.rsiChart) this.rsiChart.clearCrosshairPosition();
           if (this.macdChart) this.macdChart.clearCrosshairPosition();
+
+          // 🔧 모든 차트의 가로선 숨김
+          this.updateCrosshairVisibility(null);
         }
       } catch (error) {
         console.warn("크로스헤어 동기화 오류:", error);
@@ -789,6 +781,9 @@ export class ChartManager {
       from: startIndex,
       to: dataLength - 1,
     });
+
+    // 🔧 커스텀 크로스헤어 초기화 (하이브리드 모드)
+    this.initializeCustomCrosshair();
 
     // 반응형 처리 및 무한스크롤 설정
     this.setupResponsive();
@@ -1042,18 +1037,19 @@ export class ChartManager {
           horzLines: { color: "rgba(255, 255, 255, 0.1)" },
         },
         crosshair: {
-          mode: LightweightCharts.CrosshairMode.Normal,
+          mode: LightweightCharts.CrosshairMode.Normal, // 🔧 하이브리드 모드
           vertLine: {
-            color: "#6A7985",
-            width: 1,
-            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
-            labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+            color: "transparent", // 🔧 세로선 투명 (커스텀이 담당)
+            width: 0,
+            style: LightweightCharts.LineStyle.Solid,
+            labelVisible: false, // 세로선 라벨 숨김
           },
           horzLine: {
-            color: "#6A7985",
+            color: "#6A7985", // 🔧 가로선 표시 (TradingView 담당)
             width: 1,
-            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+            style: LightweightCharts.LineStyle.Dashed,
             labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+            labelVisible: true, // Y축 값 표시
           },
         },
         timeScale: {
@@ -1196,6 +1192,9 @@ export class ChartManager {
         this._crosshairSyncing = false;
       }
     });
+
+    // 🔧 커스텀 크로스헤어 이벤트 재연결
+    this.attachCustomCrosshairEvents();
   }
 
   async createMACDChart() {
@@ -1225,18 +1224,19 @@ export class ChartManager {
           horzLines: { color: "rgba(255, 255, 255, 0.1)" },
         },
         crosshair: {
-          mode: LightweightCharts.CrosshairMode.Normal,
+          mode: LightweightCharts.CrosshairMode.Normal, // 🔧 하이브리드 모드
           vertLine: {
-            color: "#6A7985",
-            width: 1,
-            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
-            labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+            color: "transparent", // 🔧 세로선 투명 (커스텀이 담당)
+            width: 0,
+            style: LightweightCharts.LineStyle.Solid,
+            labelVisible: false, // 세로선 라벨 숨김
           },
           horzLine: {
-            color: "#6A7985",
+            color: "#6A7985", // 🔧 가로선 표시 (TradingView 담당)
             width: 1,
-            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+            style: LightweightCharts.LineStyle.Dashed,
             labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+            labelVisible: true, // Y축 값 표시
           },
         },
         timeScale: {
@@ -1393,6 +1393,9 @@ export class ChartManager {
         this._crosshairSyncing = false;
       }
     });
+
+    // 🔧 커스텀 크로스헤어 이벤트 재연결
+    this.attachCustomCrosshairEvents();
   }
 
   addIndicatorToMainChart(ma5Data, ma20Data) {
@@ -2014,5 +2017,241 @@ export class ChartManager {
       }
     });
     console.log("모든 지표 제거됨");
+  }
+
+  // 🔧 커스텀 크로스헤어 초기화 (하이브리드 모드)
+  initializeCustomCrosshair() {
+    // 기존 커스텀 크로스헤어 제거
+    this.removeCustomCrosshair();
+
+    // 커스텀 크로스헤어 컨테이너 생성
+    this.customCrosshair = {
+      container: null,
+      verticalLine: null,
+      timeLabel: null,
+      isVisible: false
+    };
+
+    // 메인 차트 컨테이너 찾기
+    const chartWrapper = document.querySelector('.chart-container');
+    if (!chartWrapper) {
+      console.warn('차트 컨테이너를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 차트 컨테이너를 relative로 설정
+    chartWrapper.style.position = 'relative';
+
+    // 커스텀 크로스헤어 컨테이너 생성
+    this.customCrosshair.container = document.createElement('div');
+    this.customCrosshair.container.className = 'custom-crosshair-overlay';
+    this.customCrosshair.container.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      overflow: hidden;
+    `;
+
+    // 세로선 생성 (TradingView 스타일)
+    this.customCrosshair.verticalLine = document.createElement('div');
+    this.customCrosshair.verticalLine.className = 'custom-vertical-line';
+    this.customCrosshair.verticalLine.style.cssText = `
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #7F7F7F 0px,
+        #7F7F7F 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      opacity: 0.7;
+      transform: translateX(-50%);
+      pointer-events: none;
+    `;
+
+    // 시간 라벨 생성 (TradingView 스타일)
+    this.customCrosshair.timeLabel = document.createElement('div');
+    this.customCrosshair.timeLabel.className = 'custom-time-label';
+    this.customCrosshair.timeLabel.style.cssText = `
+      position: absolute;
+      bottom: 2px;
+      background: #000000;
+      color: #d1d4dc;
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-size: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 400;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      border: 1px solid #4a4a4a;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      z-index: 15;
+      pointer-events: none;
+      line-height: 1.2;
+    `;
+
+    // DOM에 추가
+    this.customCrosshair.container.appendChild(this.customCrosshair.verticalLine);
+    this.customCrosshair.container.appendChild(this.customCrosshair.timeLabel);
+    chartWrapper.appendChild(this.customCrosshair.container);
+
+    // TradingView 차트들에 마우스 이벤트 리스너 추가
+    this.attachCustomCrosshairEvents();
+
+    console.log('✅ 커스텀 크로스헤어 초기화 완료 (하이브리드 모드)');
+  }
+
+  // 커스텀 크로스헤어 이벤트 연결
+  attachCustomCrosshairEvents() {
+    if (!this.priceChart || !this.volumeChart) return;
+
+    // 프라이스 차트 이벤트
+    this.priceChart.subscribeCrosshairMove((param) => {
+      this.updateCustomCrosshair(param, 'price');
+    });
+
+    // 볼륨 차트 이벤트
+    this.volumeChart.subscribeCrosshairMove((param) => {
+      this.updateCustomCrosshair(param, 'volume');
+    });
+
+    // RSI 차트 이벤트 (있는 경우)
+    if (this.rsiChart) {
+      this.rsiChart.subscribeCrosshairMove((param) => {
+        this.updateCustomCrosshair(param, 'rsi');
+      });
+    }
+
+    // MACD 차트 이벤트 (있는 경우)
+    if (this.macdChart) {
+      this.macdChart.subscribeCrosshairMove((param) => {
+        this.updateCustomCrosshair(param, 'macd');
+      });
+    }
+  }
+
+  // 커스텀 크로스헤어 업데이트
+  updateCustomCrosshair(param, source) {
+    if (!this.customCrosshair?.container) return;
+
+    if (param.point && param.time) {
+      // 크로스헤어 표시
+      this.customCrosshair.container.style.opacity = '1';
+      this.customCrosshair.isVisible = true;
+
+      // X 좌표 설정
+      const x = param.point.x;
+      this.customCrosshair.verticalLine.style.left = `${x}px`;
+      this.customCrosshair.timeLabel.style.left = `${x}px`;
+
+      // 시간 라벨 텍스트 설정
+      const timeText = this.formatTimeLabel(param.time);
+      this.customCrosshair.timeLabel.textContent = timeText;
+
+      // 🔧 가로선 가시성 업데이트
+      this.updateCrosshairVisibility(source);
+
+    } else {
+      // 크로스헤어 숨김
+      this.customCrosshair.container.style.opacity = '0';
+      this.customCrosshair.isVisible = false;
+
+      // 🔧 모든 차트의 가로선 숨김
+      this.updateCrosshairVisibility(null);
+    }
+  }
+
+  // 시간 라벨 포맷
+  formatTimeLabel(time) {
+    const date = new Date(time * 1000);
+
+    // 시간 단위에 따른 다른 포맷
+    if (this.state.activeUnit === "1D") {
+      return date.toLocaleDateString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit"
+      }).replace(/\//g, ".");
+    } else if (this.state.activeUnit === "240") {
+      return date.toLocaleDateString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit"
+      }).replace(/\//g, ".").replace(", ", ".");
+    } else {
+      return date.toLocaleString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).replace(/\//g, ".").replace(", ", ".");
+    }
+  }
+
+  // 🔧 크로스헤어 가시성 업데이트 (활성 차트만 가로선 표시)
+  updateCrosshairVisibility(activeChart) {
+    const charts = [
+      { chart: this.priceChart, name: 'price' },
+      { chart: this.volumeChart, name: 'volume' },
+      { chart: this.rsiChart, name: 'rsi' },
+      { chart: this.macdChart, name: 'macd' }
+    ];
+
+    charts.forEach(({ chart, name }) => {
+      if (!chart) return;
+
+      try {
+        if (name === activeChart) {
+          // 활성 차트: 가로선 표시
+          chart.applyOptions({
+            crosshair: {
+              horzLine: {
+                color: "#6A7985",
+                width: 1,
+                style: LightweightCharts.LineStyle.Dashed,
+                labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+                labelVisible: true,
+              }
+            }
+          });
+        } else {
+          // 비활성 차트: 가로선 투명
+          chart.applyOptions({
+            crosshair: {
+              horzLine: {
+                color: "transparent",
+                width: 0,
+                labelVisible: false,
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.warn(`차트 ${name} 가시성 업데이트 실패:`, error);
+      }
+    });
+  }
+
+  // 커스텀 크로스헤어 제거
+  removeCustomCrosshair() {
+    if (this.customCrosshair?.container) {
+      this.customCrosshair.container.remove();
+      this.customCrosshair = null;
+    }
   }
 }
