@@ -47,6 +47,9 @@ export class ChartManager {
       BB: false
     };
 
+    // 이동평균선 상태 추적을 위한 속성 추가
+    this._activeMovingAverages = new Set(); // 활성화된 이동평균선 기간 저장 (예: 5, 20, 50)
+
     // 🔍 디버깅용 상태 추적
     this._debugMode = true;
     this._syncEvents = [];
@@ -1902,6 +1905,7 @@ export class ChartManager {
     }
 
     this.indicatorSeries[key] = maSeries;
+    this._activeMovingAverages.add(period); // 상태 추적
     console.log(`MA${period} 추가됨`);
     return maSeries;
   }
@@ -1911,6 +1915,7 @@ export class ChartManager {
     if (this.indicatorSeries[key]) {
       this.priceChart.removeSeries(this.indicatorSeries[key]);
       delete this.indicatorSeries[key];
+      this._activeMovingAverages.delete(period); // 상태 업데이트
       console.log(`MA${period} 제거됨`);
       return true;
     }
@@ -2032,6 +2037,13 @@ export class ChartManager {
         delete this.indicatorSeries[key];
       }
     });
+
+    // 상태 초기화
+    this._activeMovingAverages.clear();
+    this._activeIndicators.RSI = false;
+    this._activeIndicators.MACD = false;
+    this._activeIndicators.BB = false;
+
     console.log("모든 지표 제거됨");
   }
 
@@ -2273,7 +2285,10 @@ export class ChartManager {
 
   // 활성화된 보조지표들을 자동으로 복원하는 메서드
   async restoreActiveIndicators() {
-    console.log("🔄 활성화된 보조지표 복원 시작:", this._activeIndicators);
+    console.log("🔄 활성화된 보조지표 복원 시작:", {
+      indicators: this._activeIndicators,
+      movingAverages: Array.from(this._activeMovingAverages)
+    });
 
     const promises = [];
 
@@ -2313,6 +2328,32 @@ export class ChartManager {
       // UI 체크박스 상태 동기화
       const bbCheckbox = document.querySelector('input[data-indicator="BB"]');
       if (bbCheckbox) bbCheckbox.checked = true;
+    }
+
+    // 이동평균선들을 복원
+    if (this._activeMovingAverages.size > 0) {
+      console.log("📊 이동평균선 복원 중:", Array.from(this._activeMovingAverages));
+
+      // 복원할 이동평균선 복사 (복원 중 수정되지 않도록)
+      const periodsToRestore = Array.from(this._activeMovingAverages);
+
+      for (const period of periodsToRestore) {
+        const key = `ma${period}`;
+        // 이미 존재하지 않는 경우에만 다시 생성
+        if (!this.indicatorSeries[key]) {
+          try {
+            this.restoreMovingAverage(period);
+
+            // UI 체크박스 상태 동기화
+            const maCheckbox = document.querySelector(`input[data-ma="${period}"]`);
+            if (maCheckbox) maCheckbox.checked = true;
+
+            console.log(`✅ MA${period} 복원 완료`);
+          } catch (error) {
+            console.error(`❌ MA${period} 복원 실패:`, error);
+          }
+        }
+      }
     }
 
     // 모든 보조지표 복원을 병렬로 처리
@@ -2380,5 +2421,45 @@ export class ChartManager {
     } catch (error) {
       console.error("❌ 볼린저밴드 복원 실패:", error);
     }
+  }
+
+  // 이동평균선 복원을 위한 별도 메서드 (상태 중복 추가 방지)
+  restoreMovingAverage(period) {
+    if (!this.priceChart || !this.lastCandleData) {
+      console.warn("차트 또는 캔들 데이터가 없어서 이동평균선 복원 불가");
+      return null;
+    }
+
+    const key = `ma${period}`;
+
+    if (this.indicatorSeries[key]) {
+      this.priceChart.removeSeries(this.indicatorSeries[key]);
+    }
+
+    const colors = {
+      5: "#FF6B6B",
+      10: "#4ECDC4",
+      20: "#45B7D1",
+      50: "#96CEB4",
+      100: "#FFEAA7",
+      200: "#DDA0DD",
+    };
+
+    const maSeries = this.priceChart.addSeries(LightweightCharts.LineSeries, {
+      color: colors[period] || "#FFFFFF",
+      lineWidth: 2,
+      title: `MA${period}`,
+      lastValueVisible: true,
+    });
+
+    const maData = this.calculateSafeMA(this.lastCandleData, period);
+    if (maData.length > 0) {
+      maSeries.setData(maData);
+    }
+
+    this.indicatorSeries[key] = maSeries;
+    // 복원 시에는 이미 _activeMovingAverages에 있으므로 다시 추가하지 않음
+    console.log(`MA${period} 복원됨`);
+    return maSeries;
   }
 }
