@@ -15,7 +15,7 @@ const { keycloak, memoryStore } = require("./services/keycloak-config.js");
 const db = require("./services/database.js");
 // 메인(크립토) DB 풀
 const pool = db.pool;
-// QnA 전용 풀 (questions/answers/comments/categories)
+// QnA 전용 풀
 const { qnaPool } = require("./services/database.js");
 const { sendDeletionConfirmationEmail } = require("./services/email.js");
 const mysql = require("mysql2");
@@ -49,7 +49,7 @@ app.use(cors());
 app.use(express.json());
 app.use(
   session({
-    secret: "replace-with-strong-secret", // 실제 운영용 키로 교체
+    secret: "replace-with-strong-secret",
     resave: false,
     saveUninitialized: true,
     store: memoryStore,
@@ -57,6 +57,8 @@ app.use(
 );
 app.use(keycloak.middleware({ logout: "/logout" }));
 
+// 보호 페이지 (리포트 추가)
+app.get('/report.html', keycloak.protect()); // ← 추가
 app.get('/mypage.html', keycloak.protect());
 app.get('/realtime.html', keycloak.protect());
 app.get('/crypto.html', keycloak.protect());
@@ -123,7 +125,6 @@ app.use(async (req, res, next) => {
 
 async function initializeUserTradingBalance(user) {
   try {
-    // 거래 관련 컬럼이 없으면 추가 (사용자별로 초기 잔고 설정)
     await db.pool.execute(`
       UPDATE users 
       SET 
@@ -134,7 +135,6 @@ async function initializeUserTradingBalance(user) {
       WHERE id = ?
     `, [user.id]);
   } catch (error) {
-    // 컬럼이 없는 경우 무시 (테이블 스키마가 아직 업데이트되지 않음)
     console.log("거래 관련 컬럼 초기화 생략 (정상 동작)");
   }
 }
@@ -180,13 +180,9 @@ app.get("/api/user/confirm-deletion", async (req, res) => {
     const { token } = req.query;
     const user = await db.confirmDeletion(token);
     if (user) {
-      res.send(
-        "<h1>회원 탈퇴가 예약되었습니다.</h1><p>14일 이내에 다시 로그인하시면 탈퇴가 취소됩니다. 이 창은 닫으셔도 좋습니다.</p>"
-      );
+      res.send("<h1>회원 탈퇴가 예약되었습니다.</h1><p>14일 이내에 다시 로그인하시면 탈퇴가 취소됩니다. 이 창은 닫으셔도 좋습니다.</p>");
     } else {
-      res
-        .status(400)
-        .send("<h1>잘못된 요청입니다.</h1><p>유효하지 않거나 만료된 토큰입니다.</p>");
+      res.status(400).send("<h1>잘못된 요청입니다.</h1><p>유효하지 않거나 만료된 토큰입니다.</p>");
     }
   } catch (error) {
     console.error("Failed to confirm deletion:", error);
@@ -194,7 +190,7 @@ app.get("/api/user/confirm-deletion", async (req, res) => {
   }
 });
 
-// ---------------------- 보호 페이지 ----------------------
+// ---------------------- 보호 디렉토리 ----------------------
 app.use('/secure', keycloak.protect(),
   express.static(path.join(__dirname, 'public', 'secure'))
 );
@@ -210,32 +206,27 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
-// ===== qna 라우트 연결 (qna.js) =====
+// ===== qna 라우트 연결 =====
 const registerQnaRoutes = require('./qna');
 registerQnaRoutes(app);
 
-// ===== 실시간 거래 모듈 연결 (trading 통합) =====
+// ===== 실시간 거래 모듈 연결 =====
 let tradingWebSocketManager = null;
 let tradingService = null;
 try {
   const APIRouter = require('./trading/routes/api-router');
   const TradingService = require('./trading/services/trading-service');
 
-  // DB 매니저와 서비스 초기화
-  tradingService = new TradingService(db, null); // WebSocket 매니저는 나중에 설정
+  tradingService = new TradingService(db, null);
   const apiRouter = new APIRouter(db, tradingService);
-  
-  // API 라우터 등록 (키클락 인증 적용)
   app.use('/api', keycloak.protect(), apiRouter.router);
-  
+
   console.log('✅ Trading 모듈이 성공적으로 통합되었습니다.');
 
-  // 키클락 사용자 동기화 실행 (서버 시작 시)
   db.syncKeycloakUsers()
     .then(() => console.log('✅ 키클락 사용자 동기화 완료'))
     .catch(syncError => console.error('⚠️ 키클락 사용자 동기화 실패:', syncError.message));
 
-  // 키클락 사용자 정기 동기화 (30분마다)
   setInterval(async () => {
     try {
       console.log('🔄 정기 키클락 사용자 동기화 실행...');
@@ -243,54 +234,47 @@ try {
     } catch (syncError) {
       console.error('⚠️ 정기 키클락 사용자 동기화 실패:', syncError.message);
     }
-  }, 30 * 60 * 1000); // 30분
+  }, 30 * 60 * 1000);
 } catch (error) {
   console.error('❌ Trading 모듈 통합 실패:', error.message);
   console.log('⚠️ 기본 realtime.js 모듈로 대체합니다.');
 }
 
-// ===== 시나리오 라우트 연결 (scenario.js) =====
+// ===== 시나리오 라우트 연결 =====
 const registerScenarioRoutes = require("./scenario");
 registerScenarioRoutes(app);
 
-// ===== 실시간 기능 연결 (realtime.js) =====
+// ===== 실시간 기능 연결 =====
 const registerRealtime = require("./realtime");
-
-// server & wss는 여기서 '한 번만' 생성
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Trading WebSocket 매니저 초기화 (통합된 경우에만)
 if (tradingWebSocketManager === null) {
   try {
     const WebSocketManager = require('./trading/managers/websocket-manager');
     tradingWebSocketManager = new WebSocketManager(wss, db);
     tradingWebSocketManager.connect();
-
-    // TradingService에 WebSocket 매니저 연결
     if (tradingService) {
       tradingService.setWebSocketManager(tradingWebSocketManager);
       console.log('✅ TradingService에 WebSocket 매니저가 연결되었습니다.');
     }
-
     console.log('✅ Trading WebSocket 매니저가 초기화되었습니다.');
   } catch (error) {
     console.error('❌ Trading WebSocket 매니저 초기화 실패:', error.message);
   }
 }
 
-// 실시간 기능 부착 후 disposer 받기
 const realtimeDisposer = registerRealtime(app, wss);
 
-// ===== 뉴스 리우트 연결(news.js) =====
+// ===== 뉴스 라우트 연결 =====
 const registerNews = require("./news");
 registerNews(app);
 
-// ===== 리포트 라우트 연결(report.js) =====
+// ===== 리포트 라우트 연결 =====
 const registerReport = require("./report");
 registerReport(app);
 
-// ===== AI 챗봇 프록시 라우트 =====
+// ===== AI 챗봇 프록시 =====
 app.post("/api/chat", keycloak.protect(), async (req, res) => {
   const { model, messages } = req.body;
   const apiKey = process.env.LLM_API_KEY;
@@ -298,18 +282,14 @@ app.post("/api/chat", keycloak.protect(), async (req, res) => {
 
   if (!apiKey) {
     return res.status(500).json({ error: "LLM_API_KEY가 서버에 설정되지 않았습니다." });
+    // server.js에 등록해 리포트 라우트를 활성화합니다. :contentReference[oaicite:11]{index=11}
   }
 
   try {
     const response = await axios.post(
       apiEndpoint,
       { model, messages, stream: false },
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' } }
     );
     res.json(response.data);
   } catch (error) {
@@ -318,31 +298,11 @@ app.post("/api/chat", keycloak.protect(), async (req, res) => {
   }
 });
 
-
 // 종료 시 정리
 process.on('SIGINT', () => { realtimeDisposer.close(); process.exit(0); });
 process.on('SIGTERM', () => { realtimeDisposer.close(); process.exit(0); });
 
-// 🔧 새로 추가: 사용자 거래 잔고 초기화 함수 (로그인 라우트들 뒤쪽에 추가)
-async function initializeUserTradingBalance(user) {
-  try {
-    // 거래 관련 컬럼이 없으면 추가 (사용자별로 초기 잔고 설정)
-    await db.pool.execute(`
-      UPDATE users 
-      SET 
-        krw_balance = COALESCE(krw_balance, 10000000),
-        btc_balance = COALESCE(btc_balance, 0.00000000),
-        eth_balance = COALESCE(eth_balance, 0.00000000),
-        xrp_balance = COALESCE(xrp_balance, 0.00000000)
-      WHERE id = ?
-    `, [user.id]);
-  } catch (error) {
-    // 컬럼이 없는 경우 무시 (테이블 스키마가 아직 업데이트되지 않음)
-    console.log("거래 관련 컬럼 초기화 생략 (정상 동작)");
-  }
-}
-
-// ---------------------- 탈퇴 스케줄러/종료 처리 ----------------------
+// ---------------------- 탈퇴 스케줄러 ----------------------
 async function deleteUserFromKeycloak(keycloak_uuid, adminToken) {
   try {
     await axios.delete(
@@ -363,9 +323,7 @@ async function runDeletionJob() {
       console.log("No users to delete.");
       return;
     }
-
     const adminToken = await getKeycloakAdminToken();
-
     for (const user of usersToDelete) {
       console.log(`Processing deletion for user ID: ${user.id}`);
       await deleteUserFromKeycloak(user.keycloak_uuid, adminToken);
@@ -379,7 +337,7 @@ async function runDeletionJob() {
 setInterval(runDeletionJob, 3600 * 1000);
 runDeletionJob();
 
-// ---------------------- 서버 기동/종료 ----------------------
+// ---------------------- 서버 기동 ----------------------
 const PORT = Number(process.env.PORT || 3000);
 server.listen(PORT, async () => {
   console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
@@ -390,12 +348,8 @@ server.listen(PORT, async () => {
 
 async function gracefulShutdown() {
   console.log("서버 종료 중...");
-  try {
-    if (upbitWs && upbitWs.readyState === WebSocket.OPEN) upbitWs.close();
-  } catch {}
-  try {
-    await pool.end();
-  } catch {}
+  try { if (upbitWs && upbitWs.readyState === WebSocket.OPEN) upbitWs.close(); } catch {}
+  try { await pool.end(); } catch {}
   process.exit(0);
 }
 process.on("SIGINT", gracefulShutdown);

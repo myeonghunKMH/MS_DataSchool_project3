@@ -8,107 +8,44 @@
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/chat-widget.css" />
   <style>
-
     :root { color-scheme: dark; }
-    body{
-      background:#0b0b0b; color:#eaeaea; margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    }
+    body{ background:#0b0b0b; color:#eaeaea; margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
     a{ color:inherit; text-decoration:none; }
-
-    /* ===== 상단 헤더 ===== */
-    header{
-      position:fixed; top:16px; left:16px; right:16px; z-index:20;
-      display:flex; align-items:center; justify-content:space-between;
-      pointer-events:none;
-    }
+    header{ position:fixed; top:16px; left:16px; right:16px; z-index:20; display:flex; align-items:center; justify-content:space-between; pointer-events:none; }
     header .left, header .right{ pointer-events:auto; display:flex; align-items:center; gap:10px; }
-    header img.logo{
-      width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none;
-      filter:drop-shadow(0 6px 18px rgba(0,0,0,.5));
-    }
-
-    .btn-nav{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 14px; border-radius:14px; font-weight:600; font-size:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      box-shadow:0 10px 28px rgba(0,0,0,.35);
-      transition:transform .12s ease, background .2s ease, border-color .2s ease;
-    }
-    .btn-nav:hover{
-      transform:translateY(-1px);
-      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
-      border-color:rgba(255,255,255,.22);
-    }
-
+    header img.logo{ width:120px; height:auto; filter:drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
+    .btn-nav{ display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; font-weight:600; font-size:14px; border:1px solid rgba(255,255,255,.14); background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); box-shadow:0 10px 28px rgba(0,0,0,.35); }
+    .btn-nav:hover{ transform:translateY(-1px); background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05)); border-color:rgba(255,255,255,.22); }
     nav{ display:flex; gap:10px; }
-    .navbtn{
-      display:inline-flex; align-items:center; gap:10px;
-      height:38px; padding:0 12px; border-radius:10px;
-      background:#121212; border:1px solid #262626; color:#e8e8e8;
-      text-decoration:none; font-weight:700;
-    }
+    .navbtn{ display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px; border-radius:10px; background:#121212; border:1px solid #262626; color:#e8e8e8; font-weight:700; }
     .navbtn img{ width:16px; height:16px; }
-
-    /* ===== 페이지 레이아웃 ===== */
     .wrap{ max-width:1200px; margin:0 auto; padding:90px 16px 48px; }
-
     .grid{ display:grid; gap:14px; }
     .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
     .grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     @media (max-width:1024px){ .grid.cols-4{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:760px){ .grid.cols-4,.grid.cols-2{ grid-template-columns:1fr; } }
-
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px; padding:16px 16px 14px;
-      box-shadow:0 12px 30px rgba(0,0,0,.35);
-      position:relative; overflow:hidden;
-    }
-    .title{ font-size:14px; color:#bdbdbd; letter-spacing:.2px; margin-bottom:8px; }
-
+    .card{ background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:16px 16px 14px; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+    .title{ font-size:14px; color:#bdbdbd; margin-bottom:8px; }
     .kpi{ display:flex; align-items:flex-end; gap:8px; }
     .kpi .value{ font-size:28px; font-weight:800; }
-    .kpi .sub{
-      font-size:12px; color:#9ec; padding:2px 8px; border-radius:999px;
-      background:rgba(70,215,198,.12); border:1px solid rgba(70,215,198,.28);
-    }
-
+    .kpi .sub{ font-size:12px; color:#9ec; padding:2px 8px; border-radius:999px; background:rgba(70,215,198,.12); border:1px solid rgba(70,215,198,.28); }
     .table{ width:100%; border-collapse:collapse; font-size:14px; }
-    .table th, .table td{
-      padding:10px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08);
-    }
+    .table th, .table td{ padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); }
     .table th{ color:#bdbdbd; font-weight:600; }
     .muted{ color:#a8a8a8; }
-
+    .gain{ color:#3bd1b8; }
+    .loss{ color:#ff7f7f; }
     footer{ margin:40px 0 20px; text-align:center; color:#9a9a9a; font-size:13px; }
-    footer a{ color:#ddd; text-decoration:underline; }
-    .print-btn{
-      position:fixed; bottom:20px; right:20px; z-index:30;
-      border-radius:999px; padding:10px 14px; font-weight:600; font-size:14px;
-      border:1px solid rgba(255,255,255,.15);
-      background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03));
-      box-shadow:0 10px 28px rgba(0,0,0,.35); cursor:pointer;
-    }
-    /* AI Chat Button Position Override */
-    #ai-chat-button {
-      bottom: 80px; /* PDF 버튼 위에 위치하도록 조정 */
-    }
-    #ai-chat-widget {
-      bottom: 150px; /* 채팅창 위치 조정 */
-    }
+    .print-btn{ position:fixed; bottom:20px; right:20px; z-index:30; border-radius:999px; padding:10px 14px; font-weight:600; font-size:14px; border:1px solid rgba(255,255,255,.15); background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); box-shadow:0 10px 28px rgba(0,0,0,.35); cursor:pointer; }
+    #ai-chat-button { bottom: 80px; }
+    #ai-chat-widget { bottom: 150px; }
   </style>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <!-- 헤더 -->
   <header>
-    <div class="left">
-      <a href="index.html"><img class="logo" src="/images/logo.png" alt="ITC" /></a>
-    </div>
+    <div class="left"><a href="index.html"><img class="logo" src="/images/logo.png" alt="ITC" /></a></div>
     <div class="right">
       <a class="navbtn" href="guide.html"><img src="/images/Document.png">가이드</a>
       <a class="btn-nav" href="/mypage.html">마이페이지</a>
@@ -118,65 +55,30 @@
   <button class="print-btn" onclick="window.print()">📄 PDF로 저장</button>
 
   <main class="wrap">
-    <h1 style="margin:0 4px 6px; font-size:28px; letter-spacing:.2px;">개인화된 사용자 리포트</h1>
+    <h1 style="margin:0 4px 6px; font-size:28px;">개인화된 사용자 리포트</h1>
     <p class="muted" style="margin:0 4px 22px;">로그인 후 API에서 실제 데이터로 렌더링합니다.</p>
 
-    <!-- ======= 개인화 KPI ======= -->
+    <!-- KPI -->
     <div class="grid cols-4">
-      <div class="card">
-        <div class="title">이번 달 내 거래 횟수</div>
-        <div class="kpi">
-          <div class="value" id="kpi_trades">—</div>
-          <div class="sub" id="kpi_trades_diff">—</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="title">이번 달 총 거래액</div>
-        <div class="kpi">
-          <div class="value" id="kpi_volume">—</div>
-          <div class="sub" id="kpi_volume_diff">—</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="title">내 수익률 (월간)</div>
-        <div class="kpi">
-          <div class="value" id="kpi_return">—</div>
-          <div class="sub" id="kpi_return_rank">—</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="title">가장 많이 거래한 종목</div>
-        <div class="kpi">
-          <div class="value" id="kpi_top_symbol">—</div>
-          <div class="sub" id="kpi_top_symbol_share">—</div>
-        </div>
-      </div>
+      <div class="card"><div class="title">이번 달 내 거래 횟수</div><div class="kpi"><div class="value" id="kpi_trades">—</div><div class="sub" id="kpi_trades_diff">—</div></div></div>
+      <div class="card"><div class="title">이번 달 손익(실현)</div><div class="kpi"><div class="value" id="kpi_pnl">—</div><div class="sub" id="kpi_pnl_diff">—</div></div></div>
+      <div class="card"><div class="title">내 수익률 (월간)</div><div class="kpi"><div class="value" id="kpi_return">—</div><div class="sub" id="kpi_return_rank">—</div></div></div>
+      <div class="card"><div class="title">가장 많이 거래한 종목</div><div class="kpi"><div class="value" id="kpi_top_symbol">—</div><div class="sub" id="kpi_top_symbol_share">—</div></div></div>
     </div>
 
-    <!-- ======= 차트: 자산 변화 / 수익률 비교 ======= -->
+    <!-- Charts -->
     <div class="grid cols-2" style="margin-top:14px;">
-      <div class="card">
-        <div class="title">나의 보유 자산 변화</div>
-        <canvas id="chart_equity" height="120"></canvas>
-      </div>
-      <div class="card">
-        <div class="title">나의 수익률 vs 전체 평균 수익률</div>
-        <canvas id="chart_return_compare" height="120"></canvas>
-      </div>
+      <div class="card"><div class="title">나의 총자산 변화</div><canvas id="chart_equity" height="120"></canvas></div>
+      <div class="card"><div class="title">나의 수익률 vs 전체 평균 수익률</div><canvas id="chart_return_compare" height="120"></canvas></div>
     </div>
 
-    <!-- ======= 내가 거래한 종목 + 최근 체결 ======= -->
+    <!-- Top symbols + recent fills -->
     <div class="grid cols-2" style="margin-top:14px;">
-      <div class="card">
-        <div class="title">내가 거래한 종목 수량</div>
-        <canvas id="chart_my_top_symbols" height="120"></canvas>
-      </div>
+      <div class="card"><div class="title">내가 거래한 종목 수량</div><canvas id="chart_my_top_symbols" height="120"></canvas></div>
       <div class="card">
         <div class="title">최근 체결 히스토리</div>
         <table class="table" id="table_recent">
-          <thead>
-            <tr><th>시간</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr>
-          </thead>
+          <thead><tr><th>일시</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -186,82 +88,94 @@
   <script>
     const fmtKRW = v => '₩' + Number(v||0).toLocaleString('ko-KR');
     const fmtPct = v => (v>=0?'+':'') + Number(v||0).toFixed(1) + '%';
+    const fmtDT  = ts => {
+      const d = new Date(ts);
+      return isNaN(d.getTime()) ? String(ts) : d.toLocaleString('ko-KR', { dateStyle:'short', timeStyle:'short' });
+    };
+    const sideKR = s => {
+      const map = { buy:'매수', sell:'매도', bid:'매수', ask:'매도' };
+      return map[(s||'').toLowerCase()] || (s||'').toUpperCase();
+    };
+    const cleanSymbol = sym => (sym||'').replace(/^KRW[-/]/, '');
 
-    async function loadReport() {
-      const r = await fetch('/api/user/report', { credentials: 'include' });
-      if (!r.ok) throw new Error('report api failed');
+    async function loadReport(){
+      const r = await fetch('/api/user/report', { credentials:'include' });
+      if(!r.ok) throw new Error('report api failed');
       const data = await r.json();
-      const { days, my } = data;
+      const { days=[], my={} } = data;
 
-      // ===== KPI =====
-      document.getElementById('kpi_trades').textContent = Number(my.monthlyTrades).toLocaleString('ko-KR');
-      document.getElementById('kpi_trades_diff').textContent =
-        (my.monthlyTradesDiff>=0?'+':'') + my.monthlyTradesDiff + '건';
+      // KPI
+      document.getElementById('kpi_trades').textContent = Number(my.monthlyTrades||0).toLocaleString('ko-KR');
+      document.getElementById('kpi_trades_diff').textContent = (my.monthlyTradesDiff>=0?'+':'') + (my.monthlyTradesDiff||0) + '건';
 
-      document.getElementById('kpi_volume').textContent = fmtKRW(my.monthlyVolume);
-      document.getElementById('kpi_volume_diff').textContent = fmtPct(my.monthlyVolumeDiff);
+      const monthlyPnL = my.monthlyPnL || 0;
+      const monthlyPnLDiff = my.monthlyPnLDiff || 0;
+      document.getElementById('kpi_pnl').textContent = fmtKRW(monthlyPnL);
+      document.getElementById('kpi_pnl').classList.add(monthlyPnL>=0?'gain':'loss');
+      document.getElementById('kpi_pnl_diff').textContent = (monthlyPnLDiff>=0?'+':'') + fmtKRW(Math.abs(monthlyPnLDiff));
+      document.getElementById('kpi_pnl_diff').classList.add(monthlyPnLDiff>=0?'gain':'loss');
 
-      document.getElementById('kpi_return').textContent = fmtPct(my.monthlyReturnPct);
-      document.getElementById('kpi_return_rank').textContent = `상위 ${my.returnRankPctile}%`;
+      document.getElementById('kpi_return').textContent = fmtPct(my.monthlyReturnPct||0);
+      document.getElementById('kpi_return_rank').textContent = (my.returnRankPctile!=null) ? `상위 ${my.returnRankPctile}%` : '—';
 
-      if (my.topSymbols?.length) {
-        document.getElementById('kpi_top_symbol').textContent = my.topSymbols[0].symbol;
-        document.getElementById('kpi_top_symbol_share').textContent =
-          Math.round(my.topSymbols[0].share * 100) + '%';
-      } else {
-        document.getElementById('kpi_top_symbol').textContent = '—';
-        document.getElementById('kpi_top_symbol_share').textContent = '—';
+      if (my.topSymbols?.length){
+        document.getElementById('kpi_top_symbol').textContent = cleanSymbol(my.topSymbols[0].symbol);
+        document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
       }
 
-      // ===== 최근 체결 테이블 =====
+      // 최근 체결 테이블
       const tbody = document.querySelector('#table_recent tbody');
       tbody.innerHTML = '';
-      (my.recentFills || []).forEach(r=>{
-        const t = new Date(r.ts);
-        const hhmm = isNaN(t.getTime()) ? r.ts : t.toTimeString().slice(0,5);
+      (my.recentFills||[]).forEach(f=>{
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${hhmm}</td><td>${r.sym}</td><td>${r.side}</td><td>${r.qty}</td><td>${fmtKRW(r.price)}</td>`;
+        tr.innerHTML = `
+          <td>${fmtDT(f.ts||f.created_at)}</td>
+          <td>${cleanSymbol(f.sym||f.market||'')}</td>
+          <td>${sideKR(f.side)}</td>
+          <td>${f.qty}</td>
+          <td>${fmtKRW(f.price)}</td>`;
         tbody.appendChild(tr);
       });
 
-      // ===== 차트 렌더링 =====
+      // 차트 공통 옵션
       const baseGrid = { color:'rgba(255,255,255,.12)' };
       const baseTicks = { color:'#cfcfcf', font:{ size:11 } };
       const tooltip = { enabled:true, intersect:false, mode:'index' };
 
-      // 1) 현금잔고 추정 라인
+      // 총자산 변화
       new Chart(document.getElementById('chart_equity'), {
         type:'line',
-        data:{ labels: days, datasets:[{
-          label:'현금 잔고(₩)',
-          data: my.equityCurve,
-          fill:true, borderWidth:2, pointRadius:0, tension:.35
-        }]},
-        options:{ plugins:{ legend:{display:false}, tooltip },
-          scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } }
-        }
+        data:{ labels:days, datasets:[{ label:'총자산(₩)', data:my.equityCurve||[], fill:true, borderWidth:2, pointRadius:0, tension:.35 }]},
+        options:{ plugins:{ legend:{display:false}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } } }
       });
 
-      // 2) 변화율 vs 기준선(0%)
+      // 수익률 비교
+      const myReturn = my.returnSeries||[];
+      const peerReturn = my.peerAvgReturnSeries||null;
+      const marketBaseline = my.marketReturnSeries || new Array(days.length).fill(0);
+
+      const datasets = [
+        { type:'line', label:'내 수익률(%)', data:myReturn, borderColor:'#4bc0c0', borderWidth:2, pointRadius:0, tension:.35 }
+      ];
+      if (peerReturn){
+        datasets.push({ type:'line', label:'전체 평균 수익률(%)', data:peerReturn, borderColor:'#ffcd56', borderWidth:2, pointRadius:0, tension:.35 });
+      } else {
+        datasets.push({ type:'line', label:'기준선(0%)', data:marketBaseline, borderDash:[5,5], borderColor:'#aaa', borderWidth:2, pointRadius:0, tension:.35 });
+      }
+
       new Chart(document.getElementById('chart_return_compare'), {
-        type:'bar',
-        data:{ labels: days, datasets:[
-          { type:'line', label:'현금잔고 변화율(%)', data: my.returnSeries, borderWidth:2, pointRadius:0, tension:.35 },
-          { type:'line', label:'기준선(0%)', data: my.marketReturnSeries, borderDash:[5,5], borderWidth:2, pointRadius:0, tension:.35 }
-        ]},
+        type:'line',
+        data:{ labels:days, datasets },
         options:{ plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip },
-          scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } }
-        }
+          scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks } } }
       });
 
-      // 3) 내가 많이 거래한 종목(가로 막대)
+      // 내가 거래한 종목
       new Chart(document.getElementById('chart_my_top_symbols'), {
         type:'bar',
-        data:{ labels: (my.topSymbols||[]).map(d=>d.symbol),
-          datasets:[{ label:'거래 비중(%)', data:(my.topSymbols||[]).map(d=>Math.round(d.share*100)) }] },
+        data:{ labels:(my.topSymbols||[]).map(d=>cleanSymbol(d.symbol)), datasets:[{ label:'거래 비중(%)', data:(my.topSymbols||[]).map(d=>Math.round(d.share*100)) }] },
         options:{ indexAxis:'y', plugins:{ legend:{display:false}, tooltip },
-          scales:{ x:{ grid:baseGrid, ticks:baseTicks, max:100 }, y:{ grid:{display:false}, ticks:baseTicks } }
-        }
+          scales:{ x:{ grid:baseGrid, ticks:baseTicks, max:100 }, y:{ grid:{display:false}, ticks:baseTicks } } }
       });
     }
 
@@ -271,7 +185,6 @@
     });
   </script>
 
-  <!-- AI Assistant Scripts -->
   <script src="js/ReportAIAssistant.js" defer></script>
   <script src="js/report-ai-init.js" defer></script>
 </body>

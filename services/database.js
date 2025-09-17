@@ -181,6 +181,7 @@ async function scheduleDeletionImmediately(userId) {
 module.exports = {
   pool, // 기존(crypto_data)
   qnaPool, // 신규(qna)
+  tradingPool,
   testDBConnection,
   findOrCreateUser,
   getUserById,
