@@ -1286,9 +1286,11 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   height: 120px;
   min-height: 120px;
   flex-shrink: 0;
-  border-top: 1px solid #333;
+  border-top: none; /* 🔧 차트 간 구분선 제거 */
   background-color: #1a1a1a;
   transition: height 0.3s ease, opacity 0.3s ease;
+  margin: 0; /* 🔧 마진 제거 */
+  padding: 0; /* 🔧 패딩 제거 */
 }
 /* 차트 생성 중에는 transition 비활성화 */
 .indicator-chart.creating {
@@ -1300,37 +1302,6 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   overflow: hidden;
   opacity: 0;
   border: none;
-}
-.indicator-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 10px;
-  background-color: #1e1e1e;
-  border-bottom: 1px solid #333;
-  height: 25px;
-  font-size: 12px;
-}
-.indicator-title {
-  color: #e0e0e0;
-  font-weight: 500;
-}
-.indicator-close {
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-}
-.indicator-close:hover {
-  color: #e0e0e0;
 }
 .indicator-btn {
   display: inline-flex;          /* 내용 크기에 맞춰 버튼 길이 */
@@ -1364,13 +1335,38 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
 }
 
 .chart-content {
-  height: calc(100% - 25px);
+  height: 100%; /* 🔧 헤더 제거로 전체 높이 사용 */
   width: 100%;
+  margin: 0; /* 🔧 마진 제거 */
+  padding: 0; /* 🔧 패딩 제거 */
+  border: none; /* 🔧 보더 제거 */
+}
+
+/* 🔧 TradingView 차트 내부 여백 제거 */
+.chart-content > div,
+.chart-content table,
+.chart-content canvas {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 🔧 RSI, MACD 차트 특별 여백 제거 */
+#rsiChart .chart-content,
+#macdChart .chart-content {
+  display: block;
+  overflow: hidden;
+}
+
+#rsiChart .chart-content > div,
+#macdChart .chart-content > div {
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 .volume-chart {
   flex: 1;
   min-height: 80px;
-  border-top: 1px solid #333;
+  border-top: none; /* 🔧 볼륨 차트 구분선도 제거 */
 }
 /* 사용자 헤더 */
 .user-header {

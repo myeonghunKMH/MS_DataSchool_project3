@@ -473,13 +473,13 @@ export class ChartManager {
         vertLine: {
           color: "#6A7985",
           width: 1,
-          style: LightweightCharts.LineStyle.Dashed,
+          style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
           labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
         },
         horzLine: {
           color: "#6A7985",
           width: 1,
-          style: LightweightCharts.LineStyle.Dashed,
+          style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
           labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
         },
       },
@@ -1032,7 +1032,7 @@ export class ChartManager {
     try {
       this.rsiChart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
-        height: 95,
+        height: 120, // 🔧 컨테이너 높이와 동일하게 설정
         layout: {
           background: { type: "solid", color: "#1a1a1a" },
           textColor: "#e0e0e0",
@@ -1040,6 +1040,21 @@ export class ChartManager {
         grid: {
           vertLines: { color: "rgba(255, 255, 255, 0.1)" },
           horzLines: { color: "rgba(255, 255, 255, 0.1)" },
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: "#6A7985",
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+            labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+          },
+          horzLine: {
+            color: "#6A7985",
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+            labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+          },
         },
         timeScale: {
           visible: false,
@@ -1105,6 +1120,13 @@ export class ChartManager {
       // CSS transition 재활성화
       const rsiChartElement = document.getElementById("rsiChart");
       rsiChartElement.classList.remove("creating");
+
+      // 🔧 차트 크기 강제 재조정
+      setTimeout(() => {
+        if (this.rsiChart && container) {
+          this.rsiChart.resize(container.clientWidth, 120);
+        }
+      }, 50);
 
       // 추가: 강제 동기화로 확실히 보장
       setTimeout(() => {
@@ -1193,7 +1215,7 @@ export class ChartManager {
     try {
       this.macdChart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
-        height: 95,
+        height: 120, // 🔧 컨테이너 높이와 동일하게 설정
         layout: {
           background: { type: "solid", color: "#1a1a1a" },
           textColor: "#e0e0e0",
@@ -1201,6 +1223,21 @@ export class ChartManager {
         grid: {
           vertLines: { color: "rgba(255, 255, 255, 0.1)" },
           horzLines: { color: "rgba(255, 255, 255, 0.1)" },
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: "#6A7985",
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+            labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+          },
+          horzLine: {
+            color: "#6A7985",
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed, // 🔧 점선으로 변경
+            labelBackgroundColor: "rgba(0, 0, 0, 0.8)",
+          },
         },
         timeScale: {
           visible: false,
@@ -1280,6 +1317,13 @@ export class ChartManager {
       // CSS transition 재활성화
       const macdChartElement = document.getElementById("macdChart");
       macdChartElement.classList.remove("creating");
+
+      // 🔧 차트 크기 강제 재조정
+      setTimeout(() => {
+        if (this.macdChart && container) {
+          this.macdChart.resize(container.clientWidth, 120);
+        }
+      }, 50);
 
       // 추가: 강제 동기화로 확실히 보장
       setTimeout(() => {

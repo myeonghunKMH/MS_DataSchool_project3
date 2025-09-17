@@ -32,7 +32,6 @@ export class EventManager {
     this.setupTradeHistoryTabEvents();
     this.setupOrderListButtonEvents();
     this.setupDropdownEvents();
-    this.setupIndicatorCloseButtons();
     this.setupClearAllIndicatorsButton();
   }
 
@@ -577,32 +576,6 @@ export class EventManager {
     }
   }
 
-  setupIndicatorCloseButtons() {
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('indicator-close')) {
-        const targetChart = e.target.dataset.target;
-        const container = document.getElementById(targetChart);
-
-        if (container) {
-          container.classList.add('hidden');
-
-          // 체크박스도 해제
-          const indicator = container.dataset.indicator;
-          const checkbox = document.querySelector(`input[data-indicator="${indicator}"]`);
-          if (checkbox) {
-            checkbox.checked = false;
-          }
-
-          // 차트에서 지표 제거
-          this.chart.removeIndicator(indicator);
-
-          // 🔧 상태에서 기술지표 제거
-          this.state.activeIndicators.technicalIndicators.delete(indicator);
-          console.log(`${indicator} 지표가 닫기 버튼으로 제거되었습니다.`, this.state.activeIndicators);
-        }
-      }
-    });
-  }
 
   // 🔧 모든 지표 끄기 버튼 이벤트 설정
   setupClearAllIndicatorsButton() {
