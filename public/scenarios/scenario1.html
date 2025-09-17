@@ -892,11 +892,11 @@
     .pill-btn {
       flex: 1;
       padding: 12px 0;
-      background: #202020;
-      border: 1px solid #414141;
+      background: #473f36;
+      border: 1px solid #473f36;
       border-radius: 9999px;
       /* 완전 둥근 pill */
-      color: #b1b1b1;
+      color: #c8c8c8;
       font-weight: 700;
       font-size: var(--font-md);
       cursor: pointer;
@@ -904,9 +904,19 @@
     }
 
     .pill-btn:hover {
-      background: #2c2c2c;
-      border-color: #5a5a5a;
+      background: #5c5246;
+      border-color: #5c5246;
       color: var(--active);
+    }
+
+    #news-popup #news-orderConfirm.buy-btn {
+      background: #992d2f !important;
+      color: #fff !important;
+    }
+
+    #news-popup #news-orderConfirm.sell-btn {
+      background: #115191 !important;
+      color: #fff !important;
     }
 
     .currency-krw {
@@ -964,6 +974,11 @@
       background: #565048 !important;
       color: #ffd166 !important;
       /* 강조 색상 */
+      font-weight: bold;
+    }
+
+    #news-popup .form-label {
+      color: #000 !important;
       font-weight: bold;
     }
 
@@ -1973,7 +1988,14 @@
           if (val > 100) val = 100;
           this.setNewsOrderAmount(val);
         };
+        document.getElementById("overlay").onclick = () => {
+          this.currentNews._userAction = "hold";
+          this.addNewsToTimeline(this.currentNews);
 
+          document.getElementById("news-popup").style.display = "none";
+          document.getElementById("overlay").style.display = "none";
+          this.startSimulation();
+        };
         // 확인 버튼
         document.getElementById("news-orderConfirm").onclick = () => {
           const amount = parseFloat(document.getElementById("news-orderAmount").value);
