@@ -24,7 +24,7 @@ const AIAssistant = (() => {
         if (document.getElementById('ai-chat-button')) return;
         chatButton = document.createElement('button');
         chatButton.id = 'ai-chat-button';
-        chatButton.innerHTML = '<span>&#129302;</span>';
+        chatButton.innerHTML = '';
         document.body.appendChild(chatButton);
         chatWidget = document.createElement('div');
         chatWidget.id = 'ai-chat-widget';
