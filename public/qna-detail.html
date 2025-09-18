@@ -4,26 +4,73 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Q&A 상세 | ITC</title>
+  <link rel="stylesheet" href="/style.css"/>
   <style>
     :root{
       color-scheme: dark;
-      --bg:#1a1a1a; --txt:#e8e8e8;
-      --card-bg:#242424; --border:#3a3a3a; --muted:#9aa0a6;
-      --pill-bg:#111; --pill-border:#2a2a2a; --accent:#4f7cff;
-      --upvote:#4d4d4d;        /* 기본(미투표) */
+      --accent:#ffd166;
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
+
+      --txt:#eaeaea;
+      --border:#3a3a3a;
+      --card-bg:#242424;
+      --muted:#9aa0a6;
+      --pill-bg:#111; --pill-border:#2a2a2a;
+
+      /* 추천 버튼 상태색 (기존 유지) */
+      --upvote:#4d4d4d;
       --upvote-hover:#868686;
-      --upvote-on:#0f163b;     /* 투표 완료 */
+      --upvote-on:#0f163b;
       --upvote-on-border:#14534d;
     }
     *{ box-sizing:border-box; }
-    body{ margin:0; background:var(--bg); color:var(--txt);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-    header{ position:fixed; inset:16px 16px auto 16px; z-index:10; display:flex; align-items:center; justify-content:space-between; }
-    .brand img{ width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none; filter:drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
-    .navbtn{ display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px; border-radius:10px; background:#121212; border:1px solid #262626; color:#e8e8e8; text-decoration:none; font-weight:700; cursor:pointer; }
-    .navbtn:hover{ background:#191919; }
-    main{ width:min(1000px,92vw); margin:100px auto 80px; display:flex; flex-direction:column; gap:18px; }
+    html,body{ height:90%; }
+    body{
+      margin:0; color:var(--txt);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
+    }
 
+    /* Header (index와 동일) */
+    header{
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn img{ width:18px; height:18px; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
+
+    /* Layout (index와 동일 폭/마진) */
+    main{
+      width:min(1200px,92vw);
+      margin:130px auto 80px;
+      display:flex; flex-direction:column; gap:18px;
+    }
+
+    /* 상세 카드 */
     .card{ background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:18px; }
     h1{ margin:0 0 6px 0; font-size:clamp(20px,4vw,26px); font-weight:800; }
     .meta{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:13px; color:var(--muted); }
@@ -31,7 +78,7 @@
     .body{ line-height:1.7; white-space:pre-wrap; word-break:break-word; }
     .divider{ height:1px; background:var(--border); margin:14px 0; }
 
-    /* 추천/조회 라인 */
+    /* 추천/조회 */
     .stats{ display:flex; gap:10px; color:var(--muted); font-size:13px; align-items:center; flex-wrap:wrap; }
     .pill{ display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px; border-radius:999px; border:1px solid var(--border); background:#121212; color:#e8e8e8; }
     .upvote{ display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 14px; border-radius:999px; border:1px solid var(--border); background:var(--upvote); color:#e8f0ff; font-weight:800; cursor:pointer; }
@@ -56,7 +103,10 @@
 <body>
   <header>
     <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고"/></a>
-    <a href="qna.html" class="navbtn">← 목록으로</a>
+    <nav>
+      <a class="navbtn" href="qna.html">← Q&A</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
+    </nav>
   </header>
 
   <main>
@@ -69,7 +119,6 @@
       <div class="body" id="qBody">내용 로딩중…</div>
       <div class="divider"></div>
 
-      <!-- 추천(버튼+숫자, 토글 색상) + 조회 -->
       <div class="stats">
         <button id="btnUpvote" class="upvote" type="button" aria-pressed="false" aria-label="이 질문 추천하기">
           추천 <span id="qVotes">0</span>
@@ -94,11 +143,11 @@
   </main>
 
   <script>
+    /* === 기존 qna-detail.html 스크립트 유지: 상세/추천/댓글 === */
     const $ = (s, el=document)=>el.querySelector(s);
     const escapeHtml = (s='')=>String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     const fmtDate = iso => { const d = new Date(iso); return isNaN(d)?'':d.toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); };
 
-    // id 확보(없으면 목록으로)
     const params = new URLSearchParams(location.search);
     const qid = Number(params.get('id') || '');
     if(!qid){ location.replace('qna.html'); }
@@ -110,7 +159,6 @@
       return out ?? {};
     }
 
-    // 카테고리
     let CATS=null;
     async function loadCats(){
       if(CATS) return CATS;
@@ -123,7 +171,6 @@
       return (cats.find(c=>String(c.id)===String(id))||{}).label || String(id);
     }
 
-    // 상세
     async function loadQuestion(){
       const q = await fetchJSON(`/api/qna/questions/${qid}`);
       $('#qTitle').textContent = q.title;
@@ -140,18 +187,16 @@
       $('#qViews').textContent = Number(q.views||0).toLocaleString('ko-KR');
     }
 
-    // 내 투표 여부 확인 → 버튼 상태
     async function loadVoteState(){
       try{
         const s = await fetchJSON(`/api/qna/questions/${qid}/upvote-state`);
         const voted = !!s?.voted;
         $('#btnUpvote').setAttribute('aria-pressed', String(voted));
-      }catch{ /* 비로그인/엔드포인트부재 등은 무시 */ }
+      }catch{ /* 비로그인/엔드포인트 부재 허용 */ }
     }
 
-    // 추천 (계정당 1회, 서버 강제)
     async function upvote(btn){
-      if(btn.getAttribute('aria-pressed') === 'true') return; // 이미 투표
+      if(btn.getAttribute('aria-pressed') === 'true') return;
       btn.disabled = true;
       try{
         const out = await fetchJSON(`/api/qna/questions/${qid}/upvote`, { method:'POST' });
@@ -159,12 +204,10 @@
         if(!Number.isNaN(newVotes)) $('#qVotes').textContent = newVotes;
         btn.setAttribute('aria-pressed','true');
       }catch(e){
-        // 409 = 이미 투표함 / 401 = 로그인 필요
         alert(e.message || '추천 실패');
       }finally{ btn.disabled = false; }
     }
 
-    // 댓글 목록/등록
     async function loadComments(question_id){
       const list = await fetchJSON(`/api/qna/comments?question_id=${question_id}`);
       const wrap = document.getElementById('qCommentsList');
@@ -215,8 +258,8 @@
 
     (async function init(){
       try{
-        await loadQuestion();   // 상세(여기서 조회수 반영)
-        await loadVoteState();  // 내 투표 여부
+        await loadQuestion();
+        await loadVoteState();
         await loadComments(qid);
       }catch(err){
         alert(err.message || '상세 조회 실패');

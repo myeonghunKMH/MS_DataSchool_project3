@@ -4,32 +4,86 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Q&A | ITC</title>
+  <link rel="stylesheet" href="/style.css"/>
   <style>
     :root{
       color-scheme: dark;
-      --bg:#1a1a1a; --txt:#e8e8e8;
-      --card-bg:#242424; --border:#3a3a3a; --muted:#9aa0a6;
-      --pill-bg:#111; --pill-border:#2a2a2a; --accent:#4f7cff;
+      /* index.html 과 동일한 핵심 변수 */
+      --accent:#ffd166;
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
+
+      /* qna에서 쓰는 보조 색 */
+      --txt:#eaeaea;
+      --muted:#9aa0a6;
+      --border:#3a3a3a;
+      --card-bg:#242424;
+      --pill-bg:#111;
+      --pill-border:#2a2a2a;
     }
     *{ box-sizing:border-box; }
-    body{ margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+    html,body{ height:90%; }
+    body{
+      margin:0; color:var(--txt);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      /* index.html 배경과 동일 컨셉 */
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
+    }
 
-    header{ position:fixed; inset:16px 16px auto 16px; z-index:10; display:flex; align-items:center; justify-content:space-between; }
-    .brand img{ width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none; filter:drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
-    .navbtn{ display:inline-flex; align-items:center; gap:10px; height:38px; padding:0 12px; border-radius:10px; background:#121212; border:1px solid #262626; color:#e8e8e8; text-decoration:none; font-weight:700; cursor:pointer; }
-    .navbtn:hover{ background:#191919; }
+    /* ===== Header (index.html과 동일 스타일) ===== */
+    header{
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn img{ width:18px; height:18px; object-fit:contain; display:block; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
 
-    main{ width:min(1100px, 92vw); margin:100px auto 80px; display:flex; flex-direction:column; gap:18px; }
+    /* ===== Layout (index.html과 동일 폭/마진) ===== */
+    main{
+      width:min(1200px,92vw);
+      margin:130px auto 80px;
+      display:flex; flex-direction:column; gap:18px;
+    }
+
+    /* ===== Q&A 전용 UI ===== */
     .topbar{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
     h1{ margin:0; font-size:clamp(22px,4vw,28px); font-weight:800; }
-
-    .ask-btn{ display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:#173154; color:#e8f0ff; text-decoration:none; font-weight:700; transition:transform .12s ease, background-color .12s ease; cursor:pointer; }
+    .ask-btn{
+      display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
+      border:1px solid var(--stroke); background:#173154; color:#e8f0ff; text-decoration:none; font-weight:700;
+      transition:transform .12s ease, background-color .12s ease; cursor:pointer;
+    }
     .ask-btn:hover{ transform:translateY(-2px); background:#1d3c66; }
 
-    .toolbar{ display:grid; grid-template-columns: 1fr 220px 160px; gap:10px; }
-    .toolbar input, .toolbar select{ height:40px; padding:0 12px; border-radius:10px; background:#121212; color:#e8e8e8; border:1px solid #2a2a2a; outline:none; }
+    .toolbar{ display:grid; grid-template-columns:1fr 220px 160px; gap:10px; }
+    .toolbar input, .toolbar select{
+      height:40px; padding:0 12px; border-radius:10px; background:#121212; color:#e8e8e8; border:1px solid #2a2a2a; outline:none;
+    }
     .toolbar input::placeholder{ color:#6f767d; }
-    @media (max-width:860px){ .toolbar{ grid-template-columns: 1fr; } }
+    @media (max-width:860px){ .toolbar{ grid-template-columns:1fr; } }
 
     .list{ display:flex; flex-direction:column; gap:10px; }
     .card{ display:grid; grid-template-columns:120px 1fr 120px; gap:14px; padding:16px; background:var(--card-bg); border:1px solid var(--border); border-radius:14px; }
@@ -61,7 +115,6 @@
     .sheet-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
     .sheet-header .actions{ display:flex; gap:8px; }
     .form-grid{ display:grid; gap:14px; grid-template-columns: 1fr; }
-
     .field{ display:flex; flex-direction:column; gap:6px; }
     .label-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .label{ font-size:13px; color:#cbd5e1; font-weight:600; }
@@ -70,28 +123,27 @@
       width:100%; border-radius:10px; border:1px solid #555; background:#1a1a1a; color:#e8e8e8; padding:10px 12px; outline:none;
     }
     .field textarea{ min-height:220px; }
-
     .vis-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .seg{ display:inline-flex; align-items:center; gap:6px; background:#1a1a1a; border:1px solid #555; border-radius:10px; padding:2px; }
     .seg button{ border:0; background:transparent; color:#e8e8e8; cursor:pointer; padding:6px 10px; border-radius:8px; font-weight:700; font-size:13px; }
     .seg button[aria-pressed="true"]{ background:#173154; }
-
     .pw-inline{ display:none; align-items:center; gap:8px; }
     .pw-inline input{ width:160px; padding:8px 10px; border-radius:10px; border:1px solid #555; background:#1a1a1a; color:#e8e8e8; outline:none; }
-
     .sheet .actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
     .btn{ height:40px; padding:0 16px; border-radius:10px; border:1px solid var(--border); background:#121212; color:#e8e8e8; cursor:pointer; }
     .btn.primary{ background:#173154; color:#e8f0ff; border-color:#173154; }
     .btn.primary:hover{ background:#1d3c66; }
     .btn.ghost{ background:#2a2a2a; }
-
     .error{ color:#ffb3b3; font-size:13px; display:none; }
   </style>
 </head>
 <body>
   <header>
     <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
-    <a href="mypage.html" class="navbtn">← 뒤로가기</a>
+    <nav>
+      <a class="navbtn" href="index.html">HOME</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
+    </nav>
   </header>
 
   <main>
@@ -182,6 +234,7 @@
   </div>
 
   <script>
+    /* === 기존 qna.html 스크립트: 목록/검색/정렬/페이지네이션/등록/비공개 인증 === */
     const state = { items: [], filtered: [], page: 1, perPage: 8, q: '', cat: '', sort: 'recent' };
     const $  = (sel, el=document) => el.querySelector(sel);
     const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
@@ -271,10 +324,7 @@
         `;
 
         const a = li.querySelector('a');
-        // ✅ 항상 마지막 클릭 id 저장 (기본 이동은 그대로 둠)
         a.addEventListener('click', ()=> sessionStorage.setItem('qna:lastId', String(a.dataset.id)));
-
-        // ✅ 비공개면 모달로 전환 (이동 막고 인증)
         a.addEventListener('click', (ev)=>{
           if (a.dataset.private === '1') {
             ev.preventDefault();
@@ -366,20 +416,18 @@
       try{
         const out = await createQuestion({
           title: subject, body,
-          category_id: Number(catId),
+          category_id: Number(catId)||null,
           notify_email: notify,
           visibility,
-          secret_password: visibility === 'private' ? secretPw : undefined
+          secret_password: visibility==='private' ? secretPw : undefined
         });
         alert('질문이 등록되었습니다.');
-        // 방금 등록한 글 id 저장 → 상세로 바로 이동
         if(out?.id){
           sessionStorage.setItem('qna:lastId', String(out.id));
           location.href = `qna-detail.html?id=${out.id}`;
           return;
         }
         askModal.classList.remove('on');
-        // 초기화 후 목록 갱신
         $('#askSubject').value = ''; $('#askBody').value = ''; $('#askNotify').value = ''; $('#askCat').value = '';
         setVisibility('public');
         await refreshList();
@@ -404,7 +452,6 @@
       const pw = privPw.value.trim();
       if(pw.length<1){ privErr.style.display='block'; privErr.textContent='비밀번호를 입력하세요.'; return; }
       try{
-        // 서버 인증 → 세션 플래그 세팅
         const res = await fetch(`/api/qna/questions/${privTargetId}/authorize`, {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ secret_password: pw })
@@ -412,7 +459,6 @@
         const out = await res.json().catch(()=>null);
         if(!res.ok || !out?.ok){ throw new Error(out?.error || '인증 실패'); }
         privModal.classList.remove('on');
-        // ✅ 인증 성공: 마지막 ID 저장 후 이동
         sessionStorage.setItem('qna:lastId', String(privTargetId));
         location.href = `qna-detail.html?id=${privTargetId}`;
       }catch(err){
@@ -425,7 +471,6 @@
       const rows = await fetchListFromServer();
       state.items = rows; applyFilters();
     }
-
     (async function init(){
       await loadCategories();
       await refreshList();
