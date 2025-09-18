@@ -274,6 +274,12 @@ registerNews(app);
 const registerReport = require("./report");
 registerReport(app);
 
+// ===== 보유자산(마이페이지) 라우트 연결 =====
+const registerHoldings = require("./services/holdings");
+registerHoldings(app);
+app.use('/mypage.js', express.static(path.join(__dirname, 'mypage.js')));
+
+
 // ===== AI 챗봇 프록시 =====
 app.post("/api/chat", keycloak.protect(), async (req, res) => {
   const { model, messages } = req.body;

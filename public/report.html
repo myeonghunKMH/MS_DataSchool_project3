@@ -15,6 +15,11 @@
       --glow:255,255,255;
     }
 
+    main.wrap {
+      transform: scale(1.04);      /* 1.0=원본 → 1.1=10% 확대 */
+      transform-origin: top center;
+    }
+
     body{
       margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
       background:
@@ -25,27 +30,34 @@
       background-attachment: fixed;
     }
     a{ color:inherit; text-decoration:none; }
+    *{ box-sizing:border-box; }
 
     header{
       position:fixed; inset:12px 12px auto 12px; z-index:20;
       display:flex; align-items:center; justify-content:space-between;
       backdrop-filter:saturate(120%) blur(2px);
-      pointer-events:none;
     }
-    header .left, header .right{ pointer-events:auto; display:flex; align-items:center; gap:10px; }
-    header img.logo{ width:120px; height:auto; filter: drop-shadow(0 10px 26px rgba(var(--glow),.22)) drop-shadow(0 0 20px rgba(var(--glow),.18)); }
-
-    .btn-nav{
+    .brand img{
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
       display:inline-flex; align-items:center; gap:8px;
       height:36px; padding:0 12px; border-radius:10px;
       background:rgba(255,255,255,.03);
-      border:1px solid var(--stroke); color:#f3f3f3;
-      text-decoration:none; font-weight:700; font-size:14px;
-      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 6px 18px rgba(0,0,0,.30);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
     }
-    .btn-nav:hover{ border-color:rgba(var(--glow),.32); box-shadow:0 0 12px rgba(var(--glow),.22); transform:translateY(-1px); color:#fff; }
+    .navbtn img{ width:18px; height:18px; object-fit:contain; display:block; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
 
-    .wrap{ max-width:1200px; margin:0 auto; padding:100px 16px 48px; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:90px 16px 48px; }
 
     .grid{ display:grid; gap:16px; }
     .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
@@ -73,8 +85,8 @@
     .kpi .value{ font-size:26px; font-weight:900; letter-spacing:.2px; }
     .kpi .sub{ font-size:12px; color:#9ec; padding:2px 8px; border-radius:999px; background:rgba(70,215,198,.12); border:1px solid rgba(70,215,198,.28); font-weight:700; }
 
-    .table{ width:100%; border-collapse:collapse; font-size:14px; }
-    .table th, .table td{ padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); }
+    .table{ width:100%; border-collapse:collapse; font-size:14px; min-width:900px; }
+    .table th, .table td{ padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); white-space:nowrap; }
     .table th{ color:#bdbdbd; font-weight:700; }
     .muted{ color:#a8a8a8; }
 
@@ -83,27 +95,28 @@
 
     .table-container{
       max-height: 210px;
-      overflow-y: auto; overflow-x: hidden;
+      overflow-y: auto;
+      overflow-x: auto; /* 가로 슬라이드 추가 */
       border:1px solid rgba(255,255,255,.06);
       border-radius:12px;
       background:rgba(255,255,255,.02);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
     }
     .table-container thead th{ position:sticky; top:0; background:#121212; z-index:1; }
-    .table-container::-webkit-scrollbar{ width:8px; }
+    .table-container::-webkit-scrollbar{ height:8px; width:8px; }
     .table-container::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:8px; }
     .table-container::-webkit-scrollbar-track{ background:transparent; }
 
     .btn-pdf{ position:fixed; bottom:20px; left:20px; z-index:30; }
 
-    /* === 떠 있는(absolute) 새로고침 버튼: 카드와 '완전히 분리' 배치 === */
     .refresh-float-btn{
-      position:absolute; z-index:15;  /* 카드보다 위 */
+      position:absolute; z-index:15;
       background:none; border:none; color:#fff;
       font-size:18px; cursor:pointer; line-height:1;
       transition:transform .2s;
     }
     .refresh-float-btn:hover{ transform:rotate(90deg); }
+
     #kpi_return_rank { display: none !important; }
   </style>
 
@@ -121,20 +134,19 @@
 </head>
 <body>
   <header>
-    <div class="left"><a href="index.html"><img class="logo" src="/images/logo.png" alt="ITC" /></a></div>
-    <div class="right">
-      <a class="btn-nav" href="guide.html">GUIDE</a>
-      <a class="btn-nav" href="/mypage.html">MyPage</a>
-    </div>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="realtime.html" style="color: var(--accent);">RealTime</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
+    </nav>
   </header>
 
-  <button class="btn-nav btn-pdf" onclick="window.print()">📄 PDF로 저장</button>
+  <button class="navbtn btn-pdf" onclick="window.print()">📄 PDF로 저장</button>
 
   <main class="wrap">
-    <h1 style="margin:0 4px 6px; font-size:28px; font-weight:900;">개인화된 사용자 리포트</h1>
+    <h1 style="margin:0 4px 6px; font-size:28px; font-weight:900;">REPORT</h1>
     <p class="muted" style="margin:0 4px 22px;">로그인 후 API에서 실제 데이터로 렌더링합니다.</p>
 
-    <!-- KPI -->
     <div class="grid cols-4">
       <div class="card"><div class="title">이번 달 내 거래 횟수</div><div class="kpi"><div class="value" id="kpi_trades">—</div><div class="sub" id="kpi_trades_diff"></div></div></div>
       <div class="card"><div class="title">이번 달 수익</div><div class="kpi"><div class="value" id="kpi_pnl">—</div><div class="sub" id="kpi_pnl_diff"></div></div></div>
@@ -145,20 +157,28 @@
       </div>
     </div>
 
-    <!-- Charts -->
     <div class="grid cols-2" style="margin-top:14px;">
       <div class="card"><div class="title">나의 총자산 변화</div><canvas id="chart_equity" height="120"></canvas></div>
       <div class="card"><div class="title">나의 수익률 vs 전체 평균 수익률</div><canvas id="chart_return_compare" height="120"></canvas></div>
     </div>
 
-    <!-- Symbols & Recent Fills -->
     <div class="grid cols-2" style="margin-top:14px;">
       <div class="card"><div class="title">내가 거래한 종목 수량</div><canvas id="chart_my_top_symbols" height="120"></canvas></div>
       <div class="card">
         <div class="title">최근 체결 히스토리</div>
         <div class="table-container">
           <table class="table" id="table_recent">
-            <thead><tr><th>일시</th><th>종목</th><th>유형</th><th>수량</th><th>가격</th></tr></thead>
+            <thead>
+              <tr>
+                <th>일시</th>
+                <th>종목</th>
+                <th>유형</th>
+                <th>수량</th>
+                <th>가격</th>
+                <th>거래금액</th><!-- qty * price -->
+                <th>실현손익</th><!-- 매도 시 계산 -->
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
@@ -166,7 +186,6 @@
     </div>
   </main>
 
-  <!-- 카드와 '묶지 않은' 떠 있는 새로고침 버튼 -->
   <button id="refreshFloating" class="refresh-float-btn" title="새로고침" aria-label="새로고침" onclick="loadReport()">↺</button>
 
   <script>
@@ -187,12 +206,9 @@
       const span = mx - mn, p = span*pad; return { suggestedMin: mn - p, suggestedMax: mx + p };
     }
 
-    // === 위치 계산: 카드 위(오른쪽)에 '떠 있는' 버튼 배치 (카드와 DOM 상으로 완전히 분리) ===
     function positionRefresh(){
       const btn = document.getElementById('refreshFloating');
       if(!btn) return;
-
-      // "가장 많이 거래한 종목" 카드를 찾음 (title 텍스트로 탐색)
       const candidateCards = Array.from(document.querySelectorAll('.grid.cols-4 .card'));
       const target = candidateCards.find(c => {
         const t = c.querySelector('.title');
@@ -200,12 +216,10 @@
       });
       if(!target){ btn.style.display='none'; return; }
 
-      btn.style.display = ''; // 보이기
+      btn.style.display = '';
       const rect = target.getBoundingClientRect();
-      // 버튼을 카드 '바로 위' 오른쪽 정렬: 카드 우상단에서 살짝 띄움
-      const offsetY = 8;   // 카드 위로 8px
-      const offsetX = 0;   // 카드 오른쪽에 딱 맞춤
-      // viewport 좌표 -> 문서 좌표로 변환
+      const offsetY = 8;
+      const offsetX = 0;
       const top  = window.scrollY + rect.top  - btn.offsetHeight - offsetY;
       const left = window.scrollX + rect.right - btn.offsetWidth - offsetX;
 
@@ -213,13 +227,11 @@
       btn.style.left = Math.max(left, 0) + 'px';
     }
 
-    // 초기 위치 지정 및 이벤트 구독
     window.addEventListener('load', () => {
-      // 버튼 크기 계산을 위해 load 이후 한 번 더
       positionRefresh();
-      // 렌더 타이밍 보정
       requestAnimationFrame(positionRefresh);
       setTimeout(positionRefresh, 0);
+      loadReport();
     });
     window.addEventListener('resize', positionRefresh);
     window.addEventListener('scroll', positionRefresh);
@@ -230,7 +242,6 @@
       const data = await r.json();
       const { days=[], my={} } = data;
 
-      /* ===== KPI ===== */
       document.getElementById('kpi_trades').textContent = Number(my.monthlyTrades||0).toLocaleString('ko-KR');
       const tradesDiffEl = document.getElementById('kpi_trades_diff');
       const diff = my.monthlyTradesDiff;
@@ -259,26 +270,30 @@
         document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
       }
 
-      /* ===== 최근 체결 히스토리 (20개) ===== */
+      /* ===== 최근 체결 히스토리 (20개, 가로 슬라이드 포함) ===== */
       const tbody = document.querySelector('#table_recent tbody');
       tbody.innerHTML = '';
       (my.recentFills||[]).slice(0,20).forEach(f=>{
         const tr = document.createElement('tr');
+        const realizedHTML = (f.realized != null)
+          ? `<span class="${f.realized >= 0 ? 'gain' : 'loss'}">${fmtKRW(f.realized)}</span>`
+          : '';
         tr.innerHTML = `
           <td>${fmtDT(f.ts||f.created_at)}</td>
           <td>${cleanSymbol(f.sym||f.market||'')}</td>
           <td>${sideKR(f.side)}</td>
           <td>${f.qty}</td>
-          <td>${fmtKRW(f.price)}</td>`;
+          <td>${fmtKRW(f.price)}</td>
+          <td>${fmtKRW(f.total)}</td>
+          <td>${realizedHTML}</td>`;
         tbody.appendChild(tr);
       });
 
-      /* ===== 차트 공통 옵션 ===== */
+      /* ===== 차트 (기존 로직 유지) ===== */
       const baseGrid = { color:'rgba(255,255,255,.12)' };
       const baseTicks = { color:'#cfcfcf', font:{ size:11 } };
       const tooltip = { enabled:true, intersect:false, mode:'index' };
 
-      /* 총자산 변화 */
       const equityData = my.equityCurve || [];
       const yRangeEquity = calcRange(equityData, 0.08);
       new Chart(document.getElementById('chart_equity'), {
@@ -287,46 +302,29 @@
         options:{ plugins:{ legend:{display:false}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks, beginAtZero:false, ...yRangeEquity } } }
       });
 
-      /* 수익률 비교 */
       const myReturn = my.returnSeries||[];
       const peerReturn = my.peerAvgReturnSeries||null;
       const marketBaseline = my.marketReturnSeries || new Array(days.length).fill(0);
       const datasets = [ { type:'line', label:'내 수익률(%)', data:myReturn, borderColor:'#4bc0c0', borderWidth:2, pointRadius:0, tension:.35 } ];
       if (peerReturn){ datasets.push({ type:'line', label:'전체 평균 수익률(%)', data:peerReturn, borderColor:'#ffcd56', borderWidth:2, pointRadius:0, tension:.35 }); }
-      else { datasets.push({ type:'line', label:'기준선(0%)', data:marketBaseline, borderDash:[5,5], borderColor:'#aaa', borderWidth:2, pointRadius:0, tension:.35 }); }
-      const allReturnVals = [...myReturn, ...(peerReturn||[]), ...(marketBaseline||[])];
-      const yRangeReturn = calcRange(allReturnVals, 0.12);
+      else { datasets.push({ type:'line', label:'기준선(0%)', data:marketBaseline, borderColor:'#888', borderWidth:1, pointRadius:0, tension:.35 }); }
+      const yRangeReturn = calcRange(myReturn.concat(peerReturn||[]), 0.12);
       new Chart(document.getElementById('chart_return_compare'), {
-        type:'line', data:{ labels:days, datasets }, options:{ plugins:{ legend:{display:true, labels:{ color:'#ddd' }}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:{ color:'rgba(255,255,255,.12)' }, ticks:baseTicks, beginAtZero:false, ...yRangeReturn } } }
+        type:'line',
+        data:{ labels:days, datasets },
+        options:{ plugins:{ legend:{display:true}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks, beginAtZero:false, ...yRangeReturn } } }
       });
 
-      /* 내가 거래한 종목 */
-      const labelsTop = (my.topSymbols||[]).map(d=>cleanSymbol(d.symbol).toUpperCase());
-      const dataTop   = (my.topSymbols||[]).map(d=>Math.round(d.share*100));
+      /* ===== 내가 거래한 종목 수량 ===== */
+      const syms = (my.topSymbols||[]).map(s=>s.symbol);
+      const shares = (my.topSymbols||[]).map(s=>Math.round((s.share||0)*100));
       new Chart(document.getElementById('chart_my_top_symbols'), {
         type:'bar',
-        data:{ labels: labelsTop, datasets:[{ label:'거래 비중(%)', data: dataTop, backgroundColor:(ctx)=>{ const label = ctx.chart.data.labels[ctx.dataIndex]; const hex = PALETTE[label]; return hex ? hexA(hex, 0.70) : undefined; }, borderColor:(ctx)=>{ const label = ctx.chart.data.labels[ctx.dataIndex]; return PALETTE[label] || undefined; }, hoverBackgroundColor:(ctx)=>{ const label = ctx.chart.data.labels[ctx.dataIndex]; return PALETTE[label] || undefined; }, borderWidth:2 }] },
-        options:{ indexAxis:'y', plugins:{ legend:{display:false}, tooltip }, scales:{ x:{ grid:{ color:'rgba(255,255,255,.12)' }, ticks:{ color:'#cfcfcf', font:{ size:11 } }, max:100 }, y:{ grid:{ display:false }, ticks:{ color:'#cfcfcf', font:{ size:11 } } } } }
+        data:{ labels:syms, datasets:[{ label:'비중(%)', data:shares, borderWidth:0, backgroundColor: syms.map(s=>hexA(PALETTE[s]||'#4bc0c0', .65)) }] },
+        options:{ plugins:{ legend:{display:false}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks, beginAtZero:true, suggestedMax:100 } } }
       });
-
-      // 데이터 갱신 후 버튼 위치 재계산(카드 크기/위치 변화 대비)
-      positionRefresh();
     }
-
-    // 최초 위치 계산(데이터 로딩 이전에도 카드 위에 표시)
-    requestAnimationFrame(positionRefresh);
-    window.addEventListener('load', positionRefresh);
-    window.addEventListener('resize', positionRefresh);
-    window.addEventListener('scroll', positionRefresh);
-
-    loadReport().catch(err=>{
-      console.error(err);
-      document.querySelector('.muted').textContent = '리포트 로딩 실패: 로그인 또는 데이터 상태를 확인하세요.';
-      // 실패해도 버튼 위치는 유지
-      positionRefresh();
-    });
   </script>
-
   <!-- 챗봇 연동 스크립트 -->
   <script src="js/ReportAIAssistant.js" defer></script>
   <script src="js/report-ai-init.js" defer></script>

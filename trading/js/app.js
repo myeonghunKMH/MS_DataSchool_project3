@@ -7,7 +7,7 @@ const path = require("path");
 
 // 경로를 한 단계 상위 디렉토리로 변경 (../)
 const CONFIG = require("../config");
-const DatabaseManager = require("../managers/database-manager");
+const database = require("../../services/database");
 const WebSocketManager = require("../managers/websocket-manager");
 const TradingService = require("../services/trading-service");
 const APIRouter = require("../routes/api-router");
@@ -20,7 +20,7 @@ class TradingServer {
     this.wss = new Server({ server: this.server });
 
     // 서비스 인스턴스들
-    this.dbManager = new DatabaseManager();
+    this.dbManager = database;
 
     // ✅ WebSocketManager에 dbManager 전달 (주문 매칭 엔진용)
     this.wsManager = new WebSocketManager(this.wss, this.dbManager);
@@ -89,7 +89,7 @@ class TradingServer {
   async start() {
     try {
       // 데이터베이스 연결
-      await this.dbManager.connect();
+      await this.dbManager.testDBConnection();
 
       // 업비트 웹소켓 연결 (주문 매칭 엔진 포함)
       this.wsManager.connect();
@@ -117,7 +117,7 @@ class TradingServer {
       this.wsManager.close();
 
       // 데이터베이스 연결 종료
-      await this.dbManager.close();
+      // services/database.js는 연결 종료 함수가 없으므로 제거
 
       // HTTP 서버 종료
       this.server.close(() => {
