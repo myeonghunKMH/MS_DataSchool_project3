@@ -331,8 +331,13 @@ async function executeOrderFillTransaction(userId, orderId, market, side, execut
     `, [remainingQuantity, status, orderId]);
 
 
-    // 3. crypto_data에서 잔고 업데이트
+    // 3. crypto_data에서 잔고 업데이트 (동시성 제어)
     const coinName = market.split('-')[1].toLowerCase();
+
+    // 🔒 사용자 잔고 락 획득
+    await cryptoConnection.execute(`
+      SELECT id FROM users WHERE id = ? FOR UPDATE
+    `, [userId]);
 
     if (side === 'bid') {
       // 매수 체결: 코인 잔고 증가
