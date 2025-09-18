@@ -140,6 +140,7 @@ class OrderMatchingEngine {
 
   /**
    * 🔧 개선된 실제 거래 체결 처리 (부분 체결 및 가격 차이 환불 처리)
+   * 🔒 동시성 문제 해결: DB 락을 이용한 중복 체결 방지
    */
   async executeTrade(
     order,
@@ -157,7 +158,45 @@ class OrderMatchingEngine {
       remainingQuantity = 0;
     }
 
+    // 🔒 중복 처리 방지: 주문 상태를 원자적으로 확인 및 업데이트
+    const connection = await this.db.pool.getConnection();
+
     try {
+      await connection.beginTransaction();
+
+      // 주문이 여전히 처리 가능한 상태인지 확인하고 락 획득
+      const [orderCheck] = await connection.execute(`
+        SELECT id, status, remaining_quantity
+        FROM pending_orders
+        WHERE id = ? AND status IN ('pending', 'partial')
+        FOR UPDATE
+      `, [order.id]);
+
+      if (orderCheck.length === 0) {
+        // 이미 다른 프로세스에서 처리됨
+        console.log(`⚠️ 주문 ${order.id}이 이미 처리되었습니다. 건너뜁니다.`);
+        await connection.rollback();
+        return;
+      }
+
+      const currentOrder = orderCheck[0];
+
+      // 남은 수량이 실행하려는 수량보다 작으면 조정
+      if (currentOrder.remaining_quantity < executedQuantity) {
+        executedQuantity = currentOrder.remaining_quantity;
+        remainingQuantity = 0;
+      }
+
+      // 실행할 수량이 너무 작으면 취소
+      if (executedQuantity < 0.00000001) {
+        console.log(`⚠️ 주문 ${order.id}의 실행 가능한 수량이 없습니다.`);
+        await connection.rollback();
+        return;
+      }
+
+      // 실제 총액 재계산
+      const actualTotalAmount = KRWUtils.calculateTotal(executionPrice, executedQuantity);
+
       // 매수 주문의 경우 가격 차이만큼 환불 처리
       if (order.side === "bid" && remainingQuantity > 0) {
         const priceDifference = order.price - executionPrice;
@@ -166,32 +205,32 @@ class OrderMatchingEngine {
             priceDifference,
             executedQuantity
           );
-          // 환불 금액을 잔고에 추가
-          await this.db.adjustUserBalance(
-            order.user_id,
-            "krw_balance",
-            refundAmount
-          );
+          // 환불 금액을 잔고에 추가 (connection 사용)
+          await connection.execute(`
+            UPDATE users SET krw_balance = krw_balance + ? WHERE id = ?
+          `, [refundAmount, order.user_id]);
         }
       }
 
-      // 트랜잭션 시작
-      await this.db.executeOrderFillTransaction(
+      // 🔒 중복 방지: connection을 사용한 체결 처리
+      await this.executeOrderFillTransactionWithConnection(
+        connection,
         order.user_id,
         order.id,
         order.market,
         order.side,
         executionPrice,
         executedQuantity,
-        totalAmount,
+        actualTotalAmount,
         remainingQuantity
       );
 
       const status = remainingQuantity <= 0 ? "filled" : "partial";
 
-      // 최종 체결시에만 로그 출력 및 알림 전송
-      if (status === "filled") {
+      await connection.commit();
 
+      // 커밋 후 알림 전송
+      if (status === "filled") {
         // 완전체결된 주문을 transactions에 저장
         await this.db.saveCompletedOrderToTransactions(order.user_id, order.id);
 
@@ -208,10 +247,60 @@ class OrderMatchingEngine {
           status: status,
         });
       }
+
     } catch (error) {
+      await connection.rollback();
       console.error(`❌ 거래 체결 처리 실패 (주문ID: ${order.id}):`, error);
       throw error;
+    } finally {
+      connection.release();
     }
+  }
+
+  /**
+   * 🔒 DB 연결을 직접 사용한 주문 체결 처리 (중복 방지용)
+   */
+  async executeOrderFillTransactionWithConnection(
+    connection,
+    userId,
+    orderId,
+    market,
+    side,
+    executionPrice,
+    executedQuantity,
+    totalAmount,
+    remainingQuantity
+  ) {
+    const coinName = market.split("-")[1].toLowerCase();
+    const newStatus = remainingQuantity <= 0 ? "filled" : "partial";
+
+    // 잔고 업데이트
+    if (side === "bid") {
+      // 매수: 코인 잔고 증가
+      await connection.execute(`
+        UPDATE users SET ${coinName}_balance = ${coinName}_balance + ? WHERE id = ?
+      `, [executedQuantity, userId]);
+    } else {
+      // 매도: KRW 잔고 증가
+      await connection.execute(`
+        UPDATE users SET krw_balance = krw_balance + ? WHERE id = ?
+      `, [totalAmount, userId]);
+    }
+
+    // 주문 상태 업데이트
+    await connection.execute(`
+      UPDATE pending_orders
+      SET remaining_quantity = ?, status = ?, updated_at = NOW()
+      WHERE id = ?
+    `, [remainingQuantity, newStatus, orderId]);
+
+    // 체결 기록 저장
+    await connection.execute(`
+      INSERT INTO order_fills (order_id, user_id, market, side, price, quantity, amount, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+    `, [orderId, userId, market, side, executionPrice, executedQuantity, totalAmount]);
+
+    console.log(`✅ 체결 완료: ${market} ${side} - ${executedQuantity}개 x ${executionPrice.toLocaleString()}원 = ${totalAmount.toLocaleString()}원`);
   }
 
   /**
