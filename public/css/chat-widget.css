@@ -1,11 +1,11 @@
 /* AI Assistant Chat Widget Styles - 개선된 버전 */
 :root {
-    --chat-widget-primary-color: #007bff;
+    --chat-widget-primary-color: #F2C94C; /* 노란색 계열로 변경 */
     --chat-widget-background-color: #ffffff;
     --chat-widget-header-color: #f8f9fa;
     --chat-widget-text-color: #333;
-    --chat-widget-user-msg-bg: #007bff;
-    --chat-widget-user-msg-color: #fff;
+    --chat-widget-user-msg-bg: #F2C94C; /* 사용자 말풍선도 톤 맞춤 */
+    --chat-widget-user-msg-color: #292929;
     --chat-widget-bot-msg-bg: #f1f1f1;
     --chat-widget-bot-msg-color: #333;
     --chat-widget-border-radius: 8px;
@@ -44,6 +44,15 @@
 
 #ai-chat-button:hover {
     transform: scale(1.1);
+}
+
+
+/* 버튼 내부에 배경 이미지로 코인 채팅 아이콘 적용 (비율 유지) */
+#ai-chat-button {
+    background-image: url('/images/coin-chat.jpeg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain; /* 비율 유지, 찌그러짐 방지 */
 }
 
 #ai-chat-widget {
@@ -225,7 +234,7 @@
 }
 
 .chat-widget-input button:hover {
-    background-color: #0056b3;
+    background-color: #E0B94A;
     transform: scale(1.05);
 }
 

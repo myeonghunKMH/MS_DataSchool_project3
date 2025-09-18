@@ -26,7 +26,7 @@ class ReportAIAssistant {
 
         this.chatButton = document.createElement('button');
         this.chatButton.id = 'ai-chat-button';
-        this.chatButton.innerHTML = '<span>&#128172;</span>';
+        this.chatButton.innerHTML = '';
         document.body.appendChild(this.chatButton);
 
         this.chatWidget = document.createElement('div');
@@ -148,7 +148,7 @@ class ReportAIAssistant {
     }
 
     createReportPrompt(context, isInitial) {
-        let promptText = `너는 유능한 개인 자산 관리 어드바이저야. 아래의 사용자 리포트 데이터를 보고, 사용자의 질문에 친절하게 답변해줘.\n\n`;
+        let promptText = `너는 유능한 개인 자산 관리 어드바이저야. 아래의 사용자 리포트 데이터를 보고, 사용자의 질문에 친절하게 답변해줘. 주어진 대화 내역 중 암호화폐나 자산 관리와 직접 관련 없는 질문은 응답하지 말고, 그 경우에는 간결히 '저는 사용자 리포트 분석에 집중하고 있습니다.' 라고 답해.\n\n`;
         promptText += `== 사용자 리포트 요약 ==\n${context.summary}\n\n`;
 
         if (isInitial) {

@@ -1,6 +1,9 @@
 # 1. Base Image
 FROM node:20-alpine
 
+# Set timezone
+ENV TZ=Asia/Seoul
+
 # 2. Set working directory
 WORKDIR /usr/src/app
 
