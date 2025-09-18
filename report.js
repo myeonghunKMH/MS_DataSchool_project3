@@ -32,6 +32,7 @@ const UNION_SQL = `
      )
 `;
 
+/* ======================== 라우트 등록 ======================== */
 module.exports = function registerReport(app) {
   app.get("/api/user/report", keycloak.protect(), async (req, res) => {
     try {
@@ -95,7 +96,7 @@ module.exports = function registerReport(app) {
         share: volSum ? Number(r.vol) / volSum : 0
       }));
 
-      /* ===== (그래프 비교선) 전체 평균 수익률: 로버스트 버전 ===== */
+      /* ===== 전체 평균 수익률(로버스트) ===== */
       const openingEq_base = equityCurve.length
         ? equityCurve[0]
         : calcEquityTx(opening.cash, opening.pos, opening.lastPrice);
@@ -104,7 +105,7 @@ module.exports = function registerReport(app) {
         openingEq_base, startUTC_15d, endUTC_15d, daysKST
       );
 
-      /* ===== (MTD) 월 실현손익(FIFO) — 프론트에서는 안 써도 제공 유지 ===== */
+      /* ===== (MTD) 월 실현손익(FIFO) ===== */
       const [preRowsMonth] = await tradingPool.query(
         `SELECT id,market,side,price,quantity,created_at
            FROM (${UNION_SQL}) t
@@ -121,21 +122,53 @@ module.exports = function registerReport(app) {
       );
       const monthlyPnL = computeRealizedPnL_FIFO(preRowsMonth, txMTD, INIT_CASH);
 
-      /* ===== 최근 체결 20건 ===== */
+      /* ===== 최근 체결 20건 + 각 매도건의 실현손익(FIFO) ===== */
       const [recent] = await tradingPool.query(
         `SELECT id,created_at,market,side,price,quantity
            FROM (${UNION_SQL}) t
           WHERE t.user_id=? ORDER BY t.created_at DESC, t.id DESC LIMIT 20`,
         [userId]
       );
-      const recentFills = recent.map(r => ({
-        id: r.id,
-        ts: r.created_at,
-        sym: r.market,
-        side: r.side,
-        price: Number(r.price) || 0,
-        qty: Number(r.quantity) || 0
-      }));
+
+      // 최근 목록의 가장 이른 시각을 구해, 그 이전까지를 프리롤, 그 이후를 창으로 잡아 FIFO 누적
+      const recentIds = new Set(recent.map(r => r.id));
+      const earliestTs = recent.length ? recent.reduce((m, r) => (r.created_at < m ? r.created_at : m), recent[0].created_at) : null;
+
+      let realizedMap = {};
+      if (earliestTs) {
+        const [preBeforeRecent] = await tradingPool.query(
+          `SELECT id,market,side,price,quantity,created_at
+             FROM (${UNION_SQL}) t
+            WHERE t.user_id=? AND t.created_at < ?
+            ORDER BY t.created_at ASC, t.id ASC`,
+          [userId, earliestTs]
+        );
+        const [windowAsc] = await tradingPool.query(
+          `SELECT id,market,side,price,quantity,created_at
+             FROM (${UNION_SQL}) t
+            WHERE t.user_id=? AND t.created_at >= ?
+            ORDER BY t.created_at ASC, t.id ASC`,
+          [userId, earliestTs]
+        );
+        realizedMap = computePerTradeRealizedFIFO(preBeforeRecent, windowAsc, INIT_CASH, recentIds);
+      }
+
+      const recentFills = recent.map(r => {
+        const qty = Number(r.quantity) || 0;
+        const px  = Number(r.price) || 0;
+        const total = Math.round(qty * px);
+        const realized = (realizedMap[r.id] != null) ? Math.round(realizedMap[r.id]) : null;
+        return {
+          id: r.id,
+          ts: r.created_at,
+          sym: r.market,
+          side: r.side,
+          price: px,
+          qty,
+          total,
+          realized
+        };
+      });
 
       /* ===== 응답 ===== */
       const monthlyReturnPct = openingEq_base
@@ -145,33 +178,24 @@ module.exports = function registerReport(app) {
       res.json({
         days: daysKST, // 그래프 구간: 최근 15일
         my: {
-          // KPI: 이번 달 내 거래 횟수
           monthlyTrades: trades_mtd,
-          // '+0건' 숨김을 위한 null
           monthlyTradesDiff: null,
 
-          // 월 실현손익(FIFO) — 프론트에서 미사용일 수 있으나 데이터 제공
           monthlyPnL: Math.round(monthlyPnL || 0),
-          monthlyPnLDiff: null, // 비교치 미제공
+          monthlyPnLDiff: null,
 
-          // 월간 수익률(%) — equityCurve 기준(프론트에서도 동일 계산 가능)
           monthlyReturnPct,
-          returnRankPctile: null, // 백분위 미제공 시 null
+          returnRankPctile: null,
 
-          // Top 종목
           topSymbols,
 
-          // 그래프 데이터
-          equityCurve: equityCurve.map(v => (Number.isFinite(v) ? v : 0)), // 반올림 제거
+          equityCurve: equityCurve.map(v => (Number.isFinite(v) ? v : 0)),
           returnSeries: returnSeries.map(round1),
 
-          // 로버스트 피어 평균 수익률(%) — 이상치 안정화
           peerAvgReturnSeries: (peerAvgReturnSeries || []).map(round1),
 
-          // 기준선(0%)
           marketReturnSeries: new Array(daysKST.length).fill(0),
 
-          // 최근 체결
           recentFills
         }
       });
@@ -270,11 +294,10 @@ async function fetchDailyCloses(markets, daysKST){
   await Promise.all(markets.map(async m=>{
     try{
       const { data } = await axios.get('https://api.upbit.com/v1/candles/days', { params:{ market:m, count: daysKST.length+2 }});
-      // data: 최근→과거, KST 기준
       const map = {};
       for (const c of data){
         const key = String(c.candle_date_time_kst).slice(0,10);
-        map[key] = Number(c.trade_price) || 0; // 종가
+        map[key] = Number(c.trade_price) || 0;
       }
       out[m] = map;
     }catch{
@@ -299,7 +322,6 @@ function computeMyMtMSeries15D(opening, txList, daysKST, closesByMkt, tickers){
   const pos={...opening.pos}, last={...opening.lastPrice};
   const lots = cloneLots(opening.lots);
 
-  // 거래를 KST 일자별로 그룹
   const byDay = new Map();
   for (const t of txList){
     const day = toKSTDateKey(t.created_at);
@@ -312,7 +334,6 @@ function computeMyMtMSeries15D(opening, txList, daysKST, closesByMkt, tickers){
   for (let i=0;i<daysKST.length;i++){
     const dayKey = daysKST[i];
 
-    // 1) 당일 거래 반영
     const list = byDay.get(dayKey) || [];
     for (const t of list){
       const sym = stripKRW(t.market), side = String(t.side||'').toLowerCase();
@@ -329,14 +350,13 @@ function computeMyMtMSeries15D(opening, txList, daysKST, closesByMkt, tickers){
       }
     }
 
-    // 2) 당일 평가가격: 종가(오늘은 현재가 우선) + 안전한 fallback
     let eq = Number(cash)||0;
     for (const s of Object.keys(pos||{})){
       const m = addKRW(s);
-      let px = (i===daysKST.length-1 ? (tickers[m] ?? undefined) : undefined); // 마지막 날은 실시간 우선
-      if (px==null) px = closesByMkt[m]?.[dayKey]; // 일봉 종가
-      if (px==null) px = last[s];                  // 직전 체결가
-      if (px==null) px = 0;                        // 최후 보루
+      let px = (i===daysKST.length-1 ? (tickers[m] ?? undefined) : undefined);
+      if (px==null) px = closesByMkt[m]?.[dayKey];
+      if (px==null) px = last[s];
+      if (px==null) px = 0;
       eq += (Number(pos[s])||0) * Number(px||0);
     }
     equityCurve.push(eq);
@@ -347,20 +367,18 @@ function computeMyMtMSeries15D(opening, txList, daysKST, closesByMkt, tickers){
   return { equityCurve, returnSeries };
 }
 
-/* ================= 월 실현손익(FIFO) ================= */
+/* ================= 월 실현손익(FIFO) — 구간 합산 ================= */
 function computeRealizedPnL_FIFO(preRowsBeforeStart, txRowsPeriod, initCash){
   const st = bootstrapState(preRowsBeforeStart, initCash);
-  let cash = st.cash;
-  const lots = cloneLots(st.lots);
   let realized = 0;
+  const lots = cloneLots(st.lots);
 
   for (const t of txRowsPeriod){
     const sym = stripKRW(t.market), side = String(t.side||'').toLowerCase();
-    const qty = Number(t.quantity)||0, px = Number(t.price)||0, amt = px*qty;
+    const qty = Number(t.quantity)||0, px = Number(t.price)||0;
     if (side==='buy'||side==='bid'){
-      cash -= amt; (lots[sym] ||= []).push({qty, cost:px});
+      (lots[sym] ||= []).push({qty, cost:px});
     } else if (side==='sell'||side==='ask'){
-      cash += amt;
       let r=qty, pnl=0; const q=(lots[sym] ||= []);
       while (r>1e-12 && q.length){
         const lot = q[0];
@@ -373,6 +391,31 @@ function computeRealizedPnL_FIFO(preRowsBeforeStart, txRowsPeriod, initCash){
     }
   }
   return realized;
+}
+
+/* ================= 매도 행별 실현손익(FIFO) — 맵(id→pnl) ================= */
+function computePerTradeRealizedFIFO(preRowsBeforeStart, txRowsAsc, initCash, targetIdSet){
+  const st = bootstrapState(preRowsBeforeStart, initCash);
+  const lots = cloneLots(st.lots);
+  const out = {};
+  for (const t of txRowsAsc){
+    const sym = stripKRW(t.market), side = String(t.side||'').toLowerCase();
+    const qty = Number(t.quantity)||0, px = Number(t.price)||0;
+    if (side==='buy'||side==='bid'){
+      (lots[sym] ||= []).push({qty, cost:px});
+    } else if (side==='sell'||side==='ask'){
+      let r=qty, pnl=0; const q=(lots[sym] ||= []);
+      while (r>1e-12 && q.length){
+        const lot = q[0];
+        const take = Math.min(r, lot.qty);
+        pnl += (px - lot.cost) * take;
+        lot.qty -= take; r -= take;
+        if (lot.qty <= 1e-12) q.shift();
+      }
+      if (targetIdSet && targetIdSet.has(t.id)) out[t.id] = pnl;
+    }
+  }
+  return out;
 }
 
 /* ================= 피어 평균(로버스트) ================= */
