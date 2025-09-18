@@ -3,671 +3,1364 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ITC | 지표 사전</title>
-  <meta name="description" content="RSI, MACD, Bollinger Bands 등 주요 테크니컬 지표의 정의·계산·해석을 정리한 지표 사전입니다." />
+  <title>암호화폐 백과사전 | ITC</title>
+  <link rel="stylesheet" href="/style.css" />
   <style>
-    :root {
+    :root{
       color-scheme: dark;
       --accent:#ffd166;
       --stroke:#2b2b2b;
       --glow:255,255,255;
-      --bg-gradient1: radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%);
-      --bg-gradient2: radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%);
-      --bg-gradient3: repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px);
-      --bg-gradient4: linear-gradient(#151515, #0a0a0a);
-      --radius: 14px;
-      --font-sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    }
-    *{box-sizing:border-box;}
-    html, body{height:100%; margin:0; font-family: var(--font-sans); color:#eaeaea; background:
-      var(--bg-gradient1),
-      var(--bg-gradient2),
-      var(--bg-gradient3),
-      var(--bg-gradient4);
-      background-attachment: fixed;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    header {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
 
-    .brand img {
-      width: 120px;
-      height: auto;
-      filter: drop-shadow(0 10px 26px rgba(var(--glow), .22)) drop-shadow(0 0 20px rgba(var(--glow), .18));
+    /* ===== Global ===== */
+    html,body{ height:100%; }
+    body{
+      margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
     }
-    nav {
+    *{ box-sizing:border-box; }
+
+    /* ===== Header ===== */
+    header{
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
+
+    /* ===== Layout ===== */
+    main{
+      width:min(1200px,92vw);
+      margin:100px auto 48px;
+      display:flex; flex-direction:column; gap:24px;
+    }
+
+    /* ===== Hero Section ===== */
+    .hero{
+      background:
+        radial-gradient(900px 220px at 10% -40%, rgba(255,209,102,.15), transparent 60%),
+        radial-gradient(800px 200px at 120% 120%, rgba(255,255,255,.12), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,0));
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:32px 28px;
+      box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+      text-align:center;
+      position:relative;
+    }
+    .hero::after{
+      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .hero h1{
+      margin:0 0 12px;
+      font-size:clamp(28px,4vw,42px);
+      font-weight:900;
+      letter-spacing:.3px;
+      background:linear-gradient(95deg,
+        rgba(255,255,255,1) 0%,
+        rgba(240,240,240,.85) 18%,
+        rgba(255,255,255,.98) 45%,
+        rgba(210,210,210,.65) 65%,
+        rgba(255,255,255,1) 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow),.22))
+              drop-shadow(0 0 24px rgba(var(--glow),.20));
+    }
+    .hero-desc{
+      margin:0;
+      color:#cfcfcf;
+      font-size:clamp(15px,2.2vw,18px);
+      line-height:1.6;
+      font-weight:500;
+    }
+
+    /* ===== Search Bar ===== */
+    .search-container{
+      position:relative;
+      max-width:500px;
+      margin:24px auto;
+    }
+    .search-box{
+      width:100%;
+      height:50px;
+      padding:0 20px 0 50px;
+      border:1px solid var(--stroke);
+      border-radius:25px;
+      background:rgba(255,255,255,.03);
+      color:#eaeaea;
+      font-size:16px;
+      transition:.3s;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .search-box:focus{
+      outline:none;
+      border-color:rgba(var(--glow),.4);
+      box-shadow:0 0 20px rgba(var(--glow),.15);
+      background:rgba(255,255,255,.05);
+    }
+    .search-box::placeholder{
+      color:#999;
+    }
+    .search-icon{
+      position:absolute;
+      left:18px;
+      top:50%;
+      transform:translateY(-50%);
+      width:20px;
+      height:20px;
+      color:#999;
+    }
+
+    /* ===== Category Tabs ===== */
+    .category-tabs{
       display:flex;
       gap:8px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin:20px 0;
     }
-    .navbtn {
+    .tab{
+      padding:10px 20px;
+      border:1px solid var(--stroke);
+      border-radius:25px;
+      background:rgba(255,255,255,.03);
+      color:#cfcfcf;
+      text-decoration:none;
+      font-weight:600;
+      font-size:14px;
+      transition:.3s;
+      cursor:pointer;
+    }
+    .tab:hover{
+      border-color:rgba(var(--glow),.25);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+    }
+    .tab.active{
+      background:linear-gradient(135deg, var(--accent), #ffb347);
+      border-color:var(--accent);
+      color:#1a1a1a;
+      font-weight:700;
+    }
+
+    /* ===== Content Grid ===== */
+    .content-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+      gap:20px;
+      margin-top:30px;
+    }
+
+    /* ===== Encyclopedia Cards ===== */
+    .encyclopedia-card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,0));
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:24px;
+      box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+      overflow:hidden;
+      cursor:pointer;
+    }
+    .encyclopedia-card::after{
+      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .encyclopedia-card:hover{
+      transform:translateY(-4px);
+      border-color:rgba(var(--glow),.25);
+      box-shadow:0 12px 32px rgba(0,0,0,.4), 0 0 20px rgba(var(--glow),.15);
+    }
+
+    .card-header{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .card-icon{
+      width:40px;
+      height:40px;
+      border-radius:10px;
+      background:linear-gradient(135deg, var(--accent), #ffb347);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+    }
+    .card-title{
+      font-size:20px;
+      font-weight:800;
+      color:#fff;
+      margin:0;
+    }
+    .card-category{
+      font-size:12px;
+      color:var(--accent);
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      font-weight:600;
+    }
+
+    .card-content{
+      color:#d0d0d0;
+      line-height:1.6;
+      margin-bottom:16px;
+    }
+
+    .card-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .tag{
+      padding:4px 8px;
+      background:rgba(255,209,102,.1);
+      border:1px solid rgba(255,209,102,.2);
+      border-radius:6px;
+      font-size:11px;
+      color:var(--accent);
+      font-weight:500;
+    }
+
+    /* ===== Modal ===== */
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.85);
+      z-index:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .modal.active{
+      display:flex;
+    }
+    .modal-content{
+      background:linear-gradient(180deg, #1a1a1a, #101010);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:32px;
+      width:min(700px, 95vw);
+      max-height:90vh;
+      overflow-y:auto;
+      position:relative;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .modal-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:20px;
+    }
+    .modal-title{
+      font-size:24px;
+      font-weight:800;
+      color:#fff;
+      margin:0;
+    }
+    .close-btn{
+      background:none;
+      border:none;
+      color:#999;
+      font-size:24px;
+      cursor:pointer;
+      padding:0;
+      width:30px;
+      height:30px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .close-btn:hover{
+      color:#fff;
+    }
+    .modal-body{
+      color:#d0d0d0;
+      line-height:1.7;
+    }
+    .modal-body h3{
+      color:var(--accent);
+      margin-top:24px;
+      margin-bottom:12px;
+    }
+    .modal-body ul{
+      padding-left:20px;
+    }
+    .modal-body li{
+      margin-bottom:8px;
+    }
+    .modal-body canvas{
+        max-width: 100%;
+        height: auto;
+        margin-top: 1rem;
+        display: block;
+        background: #1f1f1f;
+        border-radius: 8px;
+    }
+
+    /* ===== Back Button ===== */
+    .back{
+      align-self:flex-start;
       display:inline-flex;
       align-items:center;
       gap:8px;
-      height:36px;
-      padding:0 12px;
-      border-radius:10px;
-      background:rgba(255,255,255,.03);
+      height:40px;
+      padding:0 16px;
+      border-radius:11px;
+      background:rgba(255,255,255,.04);
       border:1px solid var(--stroke);
-      color:#f3f3f3;
+      color:#f2f2f2;
       text-decoration:none;
-      font-weight:700;
-      transition:.22s;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-      user-select:none;
-      cursor:pointer;
+      font-weight:800;
+      transition:.24s;
+      margin-top:12px;
     }
-    .navbtn img {
-      width:18px;
-      height:18px;
-      object-fit:contain;
+    .back:hover{
+      border-color:rgba(var(--glow),.30);
+      box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35);
+      color:#fff;
+      transform:translateY(-1px);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px){
+      main{ margin:90px auto 40px; }
+      .hero{ padding:24px 20px; }
+      .content-grid{ grid-template-columns:1fr; }
+      .modal-content{ padding:24px; }
+      .category-tabs{ gap:6px; }
+      .tab{ padding:8px 16px; font-size:13px; }
+    }
+
+    /* ===== Footer ===== */
+    footer{
+      display:flex; justify-content:center; margin:32px 0 40px;
+      color:#9a9a9a; font-size:12px; text-align:center; line-height:1.4;
+      padding:0 16px;
+    }
+
+    /* ===== Hidden Content ===== */
+    .content-section{
+      display:none;
+    }
+    .content-section.active{
       display:block;
     }
-    .navbtn:hover {
-      border-color:rgba(var(--glow),.32);
-      box-shadow:0 0 12px rgba(var(--glow),.22);
-      transform:translateY(-1px);
-      color:#fff;
-    }
-
-    .page {
-      width:min(1100px,94vw);
-      margin:130px auto 48px;
-      transition:opacity .18s ease;
-    }
-
-    /* Cards 스타일링 */
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, transparent);
-      border:1px solid var(--stroke);
-      border-radius: var(--radius);
-      box-shadow: 0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
-      color:#eaeaea;
-      padding:18px 16px;
-      margin-bottom: 20px;
-      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
-      cursor: default;
-    }
-    .card:hover, .card:focus {
-      outline:none;
-      transform: translateY(-6px) scale(1.02);
-      box-shadow:0 16px 34px rgba(0,0,0,.45), 0 0 18px rgba(var(--glow),.18);
-      border-color: rgba(var(--glow),.28);
-    }
-    h1, h2, h3 {
-      font-weight: 900;
-      letter-spacing: 0.3px;
-      margin: 0 0 12px 0;
-      color: #fff;
-      user-select:none;
-    }
-    h2 {
-      font-weight: 800;
-      font-size: 1.6rem;
-      color: #ffd166;
-      margin-bottom: 14px;
-    }
-    h3 {
-      font-weight: 700;
-      color: #ffde7d;
-      margin-bottom: 10px;
-    }
-    p, ul, table {
-      color: #ccc;
-      line-height: 1.6;
-      font-weight: 500;
-    }
-    p.lead {
-      color: #ddd;
-      margin-bottom: 18px;
-      font-size: 1rem;
-    }
-
-    ul {
-      padding-left: 20px;
-      margin: 0 0 16px 0;
-    }
-    ul li {
-      margin-bottom: 6px;
-    }
-
-    /* Callout 스타일 */
-    .callout {
-      border-left: 4px solid #ffd166;
-      background: #19160a;
-      color: #fff5b1;
-      padding: 12px 14px;
-      border-radius: 8px;
-      margin-top: 12px;
-      font-size: 0.95rem;
-      user-select:none;
-    }
-
-    /* Summary box */
-    .summary-box {
-      background: #101217;
-      border: 1px solid rgba(255,255,255,0.04);
-      border-radius: 8px;
-      padding: 12px;
-      color: #cfcfcf;
-      margin-top: 12px;
-      user-select:none;
-    }
-
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-      margin: 10px 0;
-      font-size: 0.95rem;
-      border-radius: 8px;
-      overflow: hidden;
-      user-select:none;
-    }
-    th, td {
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      text-align: left;
-      vertical-align: top;
-      color: #eaeaea;
-    }
-    th {
-      background: rgba(255,255,255,0.05);
-      font-weight: 700;
-      color: var(--accent);
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    /* Tiles 스타일 */
-    .tiles {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 20px;
-      margin-top: 20px;
-    }
-    @media (max-width: 800px) {
-      .tiles {
-        grid-template-columns: 1fr;
-      }
-    }
-    .tile {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      border:1px solid var(--stroke);
-      border-radius: var(--radius);
-      padding: 28px 20px;
-      color: #dcdcdc;
-      box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-      user-select:none;
-    }
-    .tile:hover, .tile:focus {
-      outline:none;
-      transform: translateY(-6px);
-      box-shadow: 0 20px 46px rgba(0,0,0,.5), 0 0 24px rgba(var(--glow),.25);
-      border-color: rgba(var(--glow),.3);
-      color: #fff;
-    }
-    .tile h3 {
-      color: var(--accent);
-      margin: 0 0 6px 0;
-      font-weight: 700;
-      font-size: 1.9rem;
-      user-select:none;
-    }
-    .tile p {
-      color: #ccc;
-      font-weight: 500;
-      margin: 0 0 16px 0;
-      user-select:none;
-    }
-
-    /* CTA 버튼 */
-    .cta {
-      background: rgba(255,209,102,0.85);
-      border-radius: 12px;
-      padding: 14px 20px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
-      text-decoration: none;
-      font-weight: 800;
-      color: #343421;
-      width: max-content;
-      transition: all .25s ease;
-      user-select:none;
-      align-self: flex-start;
-      cursor: pointer;
-    }
-    .cta:hover, .cta:focus {
-      background: rgba(255,221,110,1);
-      box-shadow: 0 0 12px rgba(255,209,102,.40), inset 0 1px 0 rgba(255,255,255,.9);
-      color: #222210;
-      outline:none;
-      transform: translateY(-1.5px);
-    }
-
-    /* Content page transition */
-    .content-page {
+    .hidden-by-search {
       display: none;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .3s ease, transform .3s ease;
-      user-select:none;
-    }
-    .content-page.active {
-      display: block;
-      opacity: 1;
-      transform: none;
-    }
-
-    /* Small text */
-    .small {
-      font-size: 0.9rem;
-      color: #d0d0d0;
-      margin-bottom: 10px;
-    }
-
-    /* Canvas responsive */
-    canvas {
-      width: 100% !important;
-      max-width: 100%;
-      height: 300px;
-      margin-top: 1rem;
-      display: block;
-      user-select:none;
-    }
-
-    /* Focus outlines */
-    a:focus, button:focus, .intro-card:focus, .tile:focus, .navbtn:focus {
-      outline: 3px solid rgba(var(--glow),0.4);
-      outline-offset: 2px;
-      border-color: rgba(var(--glow),0.6);
-    }
-  
-    /* Scrollbar: subtle */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background-color: rgba(124,199,255,0.15);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(124,199,255,0.35);
-    }
-
-    /* Responsive */
-    @media (max-width: 640px) {
-      header { inset: 8px 12px auto 12px; padding: 6px 12px; }
-      .page { margin: 110px 16px 48px; width: auto; }
-      .tiles, #intro-crypto-basic .grid { grid-template-columns: 1fr !important; }
-      .tile, .card { margin-bottom: 18px; }
-    }
-
-    /* Header */
-    header{
-      position:fixed; left:18px; top:16px; z-index:60; display:flex; align-items:center; gap:18px;
-      padding:6px 10px; border-radius:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(6px) saturate(120%);
-    }
-    header img{ width:120px; height:auto; display:block; user-select:none; -webkit-user-drag:none;
-      filter: drop-shadow(0 8px 28px rgba(0,0,0,0.25));
-    }
-
-    /* Page container */
-    .page{ width:min(var(--max-width),94vw); margin:30px auto 60px; transition:opacity .18s ease; }
-
-    /* Topbar (detail view) */
-    .topbar{ position:fixed; left:0; right:0; top:0; height:64px;
-      display:flex; align-items:center; gap:12px; padding:8px 20px;
-      background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2));
-      border-bottom:1px solid rgba(255,255,255,0.04); z-index:50; color:#e8f6ff;
-    }
-    .topbar.hidden{ display:none; }
-    .topbar .title { font-weight:800; margin-left:8px; font-size:1.05rem; color:#fff; }
-
-    /* Headings */
-    h1{ margin:0 0 12px; font-size:clamp(20px,3vw,28px); letter-spacing:0.2px; }
-    h2{ margin:0 0 12px; font-size:1.6rem; color:var(--accent); }
-    h3{ margin:0 0 8px; font-size:1.15rem; color:var(--accent-2); }
-
-    p.lead{ margin:0 0 18px; color:#cfdde8; line-height:1.6; }
-
-    /* Card base 스타일링으로 디자인 강화 */
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.04);
-      border-radius:14px; padding:18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
-      color:#dfeffb;
-    }
-
-    /* Intro grid */
-    #intro-crypto-basic .grid{
-      display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:18px;
-    }
-    @media (max-width:980px){
-      #intro-crypto-basic .grid{ grid-template-columns:1fr; }
-    }
-    .intro-card{ cursor:pointer; transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
-    .intro-card:focus, .intro-card:hover{ transform: translateY(-6px);
-      box-shadow:0 18px 40px rgba(0,0,0,0.6), 0 0 26px rgba(var(--glow),0.06);
-      border-color: rgba(var(--glow),0.12); outline: none; }
-
-    /* Tiles two-column with CTA */
-    .tiles{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:6px; }
-    @media (max-width:800px){ .tiles{ grid-template-columns:1fr; } }
-    .tile{
-      padding:28px; border-radius:16px; min-height:240px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.00));
-      border:1px solid rgba(255,255,255,0.03);
-      display:flex; flex-direction:column; justify-content:space-between;
-      transition: transform .2s ease, box-shadow .2s ease;
-      color:#cbe7ff;
-      cursor:pointer;
-    }
-    .tile:hover{ transform: translateY(-6px); box-shadow:0 16px 36px rgba(0,0,0,0.6); border-color: rgba(var(--glow),0.10); }
-    .tile h3{ font-size:1.8rem; color:var(--accent-2); margin:0 0 6px; }
-    .tile p{ color:#c9d9e8; margin:0 0 14px; }
-
-    .cta{
-      display:inline-block; padding:12px 16px; border-radius:12px;
-      background: linear-gradient(180deg,var(--accent),#5bb5ff);
-      color:#021423; font-weight:800; text-decoration:none; width:max-content;
-      box-shadow:0 8px 30px rgba(19,106,164,0.08), inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-    .cta:focus, .cta:hover{ transform: translateY(-2px); box-shadow:0 18px 50px rgba(19,106,164,0.12); }
-
-    /* Tables */
-    table{ width:100%; border-collapse:collapse; background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent); margin:10px 0; font-size:0.96rem; border-radius:8px; overflow:hidden; }
-    th,td{ padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.03); text-align:left; vertical-align:top; color:#dfeffb; }
-    th{ background: rgba(255,255,255,0.02); font-weight:700; color:#e6f7ff; }
-    tr:last-child td{ border-bottom:none; }
-
-    /* Section title */
-    .section-title{ color:var(--accent-2); margin:10px 0 6px; font-size:1.05rem; }
-
-    /* Muted / summary / callout */
-    .muted{ color:#cbdbe8; }
-    .summary-box{ background:#081018; border:1px solid rgba(255,255,255,0.03); padding:12px; border-radius:8px; color:#cbdbe8; margin-top:12px; }
-    .callout{ border-left:4px solid var(--warm); background:#19160a; color:#ffe8a6; padding:12px 14px; border-radius:8px; margin:12px 0 0; font-size:0.95rem; }
-
-    /* Landing spacing */
-    #landing{ margin-bottom:18px; }
-
-    /* Content page transitions & focus */
-    .content-page{ display:none; opacity:0; transform:translateY(6px); transition:opacity .18s ease, transform .18s ease; }
-    .content-page.active{ display:block; opacity:1; transform:none; }
-
-    /* Small typography */
-    .small{ color:#c9d9e8; font-size:0.95rem; }
-
-    /* Canvas responsiveness */
-    canvas{ width:100% !important; max-width:100%; height:300px; display:block; }
-
-    /* Utility */
-    .hidden{ display:none !important; }
-    a:focus, button:focus{ outline: 3px solid rgba(124,199,255,0.22); outline-offset:2px; border-radius:8px; }
-
-    /* Responsive tweaks */
-    @media (max-width:640px){
-      header{ left:10px; top:10px; }
-      .page{ margin:84px 16px 48px; width: auto; }
-    }
+    } 
   </style>
 </head>
 <body>
-  <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="guide.html">GUIDE</a>
+      <a class="navbtn" href="index.html">← Back</a>
+    </nav>
+  </header>
 
-  <div id="topbar" class="topbar hidden" aria-hidden="true">
-    <button id="backToToc" class="back" aria-label="목차로 돌아가기" style="background:transparent;border:0;color:var(--muted);font-weight:700;cursor:pointer">← 목차로 돌아가기</button>
-    <div id="topbarTitle" class="title" aria-live="polite"></div>
-  </div>
-
-  <main class="page" id="main-content" role="main">
-    <section id="landing">
-      <section id="intro-crypto-basic" style="margin-bottom:24px;">
-        <h1>🪙 암호화폐 기초</h1>
-        <p class="lead">암호화폐의 개념, 주식과의 차이, 대표 자산을 한눈에 정리했습니다.<br>아래 카드를 순서대로 확인해 보세요.</p>
-
-        <div class="grid" aria-label="암호화폐 기초 정보" id="intro-grid">
-          <article class="card intro-card" id="sec-what" aria-label="암호화폐란 자세히 보기">
-            <h3>1️⃣ 암호화폐란?</h3>
-            <ul style="margin:8px 0 0 18px; color:#d9eefd; line-height:1.6;">
-              <li>블록체인 기술 위에서 운영되는 <strong>디지털 자산</strong></li>
-              <li>탈중앙 네트워크로 누구나 참여 가능, 거래 기록은 공개 원장에 저장</li>
-              <li>2009년 비트코인 등장 이후 다양한 목적·기능의 코인 등장</li>
-            </ul>
-            <div class="callout">
-              <strong>블록체인이란?</strong><br>
-              여러 컴퓨터(노드)가 거래를 묶어 ‘블록’으로 기록하고 시간 순서대로 연결해 모두가 공유·검증하는 분산 원장 기술입니다.
-            </div>
-          </article>
-
-          <article class="card intro-card" aria-label="암호화폐 vs 주식 자세히 보기">
-            <h3>2️⃣ 암호화폐 vs 주식</h3>
-            <table>
-              <thead><tr><th>구분</th><th>암호화폐</th><th>주식</th></tr></thead>
-              <tbody>
-                <tr><td>거래 시간</td><td>24시간 365일</td><td>장중 (휴일 불가)</td></tr>
-                <tr><td>가격 변동성</td><td>매우 높음</td><td>일일 변동폭 제한</td></tr>
-                <tr><td>중앙기관</td><td>없음 (P2P)</td><td>있음 (거래소/감독기관)</td></tr>
-                <tr><td>투명성</td><td>블록체인 공개 원장</td><td>거래소 시스템</td></tr>
-                <tr><td>보관</td><td>개인지갑 (핫/콜드)</td><td>증권사 계좌</td></tr>
-              </tbody>
-            </table>
-          </article>
-
-          <article class="card intro-card" aria-label="대표 코인 예시 자세히 보기" style="grid-column:1 / -1;">
-            <h3>3️⃣ 대표적인 암호화폐 예시</h3>
-            <table>
-              <thead><tr><th>종류</th><th>설명</th><th>비유</th><th>주의점</th></tr></thead>
-              <tbody>
-                <tr><td><strong>비트코인 (BTC)</strong></td><td>최초, 가치 저장</td><td>💰 디지털 금</td><td>거시 변수 민감</td></tr>
-                <tr><td><strong>이더리움 (ETH)</strong></td><td>스마트 컨트랙트 플랫폼</td><td>📱 스마트폰 OS</td><td>가스비·업그레이드 이슈</td></tr>
-                <tr><td><strong>스테이블 (USDT/USDC)</strong></td><td>달러 연동</td><td>💵 디지털 달러</td><td>발행사 신뢰</td></tr>
-                <tr><td><strong>결제형 (XRP/LTC)</strong></td><td>빠른 결제·송금</td><td>💳 송금 서비스</td><td>규제 리스크</td></tr>
-                <tr><td><strong>서비스 토큰</strong></td><td>플랫폼 내 사용</td><td>🚀 스타트업 주식</td><td>유행·보안 리스크</td></tr>
-              </tbody>
-            </table>
-          </article>
-        </div>
-      </section>
-
-      <div class="tiles" aria-label="섹션 목록">
-        <section class="tile" id="tile-crypto" role="article" tabindex="0" aria-label="암호화폐 이해" data-target="crypto-overview">
-          <div>
-            <h3>암호화폐 이해</h3>
-            <p>블록체인, 토큰, 합의 알고리즘 등 기초 개념 요약</p>
-          </div>
-          <a class="cta" data-target="crypto-overview" href="#crypto-overview" aria-label="암호화폐 이해 바로가기">바로보기</a>
-        </section>
-
-        <section class="tile" id="tile-dict" role="article" tabindex="0" aria-label="지표 설명" data-target="dictionary">
-          <div>
-            <h3>지표 설명</h3>
-            <p>RSI, MACD, Bollinger Bands 등 지표별 정의·계산·해석</p>
-          </div>
-          <a class="cta" data-target="dictionary" href="#dictionary" aria-label="지표 설명 바로가기">바로보기</a>
-        </section>
-      </div>
-    </section>
-
-    <!-- 상세 컨텐츠: 지표 사전 섹션 -->
-    <section id="crypto-overview" class="content-page" aria-labelledby="crypto-overview-title" tabindex="-1" role="region">
-      <h2 id="crypto-overview-title">암호화폐 이해</h2>
-      <p class="lead muted">코인의 등장 배경과 합의 알고리즘(PoW·PoS), 그리고 1세대·2세대·3세대의 사회적 비유까지 핵심을 정리합니다.</p>
-
-      <div class="section-title">1. 역사</div>
-      <ul class="muted" style="padding-left:20px; line-height:1.6;">
-        <li><strong>등장 배경</strong> — 2008년 금융위기 이후 중앙화 시스템 취약성에 대한 대안으로 관심 증가.</li>
-        <li><strong>비트코인 (2009)</strong> — 가치 저장 중심의 디지털 자산.</li>
-        <li><strong>이더리움 (2015)</strong> — 스마트 컨태트로 플랫폼화, DApp·DeFi 확산.</li>
-      </ul>
-      <div class="summary-box">핵심: 목적에 따라 가치 저장·플랫폼·결제용 등으로 분화.</div>
-
-      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.03); margin:12px 0;">
-
-      <div class="section-title">2. 채굴 / 합의 방식</div>
-      <h3 style="margin:10px 0 6px; color:var(--accent-2);">PoW — 작업증명 (Mining)</h3>
-      <p class="muted" style="margin:0 0 8px;">PoW는 '연산 경쟁'으로 합의를 달성합니다. 채굴자들이 해시 난제를 풀어 블록을 제안하고, 먼저 푼 채굴자가 보상을 받습니다.</p>
-
-      <table>
-        <tr><th>항목</th><th>설명</th></tr>
-        <tr><td>핵심 아이디어</td><td>많은 연산(해시) 자원을 사용해 난제를 해결하는 노드가 블록 보상 획득</td></tr>
-        <tr><td>동작 흐름</td><td>트랜잭션 수집 → 블록 후보 생성 → nonce 탐색(연산 경쟁) → 블록 전파 → 네트워크 검증/추가</td></tr>
-        <tr><td>보안 원리</td><td>공격자가 네트워크를 장악하려면 막대한 연산 자원과 비용이 필요 → 공격 비용 증가로 보안 확보</td></tr>
-        <tr><td>장점</td><td>오랜 기간 검증된 모델, 명확한 인센티브 구조, 높은 탈중앙화 잠재력</td></tr>
-        <tr><td>단점/주의</td><td>전력 소모 큼(환경 이슈), 채굴풀 집중으로 인한 중앙화 우려, 장비·난이도에 따른 수익성 변동</td></tr>
-        <tr><td>대표 사례</td><td>비트코인(BTC)</td></tr>
-      </table>
-
-      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.03); margin:12px 0;">
-
-      <h3 style="margin:10px 0 6px; color:var(--accent-2);">PoS — 지분증명 (Staking)</h3>
-      <p class="muted" style="margin:0 0 8px;">PoS는 '지분 예치'를 통해 검증자를 선발해 합의를 달성합니다. 연산 경쟁이 아닌 경제적 이해관계로 보안을 유지합니다.</p>
-
-      <table>
-        <tr><th>항목</th><th>설명</th></tr>
-        <tr><td>핵심 아이디어</td><td>코인을 예치한 노드(검증자)가 무작위/지분 비율에 따라 블록 제안 기회 획득</td></tr>
-        <tr><td>동작 흐름</td><td>사용자 예치 → 검증자 후보 풀 → 알고리즘에 따라 제안자/검증자 선정 → 서명·확정 → 보상 분배</td></tr>
-        <tr><td>보안 원리</td><td>부정행위 시 예치 지분을 깎는 슬래싱으로 악의적 행동 억제</td></tr>
-        <tr><td>장점</td><td>에너지 효율적, 확장성·처리속도 개선 가능, 스테이킹 보상으로 참여 유도</td></tr>
-        <tr><td>단점/주의</td><td>지분 집중으로 인한 중앙화 위험, 스테이킹 잠금에 따른 유동성 제약, 보상·슬래싱 규칙 확인 필요</td></tr>
-        <tr><td>대표 사례</td><td>이더리움(ETH, Merge 이후 PoS 전환), 다수의 신규 체인</td></tr>
-      </table>
-
-      <div class="summary-box">요약: PoW는 연산 경쟁(채굴)으로 보안 확보 — 전력 소모 큼. PoS는 지분 기반 보안 — 에너지 효율적이나 지분 집중 리스크 존재.</div>
-
-      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.03); margin:12px 0;">
-
-      <div class="section-title">3. 1세대 · 2세대 · 3세대</div>
-      <p class="muted" style="margin:6px 0 10px;">아래 표는 요청하신 대로 세대와 대표 코인을 사회적 아날로지로 대응한 것입니다.</p>
-
-      <table>
-        <tr><th>세대</th><th>대표</th><th>사회 비유</th><th>핵심 역할</th></tr>
-        <tr><td>1세대</td><td>비트코인 (BTC)</td><td>금</td><td>희소성 기반의 가치 저장(디지털 금). 보안·불변성 중시, 결제보다는 저장 목적.</td></tr>
-        <tr><td>2세대</td><td>이더리움 (ETH)</td><td>은행 + 플랫폼</td><td>스마트 컨트랙트로 계약·서비스 실행. DeFi/NFT 등 생태계 제공.</td></tr>
-        <tr><td>3세대</td><td>리플 (XRP 중심)</td><td>통신망 / 결제 인프라</td><td>빠른 결제·정산, 낮은 수수료로 실사용 결제 인프라를 지향. 은행 연계 강조.</td></tr>
-      </table>
-
-      <div class="summary-box">실무 팁: 목적에 맞춰 기술을 선택하세요 — 저장(비트코인), 플랫폼 서비스(이더리움), 실사용 결제(리플/3세대). 성능 향상은 종종 중앙화·규제 의존성 증가를 수반합니다.</div>
-
-      <div style="margin-top:12px; font-size:0.9rem; color:#cbdbe8;">
-        참고: 각 체인의 상세 규칙(보상·슬래싱·잠금 기간 등)과 최신 상태는 프로젝트 공식 문서를 통해 확인하세요.
-      </div>
-    </section>
-
-    <section id="dictionary" class="content-page" aria-labelledby="dictionary-title" tabindex="-1" role="region">
-      <h2 id="dictionary-title" style="margin:0 0 8px;">기술지표 설명</h2>
-      <p class="lead" style="margin:0 0 12px; color:#cbdbe8;">
-        RSI, MACD, Bollinger Bands 등 지표별 정의·계산·해석을 정리합니다.
+  <main>
+    <section class="hero">
+      <h1>암호화폐 백과사전</h1>
+      <p class="hero-desc">
+        암호화폐의 기본 개념부터 고급 투자 전략까지<br>
+        체계적으로 정리된 학습 자료를 확인하세요.
       </p>
-
-      <div class="tiles" style="margin-top:12px;">
-        <section class="tile" aria-label="RSI 자세히보기" role="article" data-target="rsi" tabindex="0">
-          <div>
-            <h3>RSI</h3>
-            <p>가격 모멘텀의 강도를 0~100으로 표시.</p>
-          </div>
-          <a class="cta" data-target="rsi" href="#rsi">자세히 보기 →</a>
-        </section>
-
-        <section class="tile" aria-label="MACD 자세히보기" role="article" data-target="macd" tabindex="0">
-          <div>
-            <h3>MACD</h3>
-            <p>단기·장기 EMA 차이로 모멘텀 전환을 포착.</p>
-          </div>
-          <a class="cta" data-target="macd" href="#macd">자세히 보기 →</a>
-        </section>
-
-        <section class="tile" aria-label="Bollinger Bands 자세히보기" role="article" data-target="bb" tabindex="0">
-          <div>
-            <h3>Bollinger Bands</h3>
-            <p>가격의 변동성과 상대적 위치를 파악하는 밴드형 지표.</p>
-          </div>
-          <a class="cta" data-target="bb" href="#bb">자세히 보기 →</a>
-        </section>
+      
+      <div class="search-container">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" class="search-box" placeholder="검색어를 입력하세요..." id="searchInput">
       </div>
     </section>
 
-    <section id="rsi" class="content-page" aria-labelledby="rsi-title" tabindex="-1" role="region">
-      <h2 id="rsi-title">RSI (Relative Strength Index)</h2>
-      <p class="small" style="margin:0 0 8px;">가격 모멘텀의 강도를 0~100 범위로 표시하는 오실레이터. 기본 기간은 14입니다.</p>
-      <table>
-        <tr><th>항목</th><th>설명</th></tr>
-        <tr><td>정의/목적</td><td>최근 상승폭과 하락폭의 평균을 비교해 과매수/과매도 상태를 판단</td></tr>
-        <tr><td>계산</td><td>RS = 평균 상승 / 평균 하락, RSI = 100 - (100 / (1 + RS))</td></tr>
-        <tr><td>해석</td><td>일반적으로 RSI > 70: 과매수, RSI < 30: 과매도</td></tr>
-      </table>
-      <canvas id="rsiChart" aria-label="RSI 차트" role="img" style="max-width:100%; height:300px; margin-top:1rem;"></canvas>
-    </section>
+    <div class="category-tabs">
+      <button class="tab active" data-category="coins">주요 코인</button>
+      <button class="tab" data-category="concepts">기본 개념</button>
+      <button class="tab" data-category="indicators">투자 지표</button>
+      <button class="tab" data-category="trading">거래 전략</button>
+      <button class="tab" data-category="technology">기술 분석</button>
+    </div>
 
-    <section id="macd" class="content-page" aria-labelledby="macd-title" tabindex="-1" role="region">
-      <h2 id="macd-title">MACD (Moving Average Convergence/Divergence)</h2>
-      <p class="small" style="margin:0 0 8px;">추세와 모멘텀 변화를 포착하는 지표. 기본 설정은 EMA(12), EMA(26), Signal EMA(9).</p>
-      <table>
-        <tr><th>항목</th><th>설명</th></tr>
-        <tr><td>구성</td><td>EMA(12) - EMA(26), Signal = EMA(MACD,9), Histogram = MACD - Signal</td></tr>
-        <tr><td>직관</td><td>MACD 양수 시 단기 모멘텀 강함; Signal 상향 돌파 시 매수 신호</td></tr>
-      </table>
-      <canvas id="macdChart" aria-label="MACD 차트" role="img" style="max-width:100%; height:300px; margin-top:1rem;"></canvas>
-    </section>
+    <div class="content-section active" id="coins">
+      <div class="content-grid">
+        <div class="encyclopedia-card" data-modal="bitcoin">
+          <div class="card-header">
+            <div class="card-icon">₿</div>
+            <div>
+              <h3 class="card-title">비트코인 (BTC)</h3>
+              <div class="card-category">주요 코인</div>
+            </div>
+          </div>
+          <div class="card-content">
+            세계 최초의 암호화폐로, 디지털 금이라고 불리며 가장 높은 시가총액을 자랑합니다. 블록체인 기술의 시작점이자 암호화폐 시장의 기준점 역할을 합니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">P2P</span>
+            <span class="tag">POW</span>
+            <span class="tag">디플레이션</span>
+          </div>
+        </div>
 
-    <section id="bb" class="content-page" aria-labelledby="bb-title" tabindex="-1" role="region">
-      <h2 id="bb-title">Bollinger Bands</h2>
-      <p class="small" style="margin:0 0 8px;">가격의 변동성과 상대적 위치를 파악하는 밴드형 지표. 기본은 SMA(20), K=2.</p>
-      <table>
-        <tr><th>항목</th><th>설명</th></tr>
-        <tr><td>정의/계산</td><td>Middle = SMA(N)<br/>Upper = Middle + K × StdDev(N)<br/>Lower = Middle − K × StdDev(N)</td></tr>
-        <tr><td>해석</td><td>밴드 폭이 좁아지면 Squeeze — 이후 확장 시 큰 움직임 가능성.</td></tr>
-        <tr><td>주의</td><td>단독 판단 금지, 추세·거래량 등 다중 확인 권장.</td></tr>
-      </table>
-      <canvas id="bbChart" aria-label="볼린저 밴드 차트" role="img" style="max-width:100%; height:300px; margin-top:1rem;"></canvas>
-    </section>
+        <div class="encyclopedia-card" data-modal="ethereum">
+          <div class="card-header">
+            <div class="card-icon">Ξ</div>
+            <div>
+              <h3 class="card-title">이더리움 (ETH)</h3>
+              <div class="card-category">주요 코인</div>
+            </div>
+          </div>
+          <div class="card-content">
+            스마트 컨트랙트를 지원하는 블록체인 플랫폼으로, DeFi와 NFT 생태계의 핵심입니다. 개발자들이 분산 앱(DApp)을 구축할 수 있는 환경을 제공합니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">스마트컨트랙트</span>
+            <span class="tag">DeFi</span>
+            <span class="tag">POS</span>
+          </div>
+        </div>
 
+        <div class="encyclopedia-card" data-modal="ripple">
+          <div class="card-header">
+            <div class="card-icon">◊</div>
+            <div>
+              <h3 class="card-title">리플 (XRP)</h3>
+              <div class="card-category">주요 코인</div>
+            </div>
+          </div>
+          <div class="card-content">
+            은행 간 국제 송금을 위해 설계된 암호화폐로, 빠른 거래 속도와 낮은 수수료가 특징입니다. 전통적인 금융 기관과의 파트너십에 집중합니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">국제송금</span>
+            <span class="tag">은행</span>
+            <span class="tag">빠른거래</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-section" id="concepts">
+      <div class="content-grid">
+        <div class="encyclopedia-card" data-modal="blockchain">
+          <div class="card-header">
+            <div class="card-icon">⛓</div>
+            <div>
+              <h3 class="card-title">블록체인</h3>
+              <div class="card-category">기본 개념</div>
+            </div>
+          </div>
+          <div class="card-content">
+            분산된 데이터베이스로, 거래 정보를 블록 단위로 체인처럼 연결하여 저장합니다. 중앙 기관 없이도 신뢰할 수 있는 거래를 가능하게 하는 핵심 기술입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">분산원장</span>
+            <span class="tag">투명성</span>
+            <span class="tag">불변성</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="wallet">
+          <div class="card-header">
+            <div class="card-icon">👛</div>
+            <div>
+              <h3 class="card-title">암호화폐 지갑</h3>
+              <div class="card-category">기본 개념</div>
+            </div>
+          </div>
+          <div class="card-content">
+            암호화폐를 보관하고 거래할 수 있는 디지털 지갑입니다. 개인키와 공개키를 관리하며, 하드웨어 지갑과 소프트웨어 지갑으로 구분됩니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">개인키</span>
+            <span class="tag">보안</span>
+            <span class="tag">하드웨어</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="mining">
+          <div class="card-header">
+            <div class="card-icon">⛏</div>
+            <div>
+              <h3 class="card-title">채굴 (Mining)</h3>
+              <div class="card-category">기본 개념</div>
+            </div>
+          </div>
+          <div class="card-content">
+            컴퓨터 연산을 통해 블록체인 네트워크를 유지하고 새로운 암호화폐를 생성하는 과정입니다. 작업증명(PoW) 방식에서 네트워크 보안을 담당합니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">POW</span>
+            <span class="tag">해시파워</span>
+            <span class="tag">보상</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-section" id="indicators">
+      <div class="content-grid">
+        <div class="encyclopedia-card" data-modal="rsi">
+          <div class="card-header">
+            <div class="card-icon">📈</div>
+            <div>
+              <h3 class="card-title">RSI</h3>
+              <div class="card-category">투자 지표</div>
+            </div>
+          </div>
+          <div class="card-content">
+            상대강도지수로, 과매수와 과매도 상태를 판단하는 기술적 분석 지표입니다. 0-100 사이의 값으로 표시되며, 일반적으로 70 이상은 과매수, 30 이하는 과매도로 봅니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">과매수</span>
+            <span class="tag">과매도</span>
+            <span class="tag">모멘텀</span>
+          </div>
+        </div>
+          
+        <div class="encyclopedia-card" data-modal="macd">
+          <div class="card-header">
+            <div class="card-icon">📊</div>
+            <div>
+              <h3 class="card-title">MACD</h3>
+              <div class="card-category">투자 지표</div>
+            </div>
+          </div>
+          <div class="card-content">
+            단기 이동평균선과 장기 이동평균선의 차이를 이용하여 추세의 강도와 방향, 전환 시점을 파악하는 모멘텀 지표입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">추세</span>
+            <span class="tag">모멘텀</span>
+            <span class="tag">시그널</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="bb">
+          <div class="card-header">
+            <div class="card-icon">📉</div>
+            <div>
+              <h3 class="card-title">Bollinger Bands</h3>
+              <div class="card-category">투자 지표</div>
+            </div>
+          </div>
+          <div class="card-content">
+             이동평균선을 중심으로 표준편차를 이용하여 상단선과 하단선을 만든 밴드형 지표입니다. 가격의 변동성과 상대적 위치를 파악하는 데 유용합니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">변동성</span>
+            <span class="tag">Squeeze</span>
+            <span class="tag">상대위치</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="marketcap">
+          <div class="card-header">
+            <div class="card-icon">💰</div>
+            <div>
+              <h3 class="card-title">시가총액</h3>
+              <div class="card-category">투자 지표</div>
+            </div>
+          </div>
+          <div class="card-content">
+            암호화폐의 현재 가격에 총 발행량을 곱한 값으로, 해당 코인의 전체 시장 가치를 나타냅니다. 투자 규모와 안정성을 판단하는 중요한 지표입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">시장가치</span>
+            <span class="tag">순위</span>
+            <span class="tag">안정성</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="volume">
+          <div class="card-header">
+            <div class="card-icon">🌊</div>
+            <div>
+              <h3 class="card-title">거래량</h3>
+              <div class="card-category">투자 지표</div>
+            </div>
+          </div>
+          <div class="card-content">
+            특정 기간 동안 거래된 암호화폐의 총량을 나타냅니다. 높은 거래량은 높은 관심도와 유동성을 의미하며, 가격 움직임의 신뢰성을 판단하는 데 사용됩니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">유동성</span>
+            <span class="tag">관심도</span>
+            <span class="tag">신뢰성</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-section" id="trading">
+      <div class="content-grid">
+        <div class="encyclopedia-card" data-modal="hodl">
+          <div class="card-header">
+            <div class="card-icon">💎</div>
+            <div>
+              <h3 class="card-title">HODL 전략</h3>
+              <div class="card-category">거래 전략</div>
+            </div>
+          </div>
+          <div class="card-content">
+            "Hold On for Dear Life"의 줄임말로, 장기간 암호화폐를 보유하는 투자 전략입니다. 단기 변동성을 무시하고 장기적인 가치 상승을 기대하는 방식입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">장기투자</span>
+            <span class="tag">패시브</span>
+            <span class="tag">가치투자</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="dca">
+          <div class="card-header">
+            <div class="card-icon">📅</div>
+            <div>
+              <h3 class="card-title">분할 매수 (DCA)</h3>
+              <div class="card-category">거래 전략</div>
+            </div>
+          </div>
+          <div class="card-content">
+            Dollar Cost Averaging의 줄임말로, 정기적으로 일정 금액을 투자하는 전략입니다. 시간 분산을 통해 평균 매수 단가를 낮추고 변동성 리스크를 줄입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">시간분산</span>
+            <span class="tag">리스크관리</span>
+            <span class="tag">정기투자</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="stoploss">
+          <div class="card-header">
+            <div class="card-icon">🛑</div>
+            <div>
+              <h3 class="card-title">손절매</h3>
+              <div class="card-category">거래 전략</div>
+            </div>
+          </div>
+          <div class="card-content">
+            미리 설정한 손실 한도에 도달했을 때 자동으로 매도하는 주문 방식입니다. 큰 손실을 방지하고 감정적 거래를 피할 수 있는 리스크 관리 도구입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">리스크관리</span>
+            <span class="tag">자동매도</span>
+            <span class="tag">손실제한</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-section" id="technology">
+      <div class="content-grid">
+        <div class="encyclopedia-card" data-modal="candlestick">
+          <div class="card-header">
+            <div class="card-icon">🕯</div>
+            <div>
+              <h3 class="card-title">캔들스틱 차트</h3>
+              <div class="card-category">기술 분석</div>
+            </div>
+          </div>
+          <div class="card-content">
+            일정 기간의 시가, 고가, 저가, 종가를 캔들 모양으로 표시한 차트입니다. 가격 움직임과 시장 심리를 한눈에 파악할 수 있어 기술적 분석의 기본 도구입니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">OHLC</span>
+            <span class="tag">패턴분석</span>
+            <span class="tag">시장심리</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="support">
+          <div class="card-header">
+            <div class="card-icon">📉</div>
+            <div>
+              <h3 class="card-title">지지선 & 저항선</h3>
+              <div class="card-category">기술 분석</div>
+            </div>
+          </div>
+          <div class="card-content">
+            지지선은 가격 하락을 막는 심리적 가격대이고, 저항선은 가격 상승을 제한하는 가격대입니다. 이 선들을 돌파하면 강한 추세 변화의 신호가 될 수 있습니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">추세분석</span>
+            <span class="tag">돌파</span>
+            <span class="tag">심리적가격</span>
+          </div>
+        </div>
+
+        <div class="encyclopedia-card" data-modal="ma">
+          <div class="card-header">
+            <div class="card-icon">📊</div>
+            <div>
+              <h3 class="card-title">이동평균선</h3>
+              <div class="card-category">기술 분석</div>
+            </div>
+          </div>
+          <div class="card-content">
+            일정 기간의 평균 가격을 연결한 선으로, 추세의 방향을 파악하는 데 사용됩니다. 단기와 장기 이동평균선의 교차는 매매 신호로 활용됩니다.
+          </div>
+          <div class="card-tags">
+            <span class="tag">추세</span>
+            <span class="tag">골든크로스</span>
+            <span class="tag">데드크로스</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a class="back" href="index.html">← 메인으로</a>
   </main>
 
-  <footer style="display:flex;justify-content:center;margin:16px 0 36px;color:#9a9a9a;font-size:12px;text-align:center;padding:0 16px;">
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">제목</h2>
+        <button class="close-btn" id="closeBtn">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        내용이 여기에 표시됩니다.
+      </div>
+    </div>
+  </div>
+
+  <footer>
     본 서비스는 학습과 연습을 목적으로 제공되는 모의투자 시스템입니다.<br>
     제공되는 데이터와 시뮬레이션 결과는 실제 시장과 다를 수 있으며, 이로 인해 발생하는 모든 손실과 불이익에 대해서 운영자는 책임을 지지 않습니다.<br>
     본 서비스는 투자 권유가 아니며, 실제 투자를 결정할 때는 이용자 본인의 판단과 책임에 따라야 합니다.
   </footer>
-
-  <!-- Chart.js 로딩 및 스크립트 -->
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0"></script>
-  <script>
-  (function(){
-    var landing = document.getElementById('landing');
-    var contentPages = Array.from(document.querySelectorAll('.content-page'));
-    var topbar = document.getElementById('topbar');
-    var backToTocBtn = document.getElementById('backToToc');
-    var topbarTitle = document.getElementById('topbarTitle');
-    var charts = {};
 
+  <script>
+    // 탭 전환 기능
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.content-section');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const category = tab.dataset.category;
+        
+        // 탭 활성화
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // 섹션 전환
+        sections.forEach(section => section.classList.remove('active'));
+        document.getElementById(category).classList.add('active');
+      });
+    });
+
+   // 검색 기능 (수정됨)
+    const searchInput = document.getElementById('searchInput');
+    const allCards = document.querySelectorAll('.encyclopedia-card');
+// 검색할 텍스트를 미리 추출하여 객체 배열로 만들어 둡니다.
+// 이렇게 하면 키를 입력할 때마다 DOM을 읽을 필요가 없습니다.
+const searchableCards = Array.from(allCards).map(card => {
+  const title = card.querySelector('.card-title').textContent.toLowerCase();
+  const content = card.querySelector('.card-content').textContent.toLowerCase();
+  const tags = Array.from(card.querySelectorAll('.tag')).map(tag => tag.textContent.toLowerCase()).join(' ');
+  
+  return {
+    element: card,
+    searchText: `${title} ${content} ${tags}`
+  };
+});
+
+searchInput.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+
+  if (query) {
+    // 검색어가 있을 경우: 탭 구분을 없애고 전체에서 검색
+    sections.forEach(section => section.classList.add('active'));
+
+    searchableCards.forEach(card => {
+      const isVisible = card.searchText.includes(query);
+      // classList.toggle을 사용하면 조건에 따라 클래스를 추가/제거할 수 있어 더 효율적입니다.
+      card.element.classList.toggle('hidden-by-search', !isVisible);
+    });
+  } else {
+    // 검색어가 없을 경우: 원래 탭 상태로 복원
+    searchableCards.forEach(card => {
+      card.element.classList.remove('hidden-by-search');
+    });
+
+    const activeTab = document.querySelector('.tab.active');
+    const activeCategory = activeTab ? activeTab.dataset.category : 'coins'; // 기본값 설정
+
+    sections.forEach(section => {
+      section.classList.toggle('active', section.id === activeCategory);
+    });
+  }
+});
+
+    // 모달 기능
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const closeBtn = document.getElementById('closeBtn');
+    
+    // 차트 인스턴스 저장 객체
+    let activeChart = null;
+
+    // 상세 정보 데이터
+    const modalData = {
+      bitcoin: {
+        title: '비트코인 (BTC)',
+        content: `
+          <h3>개요</h3>
+          <p>비트코인은 2008년 사토시 나카모토가 발표한 백서를 기반으로 2009년 출시된 세계 최초의 암호화폐입니다. 중앙은행이나 정부의 개입 없이 P2P 네트워크를 통해 거래되는 디지털 화폐입니다.</p>
+          
+          <h3>주요 특징</h3>
+          <ul>
+            <li><strong>총 발행량 제한:</strong> 2,100만 개로 한정되어 인플레이션 방지</li>
+            <li><strong>작업증명(PoW):</strong> 채굴을 통한 보안 및 거래 검증</li>
+            <li><strong>분산화:</strong> 중앙 기관 없는 탈중앙화 시스템</li>
+            <li><strong>투명성:</strong> 모든 거래 내역이 블록체인에 공개</li>
+          </ul>
+          
+          <h3>투자 관점</h3>
+          <ul>
+            <li>디지털 금으로 불리며 가치 저장 수단으로 인식</li>
+            <li>기관 투자자들의 관심 증가</li>
+            <li>높은 변동성으로 인한 투기적 성격</li>
+            <li>글로벌 경제 불안정 시 안전자산 역할</li>
+          </ul>
+        `
+      },
+      ethereum: {
+        title: '이더리움 (ETH)',
+        content: `
+          <h3>개요</h3>
+          <p>이더리움은 2015년 비탈릭 부테린이 개발한 블록체인 플랫폼으로, 스마트 컨트랙트 기능을 지원하여 다양한 분산 애플리케이션(DApp) 개발이 가능합니다.</p>
+          
+          <h3>주요 특징</h3>
+          <ul>
+            <li><strong>스마트 컨트랙트:</strong> 자동 실행되는 계약 프로그램</li>
+            <li><strong>가상머신(EVM):</strong> 스마트 컨트랙트 실행 환경</li>
+            <li><strong>지분증명(PoS):</strong> 2022년 "The Merge"로 전환</li>
+            <li><strong>DeFi 생태계:</strong> 탈중앙화 금융의 핵심 플랫폼</li>
+          </ul>
+          
+          <h3>활용 분야</h3>
+          <ul>
+            <li>DeFi (탈중앙화 금융) 프로토콜</li>
+            <li>NFT (대체 불가능한 토큰) 거래</li>
+            <li>DAO (탈중앙화 자율 조직)</li>
+            <li>Web3 애플리케이션</li>
+          </ul>
+        `
+      },
+      ripple: {
+        title: '리플 (XRP)',
+        content: `
+          <h3>개요</h3>
+          <p>리플은 2012년 리플랩스가 개발한 국제 송금에 특화된 암호화폐입니다. 기존 SWIFT 시스템을 대체하여 빠르고 저렴한 국제 송금을 목표로 합니다.</p>
+          
+          <h3>주요 특징</h3>
+          <ul>
+            <li><strong>빠른 거래:</strong> 3-5초 내 거래 완료</li>
+            <li><strong>낮은 수수료:</strong> 기존 송금 대비 현저히 저렴</li>
+            <li><strong>확장성:</strong> 초당 1,500개 거래 처리 가능</li>
+            <li><strong>기업 파트너십:</strong> 다수 금융기관과 협력</li>
+          </ul>
+          
+          <h3>논란 및 이슈</h3>
+          <ul>
+            <li>SEC와의 법적 분쟁 (증권성 여부)</li>
+            <li>중앙화 논란 (리플랩스의 대량 보유)</li>
+            <li>규제 불확실성으로 인한 변동성</li>
+          </ul>
+        `
+      },
+      blockchain: {
+        title: '블록체인',
+        content: `
+          <h3>개념</h3>
+          <p>블록체인은 거래 정보를 블록 단위로 저장하고, 이를 체인처럼 연결한 분산 데이터베이스 기술입니다. 중앙 기관 없이도 신뢰할 수 있는 거래를 가능하게 합니다.</p>
+          
+          <h3>핵심 특징</h3>
+          <ul>
+            <li><strong>분산화:</strong> 여러 노드에 데이터 분산 저장</li>
+            <li><strong>투명성:</strong> 모든 거래 내역 공개</li>
+            <li><strong>불변성:</strong> 한번 기록된 데이터는 변경 불가</li>
+            <li><strong>보안성:</strong> 암호화를 통한 높은 보안</li>
+          </ul>
+          
+          <h3>작동 원리</h3>
+          <ul>
+            <li>거래 발생 시 네트워크에 전파</li>
+            <li>채굴자들이 거래 검증</li>
+            <li>검증된 거래들을 블록으로 묶음</li>
+            <li>새 블록을 기존 체인에 연결</li>
+          </ul>
+        `
+      },
+      wallet: {
+        title: '암호화폐 지갑',
+        content: `
+          <h3>개념</h3>
+          <p>암호화폐 지갑은 디지털 자산을 저장하고 관리하는 도구입니다. 실제로는 암호화폐를 저장하는 것이 아니라 개인키를 안전하게 보관합니다.</p>
+          
+          <h3>지갑 유형</h3>
+          <ul>
+            <li><strong>하드웨어 지갑:</strong> 물리적 장치 (Ledger, Trezor)</li>
+            <li><strong>소프트웨어 지갑:</strong> 앱 또는 프로그램</li>
+            <li><strong>웹 지갑:</strong> 온라인 서비스</li>
+            <li><strong>종이 지갑:</strong> 개인키를 종이에 인쇄</li>
+          </ul>
+          
+          <h3>보안 고려사항</h3>
+          <ul>
+            <li>개인키 분실 시 복구 불가능</li>
+            <li>시드 문구 안전한 보관 필수</li>
+            <li>피싱 사이트 주의</li>
+            <li>정기적인 백업 권장</li>
+          </ul>
+        `
+      },
+      mining: {
+        title: '채굴 (Mining)',
+        content: `
+          <h3>개념</h3>
+          <p>채굴은 컴퓨터의 연산력을 사용하여 블록체인 네트워크의 거래를 검증하고 새로운 블록을 생성하는 과정입니다. 이 과정에서 새로운 암호화폐가 발행됩니다.</p>
+          
+          <h3>작업증명(PoW) 방식</h3>
+          <ul>
+            <li>복잡한 수학 문제 해결</li>
+            <li>가장 먼저 문제를 푼 채굴자가 보상 획득</li>
+            <li>네트워크 보안 강화</li>
+            <li>높은 전력 소모</li>
+          </ul>
+          
+          <h3>채굴 장비</h3>
+          <ul>
+            <li><strong>ASIC:</strong> 전용 채굴 하드웨어</li>
+            <li><strong>GPU:</strong> 그래픽카드 활용</li>
+            <li><strong>CPU:</strong> 일반 프로세서 (비효율적)</li>
+          </ul>
+          
+          <h3>수익성 고려사항</h3>
+          <ul>
+            <li>전기료와 채굴 수익 비교</li>
+            <li>장비 구입 비용</li>
+            <li>난이도 조정에 따른 수익 변동</li>
+          </ul>
+        `
+      },
+      marketcap: {
+        title: '시가총액',
+        content: `
+          <h3>개념</h3>
+          <p>시가총액은 암호화폐의 현재 가격에 총 발행량(또는 유통량)을 곱한 값으로, 해당 코인의 전체 시장 가치를 나타냅니다.</p>
+          
+          <h3>계산 방법</h3>
+          <p><strong>시가총액 = 현재 가격 × 총 발행량</strong></p>
+          <p>예: 비트코인 가격이 50,000달러이고 발행량이 1,900만 개라면<br>
+          시가총액 = 50,000 × 19,000,000 = 9,500억 달러</p>
+          
+          <h3>투자 관점</h3>
+          <ul>
+            <li><strong>대형주:</strong> 시총 100억 달러 이상 (안정성 높음)</li>
+            <li><strong>중형주:</strong> 시총 10억-100억 달러</li>
+            <li><strong>소형주:</strong> 시총 10억 달러 미만 (변동성 높음)</li>
+          </ul>
+          
+          <h3>한계점</h3>
+          <ul>
+            <li>실제 거래 가능한 물량과 차이</li>
+            <li>조작 가능성 (적은 거래량으로 가격 조작)</li>
+            <li>프로젝트의 실제 가치 반영 한계</li>
+          </ul>
+        `
+      },
+      rsi: {
+        title: 'RSI (상대강도지수)',
+        content: `
+          <h3>개념</h3>
+          <p>RSI는 일정 기간 동안의 가격 상승폭과 하락폭을 비교하여 과매수/과매도 상태를 판단하는 모멘텀 지표입니다.</p>
+          
+          <h3>계산 방법</h3>
+          <p><strong>RSI = 100 - (100 / (1 + RS))</strong><br>
+          RS = 평균 상승폭 / 평균 하락폭</p>
+          
+          <h3>해석 방법</h3>
+          <ul>
+            <li><strong>70 이상:</strong> 과매수 구간 (매도 고려)</li>
+            <li><strong>30 이하:</strong> 과매도 구간 (매수 고려)</li>
+            <li><strong>50 근처:</strong> 중립 구간</li>
+          </ul>
+          
+          <h3>활용 전략</h3>
+          <ul>
+            <li>다이버전스: RSI와 가격의 반대 움직임</li>
+            <li>과매수/과매도 구간에서의 역추세 매매</li>
+            <li>50선 돌파를 통한 추세 확인</li>
+          </ul>
+          
+          <h3>주의사항</h3>
+          <ul>
+            <li>강한 추세 시장에서는 신뢰도 하락</li>
+            <li>다른 지표와 함께 사용 권장</li>
+            <li>기간 설정에 따른 민감도 변화</li>
+          </ul>
+          
+          <canvas id="rsiChart" aria-label="RSI 차트" role="img"></canvas>
+        `
+      },
+      macd: {
+        title: 'MACD',
+        content: `
+          <h3>정의</h3>
+          <p>단기 지수이동평균(EMA)과 장기 지수이동평균의 차이를 이용해 추세와 모멘텀의 변화를 포착하는 지표입니다.</p>
+          
+          <h3>구성 요소</h3>
+          <ul>
+            <li><strong>MACD선:</strong> 12일 EMA - 26일 EMA</li>
+            <li><strong>시그널선:</strong> MACD선의 9일 EMA</li>
+            <li><strong>히스토그램:</strong> MACD선 - 시그널선</li>
+          </ul>
+          
+          <h3>해석</h3>
+          <ul>
+            <li><strong>골든 크로스:</strong> MACD선이 시그널선을 상향 돌파 시 매수 신호로 해석될 수 있습니다.</li>
+            <li><strong>데드 크로스:</strong> MACD선이 시그널선을 하향 돌파 시 매도 신호로 해석될 수 있습니다.</li>
+            <li><strong>다이버전스:</strong> 가격과 MACD의 반대 움직임</li>
+          </ul>
+          
+          <h3>활용 방법</h3>
+          <ul>
+            <li>추세 전환 시점 포착</li>
+            <li>모멘텀의 강도 측정</li>
+            <li>매수/매도 타이밍 결정</li>
+          </ul>
+          
+          <canvas id="macdChart" aria-label="MACD 차트" role="img"></canvas>
+        `
+      },
+      bb: {
+        title: 'Bollinger Bands',
+        content: `
+          <h3>정의</h3>
+          <p>가격의 변동성과 상대적 위치를 파악하는 밴드형 지표입니다. 중간선(이동평균선)과 상/하단선(표준편차)으로 구성됩니다.</p>
+          
+          <h3>구성 요소</h3>
+          <ul>
+            <li><strong>중간선:</strong> 20일 단순이동평균선</li>
+            <li><strong>상단선:</strong> 중간선 + (2 × 표준편차)</li>
+            <li><strong>하단선:</strong> 중간선 - (2 × 표준편차)</li>
+          </ul>
+          
+          <h3>해석</h3>
+          <ul>
+            <li><strong>밴드 폭 축소(Squeeze):</strong> 변동성이 낮아진 상태로, 곧 큰 가격 변동이 올 수 있음을 암시합니다.</li>
+            <li><strong>가격이 상단/하단 밴드 터치:</strong> 현재 추세가 계속될 가능성 또는 과매수/과매도 상태를 나타낼 수 있습니다.</li>
+            <li><strong>밴드 폭 확대:</strong> 변동성 증가 신호</li>
+          </ul>
+          
+          <h3>활용 전략</h3>
+          <ul>
+            <li>밴드 돌파 전략</li>
+            <li>평균 회귀 전략</li>
+            <li>변동성 브레이크아웃</li>
+          </ul>
+          
+          <canvas id="bbChart" aria-label="볼린저 밴드 차트" role="img"></canvas>
+        `
+      },
+      volume: {
+        title: '거래량',
+        content: `
+          <h3>개념</h3>
+          <p>거래량은 특정 기간 동안 거래된 암호화폐의 총량을 나타내며, 시장 참여자들의 관심도와 유동성을 측정하는 중요한 지표입니다.</p>
+          
+          <h3>거래량의 의미</h3>
+          <ul>
+            <li><strong>높은 거래량:</strong> 높은 관심도, 강한 추세 신호</li>
+            <li><strong>낮은 거래량:</strong> 관심도 저하, 추세 약화</li>
+            <li><strong>급증하는 거래량:</strong> 중요한 가격 변동 예고</li>
+          </ul>
+          
+          <h3>거래량 분석</h3>
+          <ul>
+            <li><strong>가격 상승 + 거래량 증가:</strong> 강세 신호</li>
+            <li><strong>가격 하락 + 거래량 증가:</strong> 약세 신호</li>
+            <li><strong>가격 변동 + 거래량 감소:</strong> 추세 약화</li>
+          </ul>
+          
+          <h3>활용 방법</h3>
+          <ul>
+            <li>브레이크아웃 확인: 지지/저항선 돌파 시 거래량 확인</li>
+            <li>추세 강도 측정: 거래량과 가격 움직임의 상관관계</li>
+            <li>매수/매도 타이밍: 거래량 급증 구간 포착</li>
+          </ul>
+        `
+      },
+      hodl: {
+        title: 'HODL 전략',
+        content: `
+          <h3>개념</h3>
+          <p>HODL은 "Hold On for Dear Life"의 줄임말로, 시장의 단기 변동성을 무시하고 장기간 암호화폐를 보유하는 투자 전략입니다.</p>
+          
+          <h3>전략의 배경</h3>
+          <ul>
+            <li>암호화폐 시장의 높은 변동성</li>
+            <li>시장 타이밍의 어려움</li>
+            <li>장기적 기술 발전에 대한 믿음</li>
+            <li>감정적 거래 방지</li>
+          </ul>
+          
+          <h3>장점</h3>
+          <ul>
+            <li>단순하고 실행하기 쉬운 전략</li>
+            <li>거래 수수료 절약</li>
+            <li>시장 타이밍 고민 불필요</li>
+            <li>장기적 복리 효과 기대</li>
+          </ul>
+          
+          <h3>단점</h3>
+          <ul>
+            <li>단기 수익 기회 상실</li>
+            <li>심리적 부담 (큰 손실 구간)</li>
+            <li>시장 상황 변화에 대응 부족</li>
+            <li>유동성 확보 어려움</li>
+          </ul>
+          
+          <h3>성공을 위한 조건</h3>
+          <ul>
+            <li>강한 신념과 인내심</li>
+            <li>장기적 관점 유지</li>
+            <li>여유 자금으로만 투자</li>
+            <li>정기적인 투자 검토</li>
+          </ul>
+        `
+      },
+      dca: {
+        title: '분할 매수 (DCA)',
+        content: `
+          <h3>개념</h3>
+          <p>Dollar Cost Averaging(DCA)는 정기적으로 일정 금액을 투자하는 전략으로, 시간 분산을 통해 평균 매수 단가를 낮추고 변동성 리스크를 줄입니다.</p>
+          
+          <h3>작동 원리</h3>
+          <p>예: 매월 10만원씩 비트코인 투자</p>
+          <ul>
+            <li>1월: 10만원 (가격 5만원) → 2개 구매</li>
+            <li>2월: 10만원 (가격 4만원) → 2.5개 구매</li>
+            <li>3월: 10만원 (가격 6만원) → 1.67개 구매</li>
+            <li>평균 매수 단가: 30만원 ÷ 6.17개 = 약 4만8천원</li>
+          </ul>
+          
+          <h3>장점</h3>
+          <ul>
+            <li>평균 매수 단가 효과</li>
+            <li>시장 타이밍 부담 해소</li>
+            <li>감정적 투자 방지</li>
+            <li>규칙적인 투자 습관 형성</li>
+          </ul>
+          
+          <h3>단점</h3>
+          <ul>
+            <li>상승장에서 수익률 제한</li>
+            <li>하락장 지속 시 지속적 손실</li>
+            <li>기회비용 발생 가능</li>
+          </ul>
+          
+          <h3>실행 방법</h3>
+          <ul>
+            <li>투자 금액과 주기 설정</li>
+            <li>자동 투자 서비스 활용</li>
+            <li>시장 상황과 무관하게 일관성 유지</li>
+            <li>정기적인 포트폴리오 검토</li>
+          </ul>
+        `
+      },
+      stoploss: {
+        title: '손절매',
+        content: `
+          <h3>개념</h3>
+          <p>손절매는 미리 설정한 손실 한도에 도달했을 때 자동으로 매도하는 주문 방식으로, 큰 손실을 방지하는 리스크 관리 도구입니다.</p>
+          
+          <h3>손절매 설정 방법</h3>
+          <ul>
+            <li><strong>고정 금액:</strong> 매수가 대비 -10% 등</li>
+            <li><strong>기술적 지표:</strong> 지지선 하향 돌파 시</li>
+            <li><strong>변동성 기반:</strong> ATR(평균진폭) 활용</li>
+            <li><strong>시간 기반:</strong> 일정 기간 후 강제 매도</li>
+          </ul>
+          
+          <h3>장점</h3>
+          <ul>
+            <li>감정적 판단 배제</li>
+            <li>큰 손실 방지</li>
+            <li>자본 보존</li>
+            <li>계획적 투자 가능</li>
+          </ul>
+          
+          <h3>단점</h3>
+          <ul>
+            <li>일시적 하락으로 인한 조기 매도</li>
+            <li>수수료 발생</li>
+            <li>변동성 장에서 잦은 실행</li>
+          </ul>
+          
+          <h3>효과적인 활용법</h3>
+          <ul>
+            <li>리스크 허용 한도에 맞는 설정</li>
+            <li>기술적 분석과 연계</li>
+            <li>트레일링 스톱 활용</li>
+            <li>정기적인 손절선 조정</li>
+          </ul>
+        `
+      },
+      candlestick: {
+        title: '캔들스틱 차트',
+        content: `
+          <h3>개념</h3>
+          <p>캔들스틱 차트는 일정 기간의 시가, 고가, 저가, 종가(OHLC)를 캔들 모양으로 표시한 차트로, 가격 움직임과 시장 심리를 직관적으로 파악할 수 있습니다.</p>
+          
+          <h3>캔들 구성 요소</h3>
+          <ul>
+            <li><strong>몸통(Body):</strong> 시가와 종가 사이의 구간</li>
+            <li><strong>위꼬리:</strong> 고가까지의 선</li>
+            <li><strong>아래꼬리:</strong> 저가까지의 선</li>
+            <li><strong>양봉:</strong> 종가 > 시가 (상승, 보통 초록색)</li>
+            <li><strong>음봉:</strong> 종가 < 시가 (하락, 보통 빨간색)</li>
+          </ul>
+          
+          <h3>주요 캔들 패턴</h3>
+          <ul>
+            <li><strong>도지:</strong> 시가와 종가가 거의 같음 (망설임)</li>
+            <li><strong>망치:</strong> 긴 아래꼬리 (반등 신호)</li>
+            <li><strong>역망치:</strong> 긴 위꼬리 (하락 전환)</li>
+            <li><strong>마라보즈:</strong> 꼬리 없는 긴 몸통 (강한 추세)</li>
+          </ul>
+          
+          <h3>복합 패턴</h3>
+          <ul>
+            <li><strong>엥걸핑:</strong> 이전 캔들을 완전히 감싸는 패턴</li>
+            <li><strong>별(Star):</strong> 갭을 두고 나타나는 작은 캔들</li>
+            <li><strong>해머:</strong> 바닥에서 나타나는 반전 신호</li>
+          </ul>
+        `
+      },
+      support: {
+        title: '지지선 & 저항선',
+        content: `
+          <h3>개념</h3>
+          <p>지지선은 가격 하락을 막는 심리적 가격대이고, 저항선은 가격 상승을 제한하는 가격대입니다. 이는 시장 참여자들의 심리가 반영된 중요한 기술적 지표입니다.</p>
+          
+          <h3>지지선 (Support)</h3>
+          <ul>
+            <li>가격 하락 시 매수 관심이 몰리는 구간</li>
+            <li>과거 저점들을 연결한 선</li>
+            <li>돌파 시 추가 하락 가능성</li>
+            <li>횟수가 많을수록 신뢰도 증가</li>
+          </ul>
+          
+          <h3>저항선 (Resistance)</h3>
+          <ul>
+            <li>가격 상승 시 매도 압력이 나타나는 구간</li>
+            <li>과거 고점들을 연결한 선</li>
+            <li>돌파 시 추가 상승 가능성</li>
+            <li>심리적 가격대 (정수 단위 등)</li>
+          </ul>
+          
+          <h3>활용 전략</h3>
+          <ul>
+            <li><strong>지지선 근처 매수:</strong> 반등 기대</li>
+            <li><strong>저항선 근처 매도:</strong> 조정 대비</li>
+            <li><strong>돌파 확인 후 추격:</strong> 브레이크아웃 전략</li>
+            <li><strong>거래량과 함께 분석:</strong> 돌파 신뢰도 확인</li>
+          </ul>
+          
+          <h3>주의사항</h3>
+          <ul>
+            <li>가짜 돌파(False Breakout) 가능성</li>
+            <li>시장 상황에 따른 신뢰도 변화</li>
+            <li>다른 기술적 지표와 병행 분석 필요</li>
+          </ul>
+        `
+      },
+      ma: {
+        title: '이동평균선',
+        content: `
+          <h3>개념</h3>
+          <p>이동평균선은 일정 기간의 평균 가격을 연결한 선으로, 가격의 노이즈를 제거하고 추세의 방향을 명확하게 파악하는 데 사용됩니다.</p>
+          
+          <h3>종류</h3>
+          <ul>
+            <li><strong>단순이동평균(SMA):</strong> 모든 가격에 동일한 가중치</li>
+            <li><strong>지수이동평균(EMA):</strong> 최근 가격에 더 큰 가중치</li>
+            <li><strong>가중이동평균(WMA):</strong> 선형적으로 증가하는 가중치</li>
+          </ul>
+          
+          <h3>주요 기간</h3>
+          <ul>
+            <li><strong>단기:</strong> 5일, 10일, 20일선</li>
+            <li><strong>중기:</strong> 60일, 120일선</li>
+            <li><strong>장기:</strong> 200일, 300일선</li>
+          </ul>
+          
+          <h3>매매 신호</h3>
+          <ul>
+            <li><strong>골든크로스:</strong> 단기선이 장기선을 상향 돌파 (매수 신호)</li>
+            <li><strong>데드크로스:</strong> 단기선이 장기선을 하향 돌파 (매도 신호)</li>
+            <li><strong>정배열:</strong> 단기 > 중기 > 장기 (상승 추세)</li>
+            <li><strong>역배열:</strong> 장기 > 중기 > 단기 (하락 추세)</li>
+          </ul>
+          
+          <h3>활용 전략</h3>
+          <ul>
+            <li>추세 확인: 이동평균선의 기울기와 배열</li>
+            <li>지지/저항: 이동평균선이 지지선 또는 저항선 역할</li>
+            <li>매매 타이밍: 가격과 이동평균선의 괴리율</li>
+          </ul>
+          
+          <h3>한계점</h3>
+          <ul>
+            <li>후행 지표로 늦은 신호</li>
+            <li>횡보장에서 잦은 거짓 신호</li>
+            <li>급격한 가격 변동 시 따라가기 어려움</li>
+          </ul>
+        `
+      }
+    };
+    
+    // 차트 생성 함수들
     function createRSIChart(){
       var el = document.getElementById('rsiChart');
-      if(!el) return null;
+      if(!el) return;
       var ctx = el.getContext('2d');
       return new Chart(ctx, {
         type: 'line',
@@ -682,13 +1375,14 @@
           }]
         },
         options:{
-          scales:{ y:{ min:0, max:100, title:{display:true, text:'RSI Level'}, ticks:{stepSize:10} } },
+          responsive: true,
+          scales:{ y:{ min:0, max:100, title:{display:true, text:'RSI Level'}, ticks:{stepSize:10, color: '#999'}, grid:{color: 'rgba(255,255,255,0.1)'} }, x: {ticks:{color: '#999'}, grid:{color: 'rgba(255,255,255,0.1)'}} },
           plugins:{
-            legend:{display:true},
+            legend:{labels: {color: '#ddd'}},
             annotation:{
               annotations:{
-                overboughtBox:{ type:'box', yMin:70, yMax:90, xMin:4, xMax:7, backgroundColor:'rgba(255,0,0,0.18)', borderColor:'rgba(255,0,0,0.35)', borderWidth:1, label:{content:'과매수', enabled:true, position:'start', backgroundColor:'rgba(255,0,0,0.22)', color:'#fff', font:{size:12, weight:'600'}, padding:6 } },
-                oversoldBox:{ type:'box', yMin:10, yMax:30, xMin:10, xMax:14, backgroundColor:'rgba(0,0,255,0.12)', borderColor:'rgba(0,0,255,0.28)', borderWidth:1, label:{content:'과매도', enabled:true, position:'start', backgroundColor:'rgba(0,0,255,0.14)', color:'#fff', font:{size:12, weight:'600'}, padding:6 } }
+                overboughtBox:{ type:'box', yMin:70, yMax:100, backgroundColor:'rgba(255,82,82,0.15)', borderColor:'transparent' },
+                oversoldBox:{ type:'box', yMin:0, yMax:30, backgroundColor:'rgba(72,133,237,0.15)', borderColor:'transparent' }
               }
             }
           }
@@ -698,7 +1392,7 @@
 
     function createMACDChart(){
       var el = document.getElementById('macdChart');
-      if(!el) return null;
+      if(!el) return;
       var ctx = el.getContext('2d');
       return new Chart(ctx, {
         type: 'bar',
@@ -707,111 +1401,86 @@
           datasets:[
             { type:'line', label:'MACD', data:[0.5,0.7,0.4,0.6,0.9,1.3,1.1,0.8,0.6,0.4], borderColor:'rgba(255,99,132,1)', borderWidth:2, fill:false, tension:0.3 },
             { type:'line', label:'Signal', data:[0.4,0.6,0.5,0.55,0.8,1.1,1.0,0.75,0.55,0.5], borderColor:'rgba(54,162,235,1)', borderDash:[5,5], borderWidth:2, fill:false, tension:0.3 },
-            { type:'bar', label:'Histogram', data:[0.1,0.1,-0.1,0.05,0.1,0.2,0.1,0.05,0.05,-0.1], backgroundColor:'rgba(255,206,86,0.7)' }
+            { type:'bar', label:'Histogram', data:[0.1,0.1,-0.1,0.05,0.1,0.2,0.1,0.05,0.05,-0.1], backgroundColor: (context) => { const value = context.dataset.data[context.dataIndex]; return value >= 0 ? 'rgba(255,206,86,0.7)' : 'rgba(150, 150, 150, 0.7)';} }
           ]
         },
-        options:{ scales:{ y:{ beginAtZero:false, title:{display:true, text:'Value'} } } }
+        options:{ responsive: true, scales:{ y:{ beginAtZero:false, title:{display:true, text:'Value'}, ticks:{color: '#999'}, grid:{color: 'rgba(255,255,255,0.1)'} }, x: {ticks:{color: '#999'}, grid:{color: 'rgba(255,255,255,0.1)'}} }, plugins:{legend:{labels: {color: '#ddd'}}} }
       });
     }
 
     function createBBChart(){
       var el = document.getElementById('bbChart');
-      if(!el) return null;
+      if(!el) return;
       var ctx = el.getContext('2d');
       var days = Array.from({length:20}, (_,i)=>'Day '+(i+1));
       var middle = [50,51,49,52,53,54,53,52,54,55,56,58,57,59,60,59,61,62,60,61];
-      var upper = middle.map(m=>m+2), lower = middle.map(m=>m-2);
+      var upper = middle.map(m=>m+5), lower = middle.map(m=>m-5);
       var price = [51,53,48,50,55,56,52,50,57,58,60,61,58,60,62,60,63,64,59,60];
       return new Chart(ctx, {
         type:'line',
         data:{
           labels:days,
           datasets:[
-            { label:'Price', data:price, borderColor:'rgba(75,192,192,1)', borderWidth:2, fill:false, tension:0.3 },
-            { label:'Middle Band (SMA)', data:middle, borderColor:'rgba(255,159,64,1)', borderWidth:1.5, fill:false, tension:0.3 },
-            { label:'Upper Band', data:upper, borderColor:'rgba(255,205,86,1)', borderDash:[5,5], borderWidth:1, fill:'+1' },
-            { label:'Lower Band', data:lower, borderColor:'rgba(255,205,86,1)', borderDash:[5,5], borderWidth:1, fill:'-1' }
+            { label:'Price', data:price, borderColor:'rgba(75,192,192,1)', borderWidth:2, fill:false, tension:0.3, pointRadius: 2 },
+            { label:'Middle Band (SMA)', data:middle, borderColor:'rgba(255,159,64,1)', borderWidth:1.5, fill:false, tension:0.3, pointRadius: 0 },
+            { label:'Upper Band', data:upper, borderColor:'rgba(255,205,86,0.5)', borderWidth:1, fill:'+1', backgroundColor: 'rgba(255,205,86,0.1)', pointRadius: 0 },
+            { label:'Lower Band', data:lower, borderColor:'rgba(255,205,86,0.5)', borderWidth:1, fill:'-1', backgroundColor: 'rgba(255,205,86,0.1)', pointRadius: 0 }
           ]
         },
-        options:{ scales:{ y:{ beginAtZero:false, title:{display:true, text:'Price'} } }, plugins:{ filler:{ propagate:true } } }
+        options:{ responsive: true, scales:{ y:{ beginAtZero:false, title:{display:true, text:'Price'}, ticks:{color: '#999'}, grid:{color: 'rgba(255,255,255,0.1)'} }, x: {ticks:{color: '#999'}, grid:{color: 'rgba(255,255,255,0.1)'}} }, plugins:{ filler:{ propagate:false }, legend:{labels: {color: '#ddd'}}} }
       });
     }
 
-    function initChartByPage(id){
-      if(id === 'rsi' && !charts.rsi) charts.rsi = createRSIChart();
-      if(id === 'macd' && !charts.macd) charts.macd = createMACDChart();
-      if(id === 'bb' && !charts.bb) charts.bb = createBBChart();
-    }
+    // 카드 클릭 이벤트
+    document.querySelectorAll('.encyclopedia-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const modalKey = card.dataset.modal;
+        const data = modalData[modalKey];
+        
+        if (data) {
+          modalTitle.textContent = data.title;
+          modalBody.innerHTML = data.content;
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
 
-    function showLanding(push){
-      contentPages.forEach(p=>{ p.classList.remove('active'); p.setAttribute('aria-hidden','true'); });
-      landing.style.display = '';
-      const intro = document.getElementById('intro-crypto-basic'); if(intro) intro.style.display = '';
-      topbar.classList.add('hidden'); topbar.setAttribute('aria-hidden','true');
-      if(push){ try{history.pushState({page:'landing'}, '', location.pathname);}catch(e){} }
-      window.scrollTo({top:0, behavior:'auto'});
-    }
-
-    function showPage(id, push){
-      var page = document.getElementById(id); if(!page) return;
-      landing.style.display = 'none';
-      contentPages.forEach(p=>{ if(p.id===id){ p.classList.add('active'); p.removeAttribute('aria-hidden'); } else { p.classList.remove('active'); p.setAttribute('aria-hidden','true'); } });
-      const intro = document.getElementById('intro-crypto-basic'); if(intro) intro.style.display='none';
-      topbar.classList.remove('hidden'); topbar.setAttribute('aria-hidden','false');
-      var title = page.querySelector('h2') ? page.querySelector('h2').innerText : '';
-      topbarTitle.textContent = title;
-      if(push){ try{history.pushState({page:id}, '', '#'+id);}catch(e){} } else { try{history.replaceState({page:id}, '', '#'+id);}catch(e){} }
-      setTimeout(() => { if(page.focus) page.focus(); }, 80);
-      initChartByPage(id);
-    }
-
-    document.querySelectorAll('.cta').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        e.preventDefault();
-        var target = btn.getAttribute('data-target');
-        if(target) showPage(target, true);
+          // 차트가 필요한 모달인 경우 차트 생성
+          if (modalKey === 'rsi') {
+            activeChart = createRSIChart();
+          } else if (modalKey === 'macd') {
+            activeChart = createMACDChart();
+          } else if (modalKey === 'bb') {
+            activeChart = createBBChart();
+          }
+        }
       });
     });
 
-    function attachClickable(selector){
-      document.querySelectorAll(selector).forEach(el=>{
-        var target = el.getAttribute('data-target') || (el.querySelector('.cta') && el.querySelector('.cta').getAttribute('data-target'));
-        if(!target) return;
-        if(!el.hasAttribute('role')) el.setAttribute('role','button');
-        if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
-        el.addEventListener('click', e=>{
-          if(e.target.closest && e.target.closest('.cta')) return;
-          showPage(target, true);
-        });
-        el.addEventListener('keypress', e=>{
-          if(e.key==='Enter' || e.key===' '){ e.preventDefault(); showPage(target, true); }
-        });
-      });
+    function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        // 모달 닫을 때 차트 파괴
+        if (activeChart) {
+            activeChart.destroy();
+            activeChart = null;
+        }
     }
 
-    attachClickable('.tile');
-    attachClickable('.intro-card');
+    // 모달 닫기
+    closeBtn.addEventListener('click', closeModal);
 
-    backToTocBtn.addEventListener('click', e=>{ e.preventDefault(); showLanding(true); });
-
-    window.addEventListener('load', ()=>{
-      contentPages = Array.from(document.querySelectorAll('.content-page'));
-      var hash = location.hash.replace('#','');
-      if(hash){
-        var el = document.getElementById(hash);
-        if(el && el.classList.contains('content-page')) showPage(hash, false);
-        else showLanding(false);
-      }else showLanding(false);
+    // 모달 외부 클릭 시 닫기
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
     });
 
-    window.addEventListener('popstate', e=>{
-      var state = e.state;
-      if(!state){ showLanding(false); return; }
-      if(state.page === 'landing') showLanding(false);
-      else if(state.page) showPage(state.page, false);
-      else showLanding(false);
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
     });
-  })();
   </script>
 </body>
 </html>

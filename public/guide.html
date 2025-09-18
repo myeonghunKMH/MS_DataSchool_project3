@@ -6,174 +6,364 @@
   <title>서비스 가이드 | ITC</title>
   <link rel="stylesheet" href="/style.css" />
   <style>
-    :root { color-scheme: dark; }
+    :root{
+      color-scheme: dark;
+      --accent:#ffd166;
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
+    }
+
+    /* ===== Global ===== */
+    html,body{ height:100%; }
     body{
-      margin:0; background:#0b0b0b; color:#e8e8e8;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
     }
+    *{ box-sizing:border-box; }
 
-    /* 좌상단 고정 로고 */
-    header{ position:fixed; top:16px; left:16px; z-index:10; }
-    header img{
+    /* ===== Header ===== */
+    header{
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
       width:120px; height:auto;
-      filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));
-      user-select:none; -webkit-user-drag:none;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn img{ width:18px; height:18px; object-fit:contain; display:block; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
     }
 
-    /* 레이아웃 (목차 제거 → 단일 컬럼) */
-    .wrap{
-      width:min(1100px,92vw);
-      margin:100px auto 60px;
-      display:grid; grid-template-columns:1fr; gap:24px;
-      padding:0 0;
+    /* ===== Layout ===== */
+    main{
+      width:min(1200px,92vw);
+      margin:100px auto 48px;
+      display:flex; flex-direction:column; gap:24px;
     }
 
-    /* 본문 */
-    .content{ display:flex; flex-direction:column; gap:18px; }
+    /* ===== Hero Section ===== */
     .hero{
       background:
-        radial-gradient(900px 220px at 10% -40%, rgba(59,130,246,.15), transparent 60%),
-        radial-gradient(800px 200px at 120% 120%, rgba(16,185,129,.12), transparent 60%),
-        #121212;
-      border:1px solid #262626; border-radius:16px; padding:22px 20px;
-      box-shadow:0 12px 30px rgba(0,0,0,.22);
+        radial-gradient(900px 220px at 10% -40%, rgba(255,209,102,.15), transparent 60%),
+        radial-gradient(800px 200px at 120% 120%, rgba(255,255,255,.12), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,0));
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:32px 28px;
+      box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+      text-align:center;
+      position:relative;
     }
-    .hero h1{ margin:0 0 6px; font-size:clamp(24px,3.2vw,34px); font-weight:800; }
-    .lead{ margin:0; color:#cfcfcf; line-height:1.6; }
+    .hero::after{
+      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .hero h1{
+      margin:0 0 12px;
+      font-size:clamp(28px,4vw,42px);
+      font-weight:900;
+      letter-spacing:.3px;
+      background:linear-gradient(95deg,
+        rgba(255,255,255,1) 0%,
+        rgba(240,240,240,.85) 18%,
+        rgba(255,255,255,.98) 45%,
+        rgba(210,210,210,.65) 65%,
+        rgba(255,255,255,1) 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow),.22))
+              drop-shadow(0 0 24px rgba(var(--glow),.20));
+    }
+    .lead{
+      margin:0;
+      color:#cfcfcf;
+      font-size:clamp(15px,2.2vw,18px);
+      line-height:1.6;
+      font-weight:500;
+    }
 
+    /* ===== Cards ===== */
     .card{
-      background:#141414; border:1px solid #262626; border-radius:14px; padding:18px 16px;
-      box-shadow:0 8px 22px rgba(0,0,0,.18);
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,0));
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:24px 22px;
+      box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+      overflow:hidden;
     }
-    .card h2{ margin:0 0 10px; font-size:20px; }
-    ul{ margin:10px 0 0 18px; }
+    .card::after{
+      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .card:hover{
+      transform:translateY(-4px);
+      border-color:rgba(var(--glow),.25);
+      box-shadow:0 12px 32px rgba(0,0,0,.4), 0 0 20px rgba(var(--glow),.15);
+    }
 
+    .card h2{
+      margin:0 0 16px;
+      font-size:clamp(20px,2.8vw,24px);
+      font-weight:800;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .card p{
+      color:#b8b8b8;
+      line-height:1.7;
+      margin:0 0 16px;
+    }
+
+    .card ul{
+      margin:12px 0 0 0;
+      padding-left:20px;
+      list-style:none;
+    }
+    .card li{
+      position:relative;
+      color:#d0d0d0;
+      line-height:1.6;
+      margin-bottom:8px;
+      padding-left:8px;
+    }
+    .card li::before{
+      content:"•";
+      position:absolute;
+      left:-12px;
+      color:var(--accent);
+      font-weight:bold;
+    }
+
+    /* ===== Callout ===== */
     .callout{
-      border-left:4px solid #ffd34d; background:#19160a; color:#ffe8a6;
-      padding:12px 14px; border-radius:8px; margin:12px 0 4px;
+      background:linear-gradient(135deg, rgba(255,209,102,.12), rgba(255,209,102,.06));
+      border:1px solid rgba(255,209,102,.25);
+      border-left:4px solid var(--accent);
+      border-radius:12px;
+      padding:16px 18px;
+      margin:20px 0 12px;
+      color:#ffe8a6;
+      font-weight:500;
+      box-shadow:0 4px 12px rgba(255,209,102,.1);
     }
 
-    /* 뒤로가기 */
-    .back{
-      align-self:flex-start; display:inline-flex; gap:8px; align-items:center;
-      padding:10px 14px; border-radius:10px; border:1px solid #2a2a2a; background:#111;
-      color:#eaeaea; text-decoration:none; font-weight:700;
+    /* ===== Feature Grid ===== */
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+      gap:16px;
+      margin-top:20px;
     }
-    .back:hover{ background:#161616; }
+    .feature-item{
+      background:rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:18px 16px;
+      transition:.3s;
+    }
+    .feature-item:hover{
+      background:rgba(255,255,255,.04);
+      border-color:rgba(255,209,102,.2);
+      transform:translateY(-2px);
+    }
+    .feature-item h3{
+      margin:0 0 8px;
+      font-size:16px;
+      font-weight:700;
+      color:#fff;
+    }
+    .feature-item p{
+      margin:0;
+      font-size:14px;
+      color:#c0c0c0;
+      line-height:1.5;
+    }
+
+    /* ===== Back Button ===== */
+    .back{
+      align-self:flex-start;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      height:40px;
+      padding:0 16px;
+      border-radius:11px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--stroke);
+      color:#f2f2f2;
+      text-decoration:none;
+      font-weight:800;
+      transition:.24s;
+      margin-top:12px;
+    }
+    .back:hover{
+      border-color:rgba(var(--glow),.30);
+      box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35);
+      color:#fff;
+      transform:translateY(-1px);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px){
+      main{ margin:90px auto 40px; }
+      .hero{ padding:24px 20px; }
+      .card{ padding:20px 18px; }
+      .feature-grid{ grid-template-columns:1fr; }
+    }
+
+    /* ===== Footer ===== */
+    footer{
+      display:flex; justify-content:center; margin:32px 0 40px;
+      color:#9a9a9a; font-size:12px; text-align:center; line-height:1.4;
+      padding:0 16px;
+    }
   </style>
 </head>
 <body>
-  <header><a href="index.html"><img src="/images/logo.png" alt="ITC 로고"></a></header>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="index.html">Main</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
+    </nav>
+  </header>
 
-  <main class="wrap">
-    <section class="content">
-        <section class="hero" id="intro">
-            <h1>📘 서비스 사용 가이드</h1>
-            <p class="lead">
-                암호화폐 모의 투자 서비스를 안전하게, 빠르게 익히기 위한 안내서입니다.<br>
-                아래 섹션을 차례대로 살펴보고 바로 실습으로 넘어가 보세요.
-            </p>
-        </section>
-
-        <section class="card">
-            <h2 id="service-intro">🚀 서비스 소개</h2>
-            <p>
-                암호화폐 시장은 24시간 거래·높은 변동성·규제 불확실성 등으로 초보자에게 진입장벽이 큽니다.<br>
-                본 서비스는 이러한 환경에서 <b>안전하게 연습</b>하고 <b>시장 이해</b>를 돕도록 설계되었습니다.
-            </p>
-            <p>
-                실제 데이터를 활용한 시뮬레이션부터 실시간 뉴스, 교육 자료, 모의 투자까지<br>
-                암호화폐 투자에 필요한 모든 기능을 제공합니다.
-            </p>
-        </section>
-
-        <section class="card" id="simulation">
-            <h2>1️⃣ 시뮬레이션</h2>
-            <ul>
-                <li>과거의 실제 암호화폐 거래 데이터를 기반으로 <b>시나리오별 시뮬레이션</b> 제공</li>
-                <li>중요 사건이 발생했던 시점을 불러와 체험</li>
-                <li>사용자가 투자금·매수/매도 결정을 직접 선택</li>
-                <li>실제 과거 데이터 흐름으로 결과 확인 → "그때 투자했다면?" 학습</li>
-            </ul>
-            <div class="callout">💡 과거 사건의 시장 영향과, 나의 의사결정이 결과에 미치는 효과를 체험합니다.</div>
-        </section>
-
-        <section class="card" id="news">
-            <h2>2️⃣ 뉴스 한눈에 보기</h2>
-            <ul>
-                <li>네이버에서 <b>실시간으로 크롤링</b>한 가상화폐 관련 최신 뉴스 제공</li>
-                <li>시장에 영향을 미치는 주요 이슈를 <b>한 곳에서 빠르게 확인</b></li>
-                <li>카테고리별로 정리된 뉴스로 효율적인 정보 수집</li>
-                <li>투자 결정에 필요한 <b>시장 동향과 트렌드</b>를 실시간으로 파악</li>
-            </ul>
-            <div class="callout">📰 최신 뉴스와 시장 정보를 놓치지 않고 투자 전략에 활용하세요.</div>
-        </section>
-
-        <section class="card" id="encyclopedia">
-            <h2>3️⃣ 암호화폐 백과사전</h2>
-            <ul>
-                <li><b>대표 암호화폐</b>들의 특징과 기술적 배경 상세 설명</li>
-                <li>블록체인, 채굴, 지갑 등 <b>핵심 개념 정리</b></li>
-                <li>시가총액, RSI, 이동평균선 등 <b>투자 지표 해설</b></li>
-                <li>초보자도 이해하기 쉬운 <b>체계적인 학습 자료</b> 제공</li>
-            </ul>
-            <div class="callout">📚 암호화폐 투자에 필요한 기초 지식부터 심화 내용까지 체계적으로 학습하세요.</div>
-            
-            <div class="feature-grid">
-                <div class="feature-item">
-                    <h3> 주요 코인 정보</h3>
-                    <p>비트코인, 이더리움 등 주요 암호화폐의 특징과 활용 사례</p>
-                </div>
-                <div class="feature-item">
-                    <h3>📊 투자 지표 설명</h3>
-                    <p>차트 분석과 투자 판단에 필요한 각종 지표들의 의미와 활용법</p>
-                </div>
-                <div class="feature-item">
-                    <h3>🔍 개념 이해</h3>
-                    <p>블록체인 기술과 암호화폐 생태계의 핵심 개념들</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="card" id="practice">
-            <h2>4️⃣ 실시간 모의 투자 연습</h2>
-            <ul>
-                <li><b>업비트의 실시간 데이터</b>를 기반으로 한 실전 모의 투자</li>
-                <li>실제 거래소와 동일한 <b>인터페이스와 기능</b> 제공</li>
-                <li>가상 자금으로 <b>리스크 없이</b> 투자 전략 테스트</li>
-                <li>주문/체결/잔고 관리 등 <b>실전과 동일한 거래 경험</b></li>
-                <li>나의 거래 기록과 수익률을 통한 <b>투자 성과 분석</b></li>
-            </ul>
-            <div class="callout">💰 실제 자금 투자 전, 충분한 연습으로 자신만의 투자 전략을 완성하세요.</div>
-        </section>
-
-        <section class="card" id="report">
-            <h2>5️⃣ 나의 투자 보고서</h2>
-            <ul>
-                <li>모든 거래 히스토리를 바탕으로 한 <b>상세 투자 분석 리포트</b></li>
-                <li>수익률, 승률, 주요 거래 패턴 등 <b>투자 성향 분석</b></li>
-                <li>개선이 필요한 투자 습관과 <b>맞춤형 조언</b> 제공</li>
-                <li>실제 투자 전 나의 강점과 약점을 파악하여 <b>투자 전략 개선</b></li>
-            </ul>
-            <div class="callout">📈 데이터 기반의 객관적인 분석으로 더 나은 투자자로 성장하세요.</div>
-        </section>
-
-        <section class="card" id="start">
-            <h2>🎯 지금 시작하기</h2>
-            <p>
-                위의 모든 서비스는 <b>무료</b>로 이용 가능합니다.<br>
-                실제 투자에 앞서 충분한 연습과 학습을 통해 암호화폐 시장을 이해하고,<br>
-                자신만의 투자 전략을 세워보세요.
-            </p>
-            <div class="callout">
-                ⚡ 암호화폐 투자는 높은 수익 기회와 함께 큰 리스크를 동반합니다.<br>
-                모의 투자로 충분히 연습한 후 신중하게 실전 투자를 시작하세요.
-            </div>
-        </section>
+  <main>
+    <section class="hero" id="intro">
+      <h1>서비스 사용 가이드</h1>
+      <p class="lead">
+        암호화폐 모의 투자 서비스를 안전하게, 빠르게 익히기 위한 안내서입니다.<br>
+        아래 섹션을 차례대로 살펴보고 바로 실습으로 넘어가 보세요.
+      </p>
     </section>
 
-      <a class="back" href="/index.html">← 메인으로</a>
+    <section class="card">
+      <h2 id="service-intro">🚀 서비스 소개</h2>
+      <p>
+        암호화폐 시장은 24시간 거래·높은 변동성·규제 불확실성 등으로 초보자에게 진입장벽이 큽니다.<br>
+        본 서비스는 이러한 환경에서 <strong>안전하게 연습</strong>하고 <strong>시장 이해</strong>를 돕도록 설계되었습니다.
+      </p>
+      <p>
+        실제 데이터를 활용한 시뮬레이션부터 실시간 뉴스, 교육 자료, 모의 투자까지<br>
+        암호화폐 투자에 필요한 모든 기능을 제공합니다.
+      </p>
     </section>
+
+    <section class="card" id="simulation">
+      <h2>1️⃣ 시뮬레이션</h2>
+      <ul>
+        <li>과거의 실제 암호화폐 거래 데이터를 기반으로 <strong>시나리오별 시뮬레이션</strong> 제공</li>
+        <li>중요 사건이 발생했던 시점을 불러와 체험</li>
+        <li>사용자가 투자금·매수/매도 결정을 직접 선택</li>
+        <li>실제 과거 데이터 흐름으로 결과 확인 → "그때 투자했다면?" 학습</li>
+      </ul>
+      <div class="callout">💡 과거 사건의 시장 영향과, 나의 의사결정이 결과에 미치는 효과를 체험합니다.</div>
+    </section>
+
+    <section class="card" id="news">
+      <h2>2️⃣ 뉴스 한눈에 보기</h2>
+      <ul>
+        <li>네이버에서 <strong>실시간으로 크롤링</strong>한 가상화폐 관련 최신 뉴스 제공</li>
+        <li>시장에 영향을 미치는 주요 이슈를 <strong>한 곳에서 빠르게 확인</strong></li>
+        <li>카테고리별로 정리된 뉴스로 효율적인 정보 수집</li>
+        <li>투자 결정에 필요한 <strong>시장 동향과 트렌드</strong>를 실시간으로 파악</li>
+      </ul>
+      <div class="callout">📰 최신 뉴스와 시장 정보를 놓치지 않고 투자 전략에 활용하세요.</div>
+    </section>
+
+    <section class="card" id="encyclopedia">
+      <h2>3️⃣ 암호화폐 백과사전</h2>
+      <ul>
+        <li><strong>대표 암호화폐</strong>들의 특징과 기술적 배경 상세 설명</li>
+        <li>블록체인, 채굴, 지갑 등 <strong>핵심 개념 정리</strong></li>
+        <li>시가총액, RSI, 이동평균선 등 <strong>투자 지표 해설</strong></li>
+        <li>초보자도 이해하기 쉬운 <strong>체계적인 학습 자료</strong> 제공</li>
+      </ul>
+      <div class="callout">📚 암호화폐 투자에 필요한 기초 지식부터 심화 내용까지 체계적으로 학습하세요.</div>
+      
+      <div class="feature-grid">
+        <div class="feature-item">
+          <h3>🪙 주요 코인 정보</h3>
+          <p>비트코인, 이더리움 등 주요 암호화폐의 특징과 활용 사례</p>
+        </div>
+        <div class="feature-item">
+          <h3>📊 투자 지표 설명</h3>
+          <p>차트 분석과 투자 판단에 필요한 각종 지표들의 의미와 활용법</p>
+        </div>
+        <div class="feature-item">
+          <h3>🔍 개념 이해</h3>
+          <p>블록체인 기술과 암호화폐 생태계의 핵심 개념들</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="practice">
+      <h2>4️⃣ 실시간 모의 투자 연습</h2>
+      <ul>
+        <li><strong>업비트의 실시간 데이터</strong>를 기반으로 한 실전 모의 투자</li>
+        <li>실제 거래소와 동일한 <strong>인터페이스와 기능</strong> 제공</li>
+        <li>가상 자금으로 <strong>리스크 없이</strong> 투자 전략 테스트</li>
+        <li>주문/체결/잔고 관리 등 <strong>실전과 동일한 거래 경험</strong></li>
+        <li>나의 거래 기록과 수익률을 통한 <strong>투자 성과 분석</strong></li>
+      </ul>
+      <div class="callout">💰 실제 자금 투자 전, 충분한 연습으로 자신만의 투자 전략을 완성하세요.</div>
+    </section>
+
+    <section class="card" id="report">
+      <h2>5️⃣ 나의 투자 보고서</h2>
+      <ul>
+        <li>모든 거래 히스토리를 바탕으로 한 <strong>상세 투자 분석 리포트</strong></li>
+        <li>수익률, 승률, 주요 거래 패턴 등 <strong>투자 성향 분석</strong></li>
+        <li>개선이 필요한 투자 습관과 <strong>맞춤형 조언</strong> 제공</li>
+        <li>실제 투자 전 나의 강점과 약점을 파악하여 <strong>투자 전략 개선</strong></li>
+      </ul>
+      <div class="callout">📈 데이터 기반의 객관적인 분석으로 더 나은 투자자로 성장하세요.</div>
+    </section>
+
+    <section class="card" id="start">
+      <h2>🎯 지금 시작하기</h2>
+      <p>
+        위의 모든 서비스는 <strong>무료</strong>로 이용 가능합니다.<br>
+        실제 투자에 앞서 충분한 연습과 학습을 통해 암호화폐 시장을 이해하고,<br>
+        자신만의 투자 전략을 세워보세요.
+      </p>
+      <div class="callout">
+        ⚡ 암호화폐 투자는 높은 수익 기회와 함께 큰 리스크를 동반합니다.<br>
+        모의 투자로 충분히 연습한 후 신중하게 실전 투자를 시작하세요.
+      </div>
+    </section>
+
+    <a class="back" href="index.html">← 메인으로</a>
   </main>
+
+  <footer>
+    본 서비스는 학습과 연습을 목적으로 제공되는 모의투자 시스템입니다.<br>
+    제공되는 데이터와 시뮬레이션 결과는 실제 시장과 다를 수 있으며, 이로 인해 발생하는 모든 손실과 불이익에 대해서 운영자는 책임을 지지 않습니다.<br>
+    본 서비스는 투자 권유가 아니며, 실제 투자를 결정할 때는 이용자 본인의 판단과 책임에 따라야 합니다.
+  </footer>
 </body>
 </html>
