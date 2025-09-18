@@ -86,13 +86,6 @@ class OrderMatchingEngine {
 
       if (executableQuantity > 0.00000001) {
         // 최소 실행 수량 체크
-        console.log(
-          `💰 매수 체결: ${
-            buyOrder.market
-          } - 가격: ${executionPrice.toLocaleString()}, 수량: ${executableQuantity}, 남은수량: ${(
-            remainingQuantity - executableQuantity
-          ).toFixed(8)}`
-        );
 
         await this.executeTrade(
           buyOrder,
@@ -131,13 +124,6 @@ class OrderMatchingEngine {
       const executionPrice = bid.price;
 
       if (executableQuantity > 0.00000001) {
-        console.log(
-          `💸 매도 체결: ${
-            sellOrder.market
-          } - 가격: ${executionPrice.toLocaleString()}, 수량: ${executableQuantity}, 남은수량: ${(
-            remainingQuantity - executableQuantity
-          ).toFixed(8)}`
-        );
 
         await this.executeTrade(
           sellOrder,
@@ -205,7 +191,9 @@ class OrderMatchingEngine {
 
       // 최종 체결시에만 로그 출력 및 알림 전송
       if (status === "filled") {
-        console.log(`✅ [완료] ${order.market} ${order.side === 'bid' ? '매수' : '매도'} 체결 - 주문ID: ${order.id}, 체결가: ${executionPrice.toLocaleString()}원`);
+
+        // 완전체결된 주문을 transactions에 저장
+        await this.db.saveCompletedOrderToTransactions(order.user_id, order.id);
 
         // 체결 알림 전송
         this.notifyOrderFill({
