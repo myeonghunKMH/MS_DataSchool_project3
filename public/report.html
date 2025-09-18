@@ -15,6 +15,11 @@
       --glow:255,255,255;
     }
 
+    main.wrap {
+      transform: scale(1.04);      /* 1.0=원본 → 1.1=10% 확대 */
+      transform-origin: top center;
+    }
+
     body{
       margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
       background:
@@ -52,7 +57,7 @@
       transform:translateY(-1px); color:#fff;
     }
 
-    .wrap{ max-width:1200px; margin:0 auto; padding:100px 16px 48px; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:90px 16px 48px; }
 
     .grid{ display:grid; gap:16px; }
     .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
