@@ -153,11 +153,22 @@
       border:1px solid var(--stroke); border-radius:12px; overflow:hidden;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
     }
+
     table{ width:100%; border-collapse:collapse; font-size:15px; table-layout:fixed; }
     th,td{ padding:12px 14px; border-bottom:1px solid #262626; text-align:left; }
     th{ background:rgba(255,255,255,.04); font-weight:700; }
     tr:last-child td{ border-bottom:none; }
-    th:first-child, td:first-child{ width:40%; border-right:1px solid var(--stroke); }
+
+    /* 종목 ↔ 수량 사이 */
+    /* 종목 칸 */
+th:first-child, td:first-child{ width:25%; border-right:1px solid var(--stroke); }
+
+/* 보유수량 칸 */
+th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke); }
+
+    /* 수량 ↔ 평가금액 사이 */
+    th:nth-child(2), td:nth-child(2){ border-right:1px solid var(--stroke); }
+
 
     /* Bottom links */
     .actions-row{
@@ -189,6 +200,27 @@
     .btn-secondary:hover{ background:#777; }
     .danger-btn{ background:#c82333; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; }
     .danger-btn:hover{ background:#a51c2b; }
+
+    .gain{ color:#FF6B6B; } /* 빨강(+) */
+    .loss{ color:#84ceff; } /* 파랑(-) */
+
+    th:last-child {
+      display: flex;
+      justify-content: space-between; /* 텍스트 왼쪽, 버튼 오른쪽 */
+      align-items: center;
+    }
+
+    .refresh-btn{
+      margin-left:6px;
+      background:transparent;
+      border:none;
+      color:#ccc;
+      cursor:pointer;
+      font-size:14px;
+      line-height:1;
+    }
+    .refresh-btn:hover{ color:#fff; }
+
   </style>
 </head>
 <body>
@@ -244,12 +276,17 @@
         <div class="cash"><div>월렛 (현금)</div><div id="cashKRW">0원</div></div>
         <div class="holdings">
           <table>
-            <thead><tr><th>자산</th><th>보유수량</th></tr></thead>
-            <tbody>
-              <tr><td>비트코인 (BTC)</td><td id="btcQty">0</td></tr>
-              <tr><td>이더리움 (ETH)</td><td id="ethQty">0</td></tr>
-              <tr><td>리플 (XRP)</td><td id="xrpQty">0</td></tr>
-            </tbody>
+            <thead>
+              <tr>
+                <th>종목</th>
+                <th>보유수량</th>
+                <th>
+                  평가금액 (이익/손실)
+                  <button id="refreshHoldingsBtn" class="refresh-btn" title="새로고침">↺</button>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="holdingsBody"><tr><td colspan="3" style="opacity:.7">로딩 중…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -351,5 +388,6 @@
       }
     })();
   </script>
+  <script src="/mypage.js"></script>
 </body>
 </html>
