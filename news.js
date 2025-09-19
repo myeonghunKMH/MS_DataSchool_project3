@@ -2,30 +2,13 @@
 // Azure MySQL 암호화폐 뉴스 API + /news 페이지 라우트
 
 const path = require("path");
-const mysql = require("mysql2");
 
 // news.html의 '절대경로' (환경변수 우선)
 const NEWS_HTML_PATH =
-  process.env.NEWS_HTML_PATH || path.resolve(__dirname, "news.html");
+  process.env.NEWS_HTML_PATH || path.resolve(__dirname, "public", "news.html");
 
-// Azure MySQL 연결
-const azureConnection = mysql.createConnection({
-  host: process.env.AZURE_MYSQL_HOST,
-  port: parseInt(process.env.AZURE_MYSQL_PORT) || 3306,
-  user: process.env.AZURE_MYSQL_USER,
-  password: process.env.AZURE_MYSQL_PASSWORD,
-  database: process.env.AZURE_MYSQL_DATABASE,
-  ssl: { rejectUnauthorized: true },
-});
-azureConnection.connect((err) => {
-  if (err) {
-    console.error("Azure MySQL 연결 실패:", err);
-    return;
-  }
-  console.log("Azure MySQL 연결 성공!");
-});
-
-module.exports = function registerNews(app) {
+// 서버에서 생성한 Azure MySQL 풀(newsDbConnection)을 의존성으로 주입받아 사용
+module.exports = function registerNews(app, newsDbConnection) {
   // ======= 뉴스 HTML 페이지 (오직 /news 만) =======
   app.get("/news", (req, res) => {
     res.sendFile(NEWS_HTML_PATH, (err) => {
@@ -54,7 +37,7 @@ module.exports = function registerNews(app) {
       ORDER BY pubDate DESC
       LIMIT ? OFFSET ?`;
 
-    azureConnection.query(countQuery, (countErr, countResults) => {
+    newsDbConnection.query(countQuery, (countErr, countResults) => {
       if (countErr) {
         console.error("데이터 개수 조회 오류:", countErr);
         return res.status(500).json({ success: false, error: "데이터 조회 중 오류가 발생했습니다." });
@@ -62,7 +45,7 @@ module.exports = function registerNews(app) {
       const totalCount = countResults[0].total;
       const totalPages = Math.ceil(totalCount / limit);
 
-      azureConnection.query(dataQuery, [limit, offset], (dataErr, dataResults) => {
+      newsDbConnection.query(dataQuery, [limit, offset], (dataErr, dataResults) => {
         if (dataErr) {
           console.error("데이터 조회 오류:", dataErr);
           return res.status(500).json({ success: false, error: "데이터 조회 중 오류가 발생했습니다." });
@@ -105,7 +88,7 @@ module.exports = function registerNews(app) {
       ORDER BY pubDate DESC
       LIMIT ? OFFSET ?`;
 
-    azureConnection.query(countQuery, params, (countErr, countResults) => {
+    newsDbConnection.query(countQuery, params, (countErr, countResults) => {
       if (countErr) {
         console.error("검색 카운트 오류:", countErr);
         return res.status(500).json({ success: false, error: "검색 중 오류가 발생했습니다." });
@@ -114,7 +97,7 @@ module.exports = function registerNews(app) {
       const totalPages = Math.ceil(totalCount / limit);
 
       const dataParams = [...params, limit, offset];
-      azureConnection.query(dataQuery, dataParams, (dataErr, dataResults) => {
+      newsDbConnection.query(dataQuery, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("검색 데이터 오류:", dataErr);
           return res.status(500).json({ success: false, error: "검색 중 오류가 발생했습니다." });

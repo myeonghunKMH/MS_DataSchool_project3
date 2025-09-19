@@ -268,7 +268,7 @@ const realtimeDisposer = registerRealtime(app, wss);
 
 // ===== 뉴스 라우트 연결 =====
 const registerNews = require("./news");
-registerNews(app);
+registerNews(app, newsDbConnection);
 
 // ===== 리포트 라우트 연결 =====
 const registerReport = require("./report");
