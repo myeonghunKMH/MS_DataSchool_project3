@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보처리방침</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+  :root{
+    color-scheme: dark;
+    --accent:#ffd166;
+    --stroke:#2b2b2b;
+    --glow:255,255,255;
+    --card-top: rgba(255,255,255,.08);
+    --card-mid: rgba(255,255,255,.04);
+  }
+  html,body{ height:100%; }
+  body{
+    margin:0; color:#e7eaf1;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+      radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+      linear-gradient(#151515, #0a0a0a);
+    background-attachment: fixed;
+    line-height:1.7;
+  }
+  *{ box-sizing:border-box; }
+
+  header{
+    position:fixed; inset:12px 12px auto 12px; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    backdrop-filter:saturate(120%) blur(2px);
+  }
+  .brand img{
+    width:120px; height:auto;
+    filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+            drop-shadow(0 0 20px rgba(var(--glow),.18));
+  }
+  nav{ display:flex; gap:8px; }
+  .navbtn{
+    display:inline-flex; align-items:center; gap:8px;
+    height:36px; padding:0 12px; border-radius:10px;
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+    transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .navbtn:hover{
+    border-color:rgba(var(--glow),.32); box-shadow:0 0 12px rgba(var(--glow),.22);
+    transform:translateY(-1px); color:#fff;
+  }
+
+  main{
+    width:min(1100px, 94vw);
+    margin:130px auto 56px;
+    display:flex; flex-direction:column; gap:18px;
+  }
+
+  h1{
+    margin:0 0 10px 0;
+    font-size:clamp(24px,3.2vw,32px); font-weight:900; letter-spacing:.2px;
+    background:linear-gradient(95deg, #fff 0%, rgba(240,240,240,.92) 18%, rgba(255,255,255,.98) 45%, rgba(210,210,210,.70) 65%, #fff 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter: drop-shadow(0 12px 36px rgba(var(--glow),.22)) drop-shadow(0 0 24px rgba(var(--glow),.18));
+  }
+  h2{
+    color:#eaeaea; margin:24px 0 12px; font-size:1.2rem;
+  }
+  ul{ padding-left:20px; }
+  li{ margin-bottom:8px; }
+
+  .effective-date{
+    text-align:right; color:#a6adbb; font-style:italic; margin-bottom:10px;
+  }
+
+  .section{
+    margin-bottom:18px; padding:16px 18px;
+    background:linear-gradient(180deg, var(--card-top), var(--card-mid) 45%, rgba(255,255,255,0));
+    border:1px solid var(--stroke); border-radius:14px;
+    box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10);
+  }
+
+  .highlight{
+    background: rgba(255,209,102,.12);
+    border:1px solid rgba(255,209,102,.35);
+    color:#ffe7b1;
+    padding:12px 14px; border-radius:12px; margin-bottom:10px;
+  }
+
+  .contact-info{
+    background: rgba(16,185,129,.12);
+    border:1px solid rgba(16,185,129,.35);
+    color:#c9f3e3;
+    padding:14px; border-radius:12px;
+  }
+
+  table{
+    width:100%; border-collapse:collapse; margin:12px 0;
+  }
+  th, td{
+    border:1px solid #3b3b3b; padding:12px; text-align:left;
+  }
+  th{
+    background:rgba(255,255,255,.06); font-weight:800; color:#e7eaf1;
+  }
+
+  a{ color:#eaf0ff; }
+</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="index.html">Home</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
+    </nav>
+  </header>
+  <main>
+    <h1>개인정보처리방침</h1>
+    
+    <div class="effective-date">
+        시행일자: 2025년 9월 19일 | 최종 수정: 2025년 9월 19일
+    </div>
+
+    <div class="highlight">
+        <strong>⚡ 주요 안내사항</strong><br>
+        본 서비스는 모의투자 서비스를 제공하며, 회원가입 시 최소한의 개인정보만을 수집합니다. 
+        소셜 로그인(Google, Microsoft) 이용 시 해당 플랫폼의 개인정보처리방침도 함께 적용됩니다.
+    </div>
+
+    <div class="section">
+        <h2>1. 개인정보 처리목적</h2>
+        <p>당사는 다음의 목적을 위해 개인정보를 처리합니다:</p>
+        <ul>
+            <li><strong>회원 관리:</strong> 회원 가입 및 로그인 서비스 제공</li>
+            <li><strong>서비스 제공:</strong> 모의투자 서비스 이용, 계정 연동 및 접근 권한 관리</li>
+            <li><strong>보안 및 지원:</strong> 서비스 보안 모니터링, 고객지원 및 문의 응답</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>2. 수집하는 개인정보 항목 및 수집방법</h2>
+        
+        <h3>📝 일반 회원가입</h3>
+        <ul>
+            <li><strong>필수항목:</strong> 이메일, 사용자명, 성명, 비밀번호</li>
+            <li><strong>보안처리:</strong> 비밀번호는 단방향 해시(Argon2) 방식으로 암호화하여 저장</li>
+        </ul>
+
+        <h3>🔗 소셜 로그인</h3>
+        <ul>
+            <li><strong>Google:</strong> 기본 프로필 정보(이름, 이메일 등 동의화면 표시 항목)</li>
+            <li><strong>Microsoft:</strong> 이름, 이메일, 성, 사용자명, 이름</li>
+        </ul>
+
+        <h3>🔍 자동 수집 정보</h3>
+        <ul>
+            <li><strong>접속 정보:</strong> IP 주소, 브라우저 정보, 접속 시간</li>
+            <li><strong>수집 목적:</strong> 서비스 보안, 성능 최적화, 부정 이용 방지</li>
+            <li><strong>수집 방법:</strong> Cloudflare CDN을 통한 자동 수집</li>
+        </ul>
+
+        <h3>📲 수집방법</h3>
+        <ul>
+            <li>회원가입 시 직접 입력</li>
+            <li>OAuth 인증을 통한 소셜 플랫폼 연동</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>3. 개인정보 보유 및 이용기간</h2>
+        <div class="highlight">
+            <strong>🗓️ 보유기간 안내</strong>
+            <ul>
+                <li><strong>서비스 이용 중:</strong> 계정 유지 기간 동안 보관</li>
+                <li><strong>계정 탈퇴 시:</strong> 탈퇴일로부터 14일 유예기간 적용</li>
+                <li><strong>유예기간 내 재로그인:</strong> 탈퇴 취소 및 계정 복구</li>
+                <li><strong>완전 삭제:</strong> 유예기간 종료 후 모든 개인정보 및 서비스 이용기록 즉시 파기</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. 개인정보 제3자 제공 및 국외이전</h2>
+        
+        <h3>🌍 소셜 로그인 서비스</h3>
+        <table>
+            <tr>
+                <th>제공받는 자</th>
+                <th>이전 국가</th>
+                <th>이전 항목</th>
+                <th>이용 목적</th>
+                <th>보유기간</th>
+            </tr>
+            <tr>
+                <td>Google LLC</td>
+                <td>미국</td>
+                <td>기본 프로필, 이메일</td>
+                <td>사용자 인증 및 계정 연동</td>
+                <td>계정 운영~탈퇴 후 14일</td>
+            </tr>
+            <tr>
+                <td>Microsoft Corporation</td>
+                <td>미국</td>
+                <td>이름, 이메일, 사용자명 등</td>
+                <td>사용자 인증 및 계정 연동</td>
+                <td>계정 운영~탈퇴 후 14일</td>
+            </tr>
+        </table>
+    
+        <h3>☁️ CDN 및 보안 서비스</h3>
+        <table>
+            <tr>
+                <th>제공받는 자</th>
+                <th>이전 국가</th>
+                <th>이전 항목</th>
+                <th>이용 목적</th>
+                <th>보유기간</th>
+            </tr>
+            <tr>
+                <td>Cloudflare, Inc.</td>
+                <td>미국 및 전세계</td>
+                <td>IP 주소, 접속 로그, 요청 헤더</td>
+                <td>CDN, 보안, 성능 최적화</td>
+                <td>Cloudflare 정책에 따름*</td>
+            </tr>
+        </table>
+        
+        <p><small>* Cloudflare의 개인정보 보관기간은 <a href="https://www.cloudflare.com/privacy/" target="_blank">Cloudflare 개인정보처리방침</a>을 참고하시기 바랍니다.</small></p>
+        
+        <p><strong>이전 방법:</strong> HTTPS를 통한 자동 전송</p>
+    </div>
+
+    <div class="section">
+        <h2>5. 개인정보 처리위탁</h2>
+        
+        <table>
+            <tr>
+                <th>위탁업체</th>
+                <th>위탁업무</th>
+                <th>위탁항목</th>
+                <th>보유기간</th>
+            </tr>
+            <tr>
+                <td>Microsoft Azure</td>
+                <td>클라우드 인프라 및 호스팅</td>
+                <td>회원정보, 서비스 이용기록</td>
+                <td>본 방침 3항과 동일</td>
+            </tr>
+            <tr>
+                <td>Azure Kubernetes Service</td>
+                <td>시스템 모니터링 (Prometheus)</td>
+                <td>시스템 지표 및 메트릭</td>
+                <td>본 방침 3항과 동일</td>
+            </tr>
+            <tr>
+                <td>Cloudflare, Inc.</td>
+                <td>CDN, 보안서비스, 도메인 관리</td>
+                <td>IP 주소, 접속 로그, HTTP 헤더</td>
+                <td>Cloudflare 정책 준수</td>
+            </tr>
+        </table>
+    
+        <div class="highlight">
+            <strong>⚠️ Cloudflare 관련 추가 안내</strong><br>
+            Cloudflare는 웹사이트 성능 향상 및 보안을 위해 사용자의 접속 정보를 처리합니다. 
+            자세한 사항은 <a href="https://www.cloudflare.com/privacy/" target="_blank">Cloudflare 개인정보처리방침</a>을 확인해주세요.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>6. 정보주체의 권리 행사 방법</h2>
+        <p>개인정보에 관한 다음 권리를 행사하실 수 있습니다:</p>
+        <ul>
+            <li>개인정보 열람권</li>
+            <li>개인정보 정정·삭제권</li>
+            <li>개인정보 처리정지권</li>
+            <li>동의 철회권</li>
+        </ul>
+        
+        <div class="contact-info">
+            <strong>📧 권리행사 방법</strong><br>
+            • <strong>접수방법:</strong> admin@itc.today로 이메일 발송<br>
+            • <strong>처리기간:</strong> 영업일 기준 3일 이내<br>
+            • <strong>본인확인:</strong> 가입 시 등록한 이메일 주소로 확인
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. 개인정보 안전성 확보조치</h2>
+        
+        <h3>🔐 기술적 보호조치</h3>
+        <ul>
+            <li><strong>전송암호화:</strong> TLS 1.3 프로토콜 적용</li>
+            <li><strong>비밀번호 보호:</strong> Argon2 단방향 해시 알고리즘 사용
+                <br><small>※ 필요 시 PBKDF2-SHA256, Bcrypt 등 대체 알고리즘 적용 가능</small></li>
+            <li><strong>접근통제:</strong> 최소권한 원칙, 계정 분리, 세션 타임아웃 적용</li>
+        </ul>
+
+        <h3>📊 관리적 보호조치</h3>
+        <ul>
+            <li><strong>로그 관리:</strong> 인증·권한·데이터 접근 기록 30일 보관</li>
+            <li><strong>백업관리:</strong> Azure 복제 기능 활용, 동일 파기 기준 적용</li>
+            <li><strong>보안관리:</strong> 정기 패치, 취약점 스캔, 보안 점검 실시</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>8. 개인정보 파기 절차 및 방법</h2>
+        <ul>
+            <li><strong>파기 시점:</strong> 보유기간 경과 또는 처리목적 달성 시 즉시</li>
+            <li><strong>파기 방법:</strong> 전자파일은 복구 불가능한 방식으로 완전 삭제</li>
+            <li><strong>백업본 처리:</strong> 모든 백업 및 복제본도 동일 기준으로 파기</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>9. 쿠키 및 유사 기술 사용</h2>
+        <ul>
+            <li><strong>사용 목적:</strong> 세션 관리 및 보안 강화</li>
+            <li><strong>거부 방법:</strong> 브라우저 설정을 통해 쿠키 저장 거부 가능</li>
+            <li><strong>추가 도구:</strong> 분석 도구 도입 시 별도 안내 및 거부 방법 제공</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>10. 개인정보보호 책임자 및 연락처</h2>
+        <div class="contact-info">
+            <strong>📞 개인정보보호 책임자</strong><br>
+            • <strong>연락처:</strong> admin@itc.today<br>
+            • <strong>업무범위:</strong> 개인정보 관련 민원처리 및 권리행사 접수<br>
+            • <strong>응답시간:</strong> 영업일 기준 3일 이내
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>11. 개인정보처리방침 변경</h2>
+        <ul>
+            <li>개인정보처리방침의 중요한 변경사항이 있을 경우, 웹사이트 공지사항을 통해 사전 고지합니다.</li>
+            <li>로그인 및 동의 화면에서 변경된 방침 링크를 확인하실 수 있습니다.</li>
+            <li>변경된 방침은 고지 후 7일 경과 시점부터 효력이 발생합니다.</li>
+        </ul>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background-color: #00000000; border-radius: 5px; text-align: center;">
+        <p><strong>본 개인정보처리방침은 2025년 9월 19일부터 적용됩니다.</strong></p>
+        <p>개인정보 관련 문의: <a href="mailto:admin@itc.today">admin@itc.today</a></p>
+    </div>
+  </main>
+</body>
+</html>
