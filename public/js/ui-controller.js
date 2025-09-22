@@ -339,13 +339,12 @@ export class UIController {
           item.classList.add('current-price-highlight');
         }
 
+        // 일반 호가창도 누적 호가창과 동일한 5열 디자인 사용
+        item.classList.add('cumulative-grid');
+        item.classList.remove('general-grid');
         if (mode === 'general') {
-          item.classList.add('general-grid');
-          item.classList.remove('cumulative-grid');
-          this.updateGeneralItem(item, unit, 'ask', 0);
+          this.updateGeneralItemAs5Column(item, unit, 'ask', 0);
         } else {
-          item.classList.add('cumulative-grid');
-          item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'ask', 0);
         }
         item.style.display = 'grid';
@@ -368,13 +367,12 @@ export class UIController {
           item.classList.add('current-price-highlight');
         }
 
+        // 일반 호가창도 누적 호가창과 동일한 5열 디자인 사용
+        item.classList.add('cumulative-grid');
+        item.classList.remove('general-grid');
         if (mode === 'general') {
-          item.classList.add('general-grid');
-          item.classList.remove('cumulative-grid');
-          this.updateGeneralItem(item, unit, 'bid', 0);
+          this.updateGeneralItemAs5Column(item, unit, 'bid', 0);
         } else {
-          item.classList.add('cumulative-grid');
-          item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'bid', 0);
         }
         item.style.display = 'grid';
@@ -587,6 +585,32 @@ export class UIController {
     // 압력 바 너비 설정 (개별 수량 기준)
     const individualWidth = unit.individual_percentage || pressureWidth;
     div.style.setProperty('--pressure-width', individualWidth + '%');
+  }
+
+  updateGeneralItemAs5Column(div, unit, type, pressureWidth) {
+    const priceKey = type === 'ask' ? 'ask_price' : 'bid_price';
+    const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
+
+    // 누적 호가창과 동일한 5열 스타일: 호가 | 변동률 | 수량 | 금액 | 총계
+    const price = unit[priceKey];
+    const size = unit[sizeKey];
+    const amount = price * size;
+    const priceChange = this.calculatePriceChange(price);
+
+    // 일반 호가창에서는 총계 열에 총 거래대금 표시
+    const totalAmount = amount;
+
+    div.innerHTML = `
+      <div class="orderbook-price" style="color: ${type === 'ask' ? '#f6465d' : '#0ecb81'}; font-weight: bold;">${price.toLocaleString()}</div>
+      <div class="change-item" style="text-align: center; color: ${priceChange >= 0 ? '#0ecb81' : '#f6465d'};">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+      <div class="size-item" style="text-align: right;">${size.toFixed(4)}</div>
+      <div class="amount-item" style="text-align: right;">${(amount / 1000).toFixed(0)}K</div>
+      <div class="total-item" style="text-align: right; font-weight: bold;">${(totalAmount / 1000000).toFixed(1)}M</div>
+    `;
+
+    // 압력 바 너비 설정 (개별 수량 기준)
+    const individualWidth = unit.individual_percentage || pressureWidth;
+    div.style.setProperty('--volume-ratio', individualWidth + '%');
   }
 
   updateCumulativeItem(div, unit, type, pressureWidth) {

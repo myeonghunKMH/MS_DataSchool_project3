@@ -177,8 +177,18 @@ export class EventManager {
       };
     });
 
-    // HTML 생성 - 매도는 뒤집어서 표시
-    const html = [...askItems.reverse(), ...bidItems].map(item => `<div class="orderbook-unit cumulative-grid ${item.type === 'ask' ? 'ask-item' : 'bid-item'}" style="position: relative; --volume-ratio: ${item.volumeRatio}%;"><div class="orderbook-price" style="color: ${item.type === 'ask' ? '#f6465d' : '#0ecb81'}; font-weight: bold;">${item.price.toLocaleString()}</div><div class="change-item" style="text-align: center; color: ${item.change >= 0 ? '#0ecb81' : '#f6465d'};">${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}%</div><div class="size-item" style="text-align: right;">${item.size.toFixed(4)}</div><div class="amount-item" style="text-align: right;">${(item.amount / 1000).toFixed(0)}K</div><div class="cumulative-item" style="text-align: right; font-weight: bold;">${(item.cumulative * item.price / 1000000).toFixed(1)}M</div></div>`).join('');
+    // 현재가 하이라이트를 위한 가격 단위 계산
+    const priceStep = Utils.getPriceStep ? Utils.getPriceStep(currentPrice, this.state.activeCoin) :
+                      (this.state.activeCoin === 'KRW-XRP' ? 1 : 1000);
+
+    // HTML 생성 - 매도는 뒤집어서 표시, 현재가 하이라이트 추가
+    const html = [...askItems.reverse(), ...bidItems].map(item => {
+      // 현재가와 일치하는지 확인
+      const isCurrentPrice = Math.abs(item.price - currentPrice) < priceStep;
+      const highlightClass = isCurrentPrice ? ' current-price-highlight' : '';
+
+      return `<div class="orderbook-unit cumulative-grid ${item.type === 'ask' ? 'ask-item' : 'bid-item'}${highlightClass}" style="position: relative; --volume-ratio: ${item.volumeRatio}%;"><div class="orderbook-price" style="color: ${item.type === 'ask' ? '#f6465d' : '#0ecb81'}; font-weight: bold;">${item.price.toLocaleString()}</div><div class="change-item" style="text-align: center; color: ${item.change >= 0 ? '#0ecb81' : '#f6465d'};">${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}%</div><div class="size-item" style="text-align: right;">${item.size.toFixed(4)}</div><div class="amount-item" style="text-align: right;">${(item.amount / 1000).toFixed(0)}K</div><div class="cumulative-item" style="text-align: right; font-weight: bold;">${(item.cumulative * item.price / 1000000).toFixed(1)}M</div></div>`;
+    }).join('');
 
     listElement.innerHTML = html;
 
