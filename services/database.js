@@ -1,4 +1,5 @@
 const mysql = require("mysql2/promise");
+const axios = require("axios");
 
 function toInt(v, fallback) {
   const n = parseInt(String(v ?? "").trim(), 10);
@@ -891,20 +892,52 @@ async function processSellOrder(
 
 // ============== 키클락 동기화 함수 추가 ===============
 
-// 키클락 USER_ENTITY에서 사용자 정보 가져오기
+// 키클락 USER_ENTITY에서 사용자 정보 가져오기 (API 기반으로 변경)
 async function getKeycloakUsers() {
   try {
-    const [rows] = await keycloakPool.execute(`
-      SELECT ID, USERNAME, EMAIL, CREATED_TIMESTAMP, ENABLED
-      FROM USER_ENTITY
-      WHERE REALM_ID = 'af4c80a4-e59b-460d-935c-4d31ef4aeda7'
-      AND USERNAME NOT LIKE 'service-account-%'
-      AND SERVICE_ACCOUNT_CLIENT_LINK IS NULL
-    `);
-    return rows;
+    // 1. Keycloak Admin API 토큰 획득
+    const tokenParams = new URLSearchParams();
+    tokenParams.append("client_id", process.env.KEYCLOAK_ADMIN_CLIENT_ID);
+    tokenParams.append("client_secret", process.env.KEYCLOAK_ADMIN_CLIENT_SECRET);
+    tokenParams.append("grant_type", "client_credentials");
+
+    const keycloakServerUrl = process.env.KEYCLOAK_SERVER_URL;
+    const realmName = process.env.KEYCLOAK_REALM || 'itc';
+
+    if (!keycloakServerUrl || !process.env.KEYCLOAK_ADMIN_CLIENT_ID || !process.env.KEYCLOAK_ADMIN_CLIENT_SECRET) {
+      throw new Error("Keycloak Admin API 접속을 위한 환경변수가 설정되지 않았습니다.");
+    }
+
+    const { data: tokenData } = await axios.post(
+      `${keycloakServerUrl}/realms/${realmName}/protocol/openid-connect/token`,
+      tokenParams
+    );
+    const adminToken = tokenData.access_token;
+
+    // 2. Admin API를 통해 사용자 목록 조회
+    const { data: users } = await axios.get(
+      `${keycloakServerUrl}/admin/realms/${realmName}/users`,
+      {
+        headers: { Authorization: `Bearer ${adminToken}` },
+        params: { max: 2000 } // 최대 2000명까지 조회, 그 이상일 경우 페이지네이션 필요
+      }
+    );
+
+    // 3. API 응답을 기존 DB 쿼리 응답 형식과 유사하게 변환
+    return users
+      .filter(u => !(u.username || '').startsWith('service-account'))
+      .map(u => ({
+        ID: u.id,
+        USERNAME: u.username,
+        EMAIL: u.email,
+        ENABLED: u.enabled,
+        CREATED_TIMESTAMP: u.createdTimestamp
+      }));
+
   } catch (error) {
-    console.error("키클락 사용자 조회 오류:", error);
-    return [];
+    const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
+    console.error("Keycloak Admin API를 통한 사용자 조회 오류:", errorMessage);
+    return []; // 오류 발생 시 빈 배열 반환
   }
 }
 
@@ -930,6 +963,9 @@ async function syncKeycloakUsers() {
 
     const keycloakUsers = await getKeycloakUsers();
     const existingUsers = await getExistingKeycloakUsers();
+
+    console.log(`[SYNC DEBUG] Keycloak DB에서 ${keycloakUsers.length}명의 사용자를 찾았습니다.`);
+    console.log(`[SYNC DEBUG] 로컬 DB에서 ${existingUsers.size}명의 사용자를 찾았습니다.`);
 
     let syncCount = 0;
     let updateCount = 0;
@@ -1007,8 +1043,10 @@ async function syncKeycloakUsers() {
 
     // 키클락에서 삭제된 사용자 비활성화
     const keycloakUserIds = new Set(keycloakUsers.map((u) => u.ID));
+    const usersToDisable = [];
     for (const existingUuid of existingUsers) {
       if (!keycloakUserIds.has(existingUuid)) {
+        usersToDisable.push(existingUuid);
         try {
           await pool.execute(
             `
@@ -1030,6 +1068,9 @@ async function syncKeycloakUsers() {
           );
         }
       }
+    }
+    if (usersToDisable.length > 0) {
+      console.log(`[SYNC DEBUG] 비활성화 될 사용자 목록: ${JSON.stringify(usersToDisable)}`);
     }
 
     console.log(
