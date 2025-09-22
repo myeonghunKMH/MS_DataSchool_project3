@@ -1,12 +1,12 @@
-const mysql = require('mysql2/promise');
+const mysql = require("mysql2/promise");
 
 function toInt(v, fallback) {
-  const n = parseInt(String(v ?? '').trim(), 10);
+  const n = parseInt(String(v ?? "").trim(), 10);
   return Number.isFinite(n) ? n : fallback;
 }
 
 function makePool(dbName) {
-  if (!dbName) throw new Error('makePool: database name is required');
+  if (!dbName) throw new Error("makePool: database name is required");
 
   const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -28,9 +28,10 @@ function makePool(dbName) {
   });
 
   // 부팅 시 간단 연결 테스트 로그
-  pool.query('SELECT 1').then(
+  pool.query("SELECT 1").then(
     () => console.log(`[DB] connected: ${dbName}`),
-    (err) => console.error(`[DB] connection failed: ${dbName}`, err?.message || err)
+    (err) =>
+      console.error(`[DB] connection failed: ${dbName}`, err?.message || err)
   );
 
   return pool;
@@ -38,25 +39,52 @@ function makePool(dbName) {
 
 // === 풀 3개 생성 ===
 // 기존 서비스용(crypto_data) - 기본 데이터
-const cryptoDbName = process.env.DB_NAME || 'crypto_data';
+const cryptoDbName = process.env.DB_NAME || "crypto_data";
 const pool = makePool(cryptoDbName);
 
 // 거래 전용(RT_trading_db) - pending_orders, transactions 등
-const tradingDbName = process.env.TRADING_DB_NAME || 'RT_trading_db';
+const tradingDbName = process.env.TRADING_DB_NAME || "RT_trading_db";
 const tradingPool = makePool(tradingDbName);
 
 // Q&A 전용(qna)
-const qnaDbName = process.env.QNA_DB_NAME || 'qna';
+const qnaDbName = process.env.QNA_DB_NAME || "qna";
 const qnaPool = makePool(qnaDbName);
 
 // 키클락 DB 전용
-const keycloakDbName = process.env.KEYCLOAK_DB_NAME || 'keycloak';
+const keycloakDbName = process.env.KEYCLOAK_DB_NAME || "keycloak";
 const keycloakPool = makePool(keycloakDbName);
+
+// === 유저 캐시 ===
+const userCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5분
+
+// === 초기 잔고 설정 ===
+const INITIAL_BALANCES = {
+  krw_balance: 10000000,
+  btc_balance: 0.0,
+  eth_balance: 0.0,
+  xrp_balance: 0.0,
+};
+
+function getCachedUser(keycloak_uuid) {
+  const cached = userCache.get(keycloak_uuid);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.user;
+  }
+  return null;
+}
+
+function setCachedUser(keycloak_uuid, user) {
+  userCache.set(keycloak_uuid, {
+    user,
+    timestamp: Date.now(),
+  });
+}
 
 // === 유틸 ===
 async function healthcheck(dbPool) {
   try {
-    const [rows] = await dbPool.query('SELECT 1 AS ok');
+    const [rows] = await dbPool.query("SELECT 1 AS ok");
     return rows?.[0]?.ok === 1;
   } catch {
     return false;
@@ -68,10 +96,10 @@ async function testDBConnection() {
   try {
     const conn = await pool.getConnection();
     conn.release();
-    console.log('MariaDB 연결 성공');
+    console.log("MariaDB 연결 성공");
     return true;
   } catch (err) {
-    console.error('MariaDB 연결 실패:', err);
+    console.error("MariaDB 연결 실패:", err);
     return false;
   }
 }
@@ -80,51 +108,74 @@ async function findOrCreateUser(profile) {
   const { sub: keycloak_uuid, preferred_username: username } = profile;
 
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM users WHERE keycloak_uuid = ?',
-      [keycloak_uuid]
-    );
-    if (rows.length > 0) {
-      return rows[0];
+    // 캐시에서 먼저 확인
+    const cachedUser = getCachedUser(keycloak_uuid);
+    if (cachedUser) {
+      return cachedUser;
     }
 
+    // INSERT ... ON DUPLICATE KEY UPDATE로 race condition 해결
     const [result] = await pool.query(
-      'INSERT INTO users (keycloak_uuid, username) VALUES (?, ?)',
-      [keycloak_uuid, username]
+      `
+      INSERT INTO users (keycloak_uuid, username, krw_balance, btc_balance, eth_balance, xrp_balance)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE username = VALUES(username)
+    `,
+      [
+        keycloak_uuid,
+        username,
+        INITIAL_BALANCES.krw_balance,
+        INITIAL_BALANCES.btc_balance,
+        INITIAL_BALANCES.eth_balance,
+        INITIAL_BALANCES.xrp_balance,
+      ]
     );
 
-    // 초기 거래 잔고 설정
-    await pool.query(`
-      UPDATE users
-      SET
-        krw_balance = 10000000,
-        btc_balance = 0.00000000,
-        eth_balance = 0.00000000,
-        xrp_balance = 0.00000000
-      WHERE id = ?
-    `, [result.insertId]);
-
-    const [newUserRows] = await pool.query(
-      'SELECT * FROM users WHERE id = ?',
-      [result.insertId]
+    // 사용자 정보 조회 (신규든 기존이든)
+    const [userRows] = await pool.query(
+      "SELECT * FROM users WHERE keycloak_uuid = ?",
+      [keycloak_uuid]
     );
-    return newUserRows[0];
+
+    const user = userRows[0];
+
+    // 캐시에 저장
+    if (user) {
+      setCachedUser(keycloak_uuid, user);
+    }
+
+    return user;
   } catch (error) {
-    console.error('Error in findOrCreateUser:', error);
+    console.error("Error in findOrCreateUser:", error);
     throw error;
   }
 }
 
 async function getUserById(keycloak_uuid) {
   if (!keycloak_uuid) return null;
+
   try {
+    // 캐시에서 먼저 확인
+    const cachedUser = getCachedUser(keycloak_uuid);
+    if (cachedUser) {
+      return cachedUser;
+    }
+
     const [rows] = await pool.query(
-      'SELECT * FROM users WHERE keycloak_uuid = ?',
+      "SELECT * FROM users WHERE keycloak_uuid = ?",
       [keycloak_uuid]
     );
-    return rows.length > 0 ? rows[0] : null;
+
+    const user = rows.length > 0 ? rows[0] : null;
+
+    // 캐시에 저장
+    if (user) {
+      setCachedUser(keycloak_uuid, user);
+    }
+
+    return user;
   } catch (error) {
-    console.error('Error in getUserById:', error);
+    console.error("Error in getUserById:", error);
     throw error;
   }
 }
@@ -132,21 +183,21 @@ async function getUserById(keycloak_uuid) {
 async function requestDeletion(userId, token) {
   const expires = new Date(Date.now() + 3600 * 1000); // 1 hour
   await pool.query(
-    'UPDATE users SET deletion_token = ?, deletion_token_expires_at = ? WHERE id = ?',
+    "UPDATE users SET deletion_token = ?, deletion_token_expires_at = ? WHERE id = ?",
     [token, expires, userId]
   );
 }
 
 async function createWithdrawalReason(userId, reason) {
   await pool.query(
-    'INSERT INTO withdrawal_reasons (user_id, reason) VALUES (?, ?)',
+    "INSERT INTO withdrawal_reasons (user_id, reason) VALUES (?, ?)",
     [userId, reason]
   );
 }
 
 async function confirmDeletion(token) {
   const [rows] = await pool.query(
-    'SELECT * FROM users WHERE deletion_token = ? AND deletion_token_expires_at > NOW()',
+    "SELECT * FROM users WHERE deletion_token = ? AND deletion_token_expires_at > NOW()",
     [token]
   );
   if (rows.length === 0) {
@@ -155,8 +206,8 @@ async function confirmDeletion(token) {
   const user = rows[0];
   const scheduledDate = new Date(Date.now() + 14 * 24 * 3600 * 1000); // 14 days
   await pool.query(
-    'UPDATE users SET status = ?, deletion_scheduled_at = ?, deletion_token = NULL, deletion_token_expires_at = NULL WHERE id = ?',
-    ['deletion_scheduled', scheduledDate, user.id]
+    "UPDATE users SET status = ?, deletion_scheduled_at = ?, deletion_token = NULL, deletion_token_expires_at = NULL WHERE id = ?",
+    ["deletion_scheduled", scheduledDate, user.id]
   );
   return user;
 }
@@ -176,14 +227,14 @@ async function findUsersToDelete() {
 }
 
 async function deleteUser(userId) {
-  await pool.query('DELETE FROM users WHERE id = ?', [userId]);
+  await pool.query("DELETE FROM users WHERE id = ?", [userId]);
 }
 
 async function scheduleDeletionImmediately(userId) {
   const scheduledDate = new Date(Date.now() + 14 * 24 * 3600 * 1000); // 14 days
   await pool.query(
-    'UPDATE users SET status = ?, deletion_scheduled_at = ? WHERE id = ?',
-    ['deletion_scheduled', scheduledDate, userId]
+    "UPDATE users SET status = ?, deletion_scheduled_at = ? WHERE id = ?",
+    ["deletion_scheduled", scheduledDate, userId]
   );
 }
 
@@ -207,7 +258,6 @@ module.exports = {
   // 유틸
   healthcheck,
 };
-
 
 // ============== 거래 관련 기능 추가 ===============
 
@@ -243,7 +293,7 @@ const KRWUtils = {
       price: this.toInteger(transaction.price),
       total_amount: this.toInteger(transaction.total_amount),
     };
-  }
+  },
 };
 
 // 사용자 거래 관련 함수들
@@ -262,11 +312,14 @@ async function getUserByUsername(username) {
 
 async function getUserBalance(username) {
   try {
-    const [rows] = await pool.execute(`
+    const [rows] = await pool.execute(
+      `
       SELECT krw_balance, btc_balance, eth_balance, xrp_balance
       FROM users
       WHERE username = ?
-    `, [username]);
+    `,
+      [username]
+    );
     return rows[0] || null;
   } catch (error) {
     console.error("getUserBalance 오류:", error);
@@ -276,13 +329,16 @@ async function getUserBalance(username) {
 
 async function getUserTransactions(userId, limit = 50, offset = 0) {
   try {
-    const [rows] = await tradingPool.execute(`
+    const [rows] = await tradingPool.execute(
+      `
       SELECT market, side, type, price, quantity, total_amount, created_at
       FROM transactions 
       WHERE user_id = ? 
       ORDER BY created_at DESC 
       LIMIT ? OFFSET ?
-    `, [userId, parseInt(limit), parseInt(offset)]);
+    `,
+      [userId, parseInt(limit), parseInt(offset)]
+    );
     return rows;
   } catch (error) {
     console.error("getUserTransactions 오류:", error);
@@ -292,13 +348,16 @@ async function getUserTransactions(userId, limit = 50, offset = 0) {
 
 async function getUserPendingOrders(userId) {
   try {
-    const [rows] = await tradingPool.execute(`
+    const [rows] = await tradingPool.execute(
+      `
       SELECT id, market, side, order_type, price, quantity, remaining_quantity, 
              total_amount, status, created_at
       FROM pending_orders 
       WHERE user_id = ? AND status IN ('pending', 'partial')
       ORDER BY created_at DESC
-    `, [userId]);
+    `,
+      [userId]
+    );
     return rows;
   } catch (error) {
     console.error("getUserPendingOrders 오류:", error);
@@ -308,7 +367,8 @@ async function getUserPendingOrders(userId) {
 
 async function getMarketPendingOrders(market) {
   try {
-    const [rows] = await tradingPool.execute(`
+    const [rows] = await tradingPool.execute(
+      `
       SELECT id, user_id, market, side, order_type, price, quantity,
              remaining_quantity, total_amount, status, created_at
       FROM pending_orders
@@ -317,7 +377,9 @@ async function getMarketPendingOrders(market) {
         CASE WHEN side = 'bid' THEN price END DESC,
         CASE WHEN side = 'ask' THEN price END ASC,
         created_at ASC
-    `, [market]);
+    `,
+      [market]
+    );
     return rows;
   } catch (error) {
     console.error("getMarketPendingOrders 오류:", error);
@@ -326,7 +388,16 @@ async function getMarketPendingOrders(market) {
 }
 
 // 주문 체결 트랜잭션 처리
-async function executeOrderFillTransaction(userId, orderId, market, side, executionPrice, executedQuantity, totalAmount, remainingQuantity) {
+async function executeOrderFillTransaction(
+  userId,
+  orderId,
+  market,
+  side,
+  executionPrice,
+  executedQuantity,
+  totalAmount,
+  remainingQuantity
+) {
   const tradingConnection = await tradingPool.getConnection();
   const cryptoConnection = await pool.getConnection();
 
@@ -335,45 +406,55 @@ async function executeOrderFillTransaction(userId, orderId, market, side, execut
     await cryptoConnection.beginTransaction();
 
     // 1. RT_trading_db에서 pending_orders 업데이트
-    const status = remainingQuantity <= 0 ? 'filled' : 'partial';
-    await tradingConnection.execute(`
+    const status = remainingQuantity <= 0 ? "filled" : "partial";
+    await tradingConnection.execute(
+      `
       UPDATE pending_orders
       SET remaining_quantity = ?, status = ?, updated_at = NOW()
       WHERE id = ?
-    `, [remainingQuantity, status, orderId]);
-
+    `,
+      [remainingQuantity, status, orderId]
+    );
 
     // 3. crypto_data에서 잔고 업데이트 (동시성 제어)
-    const coinName = market.split('-')[1].toLowerCase();
+    const coinName = market.split("-")[1].toLowerCase();
 
     // 🔒 사용자 잔고 락 획득
-    await cryptoConnection.execute(`
+    await cryptoConnection.execute(
+      `
       SELECT id FROM users WHERE id = ? FOR UPDATE
-    `, [userId]);
+    `,
+      [userId]
+    );
 
-    if (side === 'bid') {
+    if (side === "bid") {
       // 매수 체결: 코인 잔고 증가
-      await cryptoConnection.execute(`
+      await cryptoConnection.execute(
+        `
         UPDATE users
         SET ${coinName}_balance = ${coinName}_balance + ?
         WHERE id = ?
-      `, [executedQuantity, userId]);
+      `,
+        [executedQuantity, userId]
+      );
     } else {
       // 매도 체결: KRW 잔고 증가
-      await cryptoConnection.execute(`
+      await cryptoConnection.execute(
+        `
         UPDATE users
         SET krw_balance = krw_balance + ?
         WHERE id = ?
-      `, [KRWUtils.toInteger(totalAmount), userId]);
+      `,
+        [KRWUtils.toInteger(totalAmount), userId]
+      );
     }
 
     await tradingConnection.commit();
     await cryptoConnection.commit();
-
   } catch (error) {
     await tradingConnection.rollback();
     await cryptoConnection.rollback();
-    console.error('주문 체결 트랜잭션 오류:', error);
+    console.error("주문 체결 트랜잭션 오류:", error);
     throw error;
   } finally {
     tradingConnection.release();
@@ -386,11 +467,14 @@ async function saveCompletedOrderToTransactions(userId, orderId) {
   const connection = await tradingPool.getConnection();
   try {
     // 완전체결된 주문 정보 조회
-    const [orderRows] = await connection.execute(`
+    const [orderRows] = await connection.execute(
+      `
       SELECT market, side, price, quantity, total_amount
       FROM pending_orders
       WHERE id = ? AND user_id = ? AND status = 'filled'
-    `, [orderId, userId]);
+    `,
+      [orderId, userId]
+    );
 
     if (orderRows.length === 0) {
       console.log(`⚠️ 완전체결된 주문을 찾을 수 없음: ID ${orderId}`);
@@ -399,11 +483,20 @@ async function saveCompletedOrderToTransactions(userId, orderId) {
 
     const order = orderRows[0];
 
-    await connection.execute(`
+    await connection.execute(
+      `
       INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type, created_at)
       VALUES (?, ?, ?, ?, ?, ?, 'limit', NOW())
-    `, [userId, order.market, order.side, order.price, order.quantity, order.total_amount]);
-
+    `,
+      [
+        userId,
+        order.market,
+        order.side,
+        order.price,
+        order.quantity,
+        order.total_amount,
+      ]
+    );
   } catch (error) {
     console.error(`❌ 완전체결 주문 저장 실패 - 주문ID: ${orderId}:`, error);
     throw error;
@@ -416,45 +509,64 @@ async function saveCompletedOrderToTransactions(userId, orderId) {
 async function adjustUserBalance(userId, balanceType, amount) {
   const connection = await pool.getConnection();
   try {
-    const adjustedAmount = balanceType === 'krw_balance' ? KRWUtils.toInteger(amount) : amount;
+    const adjustedAmount =
+      balanceType === "krw_balance" ? KRWUtils.toInteger(amount) : amount;
 
-    await connection.execute(`
+    await connection.execute(
+      `
       UPDATE users
       SET ${balanceType} = ${balanceType} + ?
       WHERE id = ?
-    `, [adjustedAmount, userId]);
+    `,
+      [adjustedAmount, userId]
+    );
 
     // 잔고 조정 완료
   } catch (error) {
-    console.error('잔고 조정 오류:', error);
+    console.error("잔고 조정 오류:", error);
     throw error;
   } finally {
     connection.release();
   }
 }
 
-async function createPendingOrder(userId, market, side, price, quantity, totalAmount, type) {
+async function createPendingOrder(
+  userId,
+  market,
+  side,
+  price,
+  quantity,
+  totalAmount,
+  type
+) {
   const connection = await tradingPool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const [result] = await connection.execute(`
+    const [result] = await connection.execute(
+      `
       INSERT INTO pending_orders 
       (user_id, market, side, order_type, price, quantity, remaining_quantity, total_amount)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      userId,
-      market,
-      side,
-      type,
-      KRWUtils.toInteger(price),
-      quantity,
-      quantity,
-      KRWUtils.toInteger(totalAmount),
-    ]);
+    `,
+      [
+        userId,
+        market,
+        side,
+        type,
+        KRWUtils.toInteger(price),
+        quantity,
+        quantity,
+        KRWUtils.toInteger(totalAmount),
+      ]
+    );
 
     await connection.commit();
-    console.log(`📝 지정가 주문 등록: ${market} ${side} ${KRWUtils.toInteger(price).toLocaleString()}원 ${quantity}개`);
+    console.log(
+      `📝 지정가 주문 등록: ${market} ${side} ${KRWUtils.toInteger(
+        price
+      ).toLocaleString()}원 ${quantity}개`
+    );
 
     return {
       orderId: result.insertId,
@@ -478,11 +590,14 @@ async function cancelPendingOrder(userId, orderId) {
     await cryptoConnection.beginTransaction();
 
     // 1. 주문 정보 조회 (RT_trading_db에서)
-    const [orderRows] = await tradingConnection.execute(`
+    const [orderRows] = await tradingConnection.execute(
+      `
       SELECT market, side, price, quantity, remaining_quantity, total_amount, status
       FROM pending_orders
       WHERE id = ? AND user_id = ? AND status IN ('pending', 'partial') FOR UPDATE
-    `, [orderId, userId]);
+    `,
+      [orderId, userId]
+    );
 
     if (orderRows.length === 0) {
       throw new Error("취소할 수 있는 주문을 찾을 수 없습니다.");
@@ -491,50 +606,71 @@ async function cancelPendingOrder(userId, orderId) {
     const order = orderRows[0];
 
     // 2. 주문 상태 업데이트 (RT_trading_db에서)
-    await tradingConnection.execute(`
+    await tradingConnection.execute(
+      `
       UPDATE pending_orders
       SET status = 'cancelled', updated_at = NOW()
       WHERE id = ? AND user_id = ? AND status IN ('pending', 'partial')
-    `, [orderId, userId]);
+    `,
+      [orderId, userId]
+    );
 
     // 3. 부분체결된 주문인 경우 지금까지 체결된 부분을 transactions에 저장
-    if (order.status === 'partial') {
+    if (order.status === "partial") {
       const executedQuantity = order.quantity - order.remaining_quantity;
-      const executedAmount = KRWUtils.calculateTotal(order.price, executedQuantity);
+      const executedAmount = KRWUtils.calculateTotal(
+        order.price,
+        executedQuantity
+      );
 
-      await tradingConnection.execute(`
+      await tradingConnection.execute(
+        `
         INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type, created_at)
         VALUES (?, ?, ?, ?, ?, ?, 'limit', NOW())
-      `, [userId, order.market, order.side, order.price, executedQuantity, executedAmount]);
-
+      `,
+        [
+          userId,
+          order.market,
+          order.side,
+          order.price,
+          executedQuantity,
+          executedAmount,
+        ]
+      );
     }
 
     // 4. 잔고 복구 (crypto_data에서)
     if (order.side === "bid") {
       // 매수 주문 취소: KRW 잔고 복구
-      const refundAmount = KRWUtils.calculateTotal(order.price, order.remaining_quantity);
+      const refundAmount = KRWUtils.calculateTotal(
+        order.price,
+        order.remaining_quantity
+      );
 
-      await cryptoConnection.execute(`
+      await cryptoConnection.execute(
+        `
         UPDATE users
         SET krw_balance = krw_balance + ?
         WHERE id = ?
-      `, [refundAmount, userId]);
-
+      `,
+        [refundAmount, userId]
+      );
     } else if (order.side === "ask") {
       // 매도 주문 취소: 코인 잔고 복구
       const coinName = order.market.split("-")[1].toLowerCase();
 
-      await cryptoConnection.execute(`
+      await cryptoConnection.execute(
+        `
         UPDATE users
         SET ${coinName}_balance = ${coinName}_balance + ?
         WHERE id = ?
-      `, [order.remaining_quantity, userId]);
-
+      `,
+        [order.remaining_quantity, userId]
+      );
     }
 
     await tradingConnection.commit();
     await cryptoConnection.commit();
-
 
     return { message: "주문이 성공적으로 취소되었습니다." };
   } catch (error) {
@@ -548,7 +684,15 @@ async function cancelPendingOrder(userId, orderId) {
   }
 }
 
-async function executeTradeTransaction(userId, market, side, finalPrice, finalQuantity, totalAmount, type) {
+async function executeTradeTransaction(
+  userId,
+  market,
+  side,
+  finalPrice,
+  finalQuantity,
+  totalAmount,
+  type
+) {
   const connection = await tradingPool.getConnection();
   try {
     await connection.beginTransaction();
@@ -556,15 +700,38 @@ async function executeTradeTransaction(userId, market, side, finalPrice, finalQu
     const coinName = market.split("-")[1].toLowerCase();
 
     if (side === "bid") {
-      await processBuyOrder(connection, userId, coinName, totalAmount, finalQuantity);
+      await processBuyOrder(
+        connection,
+        userId,
+        coinName,
+        totalAmount,
+        finalQuantity
+      );
     } else {
-      await processSellOrder(connection, userId, coinName, finalQuantity, totalAmount);
+      await processSellOrder(
+        connection,
+        userId,
+        coinName,
+        finalQuantity,
+        totalAmount
+      );
     }
 
-    await connection.execute(`
+    await connection.execute(
+      `
       INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [userId, market, side, KRWUtils.toInteger(finalPrice), finalQuantity, KRWUtils.toInteger(totalAmount), type]);
+    `,
+      [
+        userId,
+        market,
+        side,
+        KRWUtils.toInteger(finalPrice),
+        finalQuantity,
+        KRWUtils.toInteger(totalAmount),
+        type,
+      ]
+    );
 
     await connection.commit();
   } catch (error) {
@@ -575,14 +742,23 @@ async function executeTradeTransaction(userId, market, side, finalPrice, finalQu
   }
 }
 
-async function processBuyOrder(connection, userId, coinName, totalAmount, finalQuantity) {
+async function processBuyOrder(
+  connection,
+  userId,
+  coinName,
+  totalAmount,
+  finalQuantity
+) {
   // crypto_data에서 잔고 확인 (pool 사용)
   const poolConnection = await pool.getConnection();
   try {
-    const [balanceRows] = await poolConnection.execute(`
+    const [balanceRows] = await poolConnection.execute(
+      `
       SELECT krw_balance
       FROM users WHERE id = ? FOR UPDATE
-    `, [userId]);
+    `,
+      [userId]
+    );
 
     const currentBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
     const requiredAmount = KRWUtils.toInteger(totalAmount);
@@ -590,16 +766,20 @@ async function processBuyOrder(connection, userId, coinName, totalAmount, finalQ
     // 시장가 매수 잔고 확인
 
     if (currentBalance < requiredAmount) {
-      throw new Error(`잔액이 부족합니다. 현재 잔고: ${currentBalance.toLocaleString()}원, 필요 금액: ${requiredAmount.toLocaleString()}원`);
+      throw new Error(
+        `잔액이 부족합니다. 현재 잔고: ${currentBalance.toLocaleString()}원, 필요 금액: ${requiredAmount.toLocaleString()}원`
+      );
     }
 
     const newKrwBalance = currentBalance - requiredAmount;
 
     // crypto_data에서 잔고 차감
-    await poolConnection.execute(`
+    await poolConnection.execute(
+      `
       UPDATE users SET krw_balance = ? WHERE id = ?
-    `, [newKrwBalance, userId]);
-
+    `,
+      [newKrwBalance, userId]
+    );
   } finally {
     poolConnection.release();
   }
@@ -607,45 +787,63 @@ async function processBuyOrder(connection, userId, coinName, totalAmount, finalQ
   // crypto_data에서 코인 잔고 증가
   const cryptoConnection = await pool.getConnection();
   try {
-    await cryptoConnection.execute(`
+    await cryptoConnection.execute(
+      `
       UPDATE users
       SET ${coinName}_balance = ${coinName}_balance + ?
       WHERE id = ?
-    `, [finalQuantity, userId]);
+    `,
+      [finalQuantity, userId]
+    );
   } finally {
     cryptoConnection.release();
   }
 }
 
-async function processSellOrder(connection, userId, coinName, finalQuantity, totalAmount) {
+async function processSellOrder(
+  connection,
+  userId,
+  coinName,
+  finalQuantity,
+  totalAmount
+) {
   // crypto_data에서 잔고 확인 및 업데이트
   const poolConnection = await pool.getConnection();
   try {
-    const [balanceRows] = await poolConnection.execute(`
+    const [balanceRows] = await poolConnection.execute(
+      `
       SELECT ${coinName}_balance, krw_balance
       FROM users WHERE id = ? FOR UPDATE
-    `, [userId]);
+    `,
+      [userId]
+    );
 
     const currentCoinBalance = balanceRows[0]?.[`${coinName}_balance`] || 0;
-    const currentKrwBalance = KRWUtils.toInteger(balanceRows[0]?.krw_balance || 0);
+    const currentKrwBalance = KRWUtils.toInteger(
+      balanceRows[0]?.krw_balance || 0
+    );
 
     // 시장가 매도 잔고 확인
 
     if (currentCoinBalance < finalQuantity) {
-      throw new Error(`보유 코인이 부족합니다. 현재 잔고: ${currentCoinBalance}개, 매도 수량: ${finalQuantity}개`);
+      throw new Error(
+        `보유 코인이 부족합니다. 현재 잔고: ${currentCoinBalance}개, 매도 수량: ${finalQuantity}개`
+      );
     }
 
     const addAmount = KRWUtils.toInteger(totalAmount);
     const newKrwBalance = currentKrwBalance + addAmount;
 
     // crypto_data에서 잔고 업데이트
-    await poolConnection.execute(`
+    await poolConnection.execute(
+      `
       UPDATE users
       SET krw_balance = ?,
           ${coinName}_balance = ${coinName}_balance - ?
       WHERE id = ?
-    `, [newKrwBalance, finalQuantity, userId]);
-
+    `,
+      [newKrwBalance, finalQuantity, userId]
+    );
   } finally {
     poolConnection.release();
   }
@@ -659,7 +857,9 @@ async function getKeycloakUsers() {
     const [rows] = await keycloakPool.execute(`
       SELECT ID, USERNAME, EMAIL, CREATED_TIMESTAMP, ENABLED
       FROM USER_ENTITY
-      WHERE REALM_ID = 'itc'
+      WHERE REALM_ID = 'af4c80a4-e59b-460d-935c-4d31ef4aeda7'
+      AND USERNAME NOT LIKE 'service-account-%'
+      AND SERVICE_ACCOUNT_CLIENT_LINK IS NULL
     `);
     return rows;
   } catch (error) {
@@ -676,7 +876,7 @@ async function getExistingKeycloakUsers() {
       FROM users
       WHERE keycloak_uuid IS NOT NULL
     `);
-    return new Set(rows.map(row => row.keycloak_uuid));
+    return new Set(rows.map((row) => row.keycloak_uuid));
   } catch (error) {
     console.error("기존 키클락 사용자 조회 오류:", error);
     return new Set();
@@ -692,40 +892,110 @@ async function syncKeycloakUsers() {
     const existingUsers = await getExistingKeycloakUsers();
 
     let syncCount = 0;
+    let updateCount = 0;
+    let deactivateCount = 0;
 
+    // 키클락 활성 사용자 처리
     for (const kcUser of keycloakUsers) {
-      // 이미 존재하는 사용자는 건너뛰기
+      const isEnabled = kcUser.ENABLED === 1 || kcUser.ENABLED === true;
+
       if (existingUsers.has(kcUser.ID)) {
+        // 기존 사용자 상태 동기화
+        try {
+          await pool.execute(
+            `
+            UPDATE users
+            SET username = ?,
+                status = ?,
+                updated_at = NOW()
+            WHERE keycloak_uuid = ?
+          `,
+            [kcUser.USERNAME, isEnabled ? "active" : "disabled", kcUser.ID]
+          );
+
+          updateCount++;
+          console.log(
+            `🔄 사용자 상태 동기화: ${kcUser.USERNAME} (${
+              isEnabled ? "활성" : "비활성"
+            })`
+          );
+        } catch (updateError) {
+          console.error(
+            `❌ 사용자 상태 동기화 실패: ${kcUser.USERNAME}`,
+            updateError.message
+          );
+        }
         continue;
       }
 
-      // 새 사용자 생성
-      try {
-        const [result] = await pool.execute(`
-          INSERT INTO users (keycloak_uuid, username, created_at)
-          VALUES (?, ?, NOW())
-        `, [kcUser.ID, kcUser.USERNAME]);
+      // 활성화된 새 사용자만 생성
+      if (isEnabled) {
+        try {
+          const [result] = await pool.execute(
+            `
+            INSERT INTO users (keycloak_uuid, username, created_at, krw_balance, btc_balance, eth_balance, xrp_balance, status)
+            VALUES (?, ?, NOW(), ?, ?, ?, ?, 'active')
+            ON DUPLICATE KEY UPDATE
+              username = VALUES(username),
+              status = VALUES(status),
+              updated_at = NOW()
+          `,
+            [
+              kcUser.ID,
+              kcUser.USERNAME,
+              INITIAL_BALANCES.krw_balance,
+              INITIAL_BALANCES.btc_balance,
+              INITIAL_BALANCES.eth_balance,
+              INITIAL_BALANCES.xrp_balance,
+            ]
+          );
 
-        // 초기 거래 잔고 설정
-        await pool.execute(`
-          UPDATE users
-          SET
-            krw_balance = 10000000,
-            btc_balance = 0.00000000,
-            eth_balance = 0.00000000,
-            xrp_balance = 0.00000000
-          WHERE id = ?
-        `, [result.insertId]);
-
-        syncCount++;
-        console.log(`✅ 새 사용자 동기화: ${kcUser.USERNAME} (${kcUser.ID})`);
-      } catch (insertError) {
-        console.error(`❌ 사용자 동기화 실패: ${kcUser.USERNAME}`, insertError.message);
+          if (result.affectedRows === 1) {
+            syncCount++;
+            console.log(
+              `✅ 새 사용자 동기화: ${kcUser.USERNAME} (${kcUser.ID})`
+            );
+          }
+        } catch (insertError) {
+          console.error(
+            `❌ 사용자 동기화 실패: ${kcUser.USERNAME}`,
+            insertError.message
+          );
+        }
       }
     }
 
-    console.log(`🎉 키클락 동기화 완료: ${syncCount}명의 새 사용자 추가`);
-    return syncCount;
+    // 키클락에서 삭제된 사용자 비활성화
+    const keycloakUserIds = new Set(keycloakUsers.map((u) => u.ID));
+    for (const existingUuid of existingUsers) {
+      if (!keycloakUserIds.has(existingUuid)) {
+        try {
+          await pool.execute(
+            `
+            UPDATE users
+            SET status = 'disabled', updated_at = NOW()
+            WHERE keycloak_uuid = ? AND status != 'disabled'
+          `,
+            [existingUuid]
+          );
+
+          deactivateCount++;
+          console.log(
+            `⚠️ 사용자 비활성화: ${existingUuid} (키클락에서 삭제됨)`
+          );
+        } catch (deactivateError) {
+          console.error(
+            `❌ 사용자 비활성화 실패: ${existingUuid}`,
+            deactivateError.message
+          );
+        }
+      }
+    }
+
+    console.log(
+      `🎉 키클락 동기화 완료: 신규 ${syncCount}명, 업데이트 ${updateCount}명, 비활성화 ${deactivateCount}명`
+    );
+    return { syncCount, updateCount, deactivateCount };
   } catch (error) {
     console.error("키클락 동기화 오류:", error);
     throw error;
@@ -737,10 +1007,10 @@ module.exports = {
   ...module.exports, // 기존 exports 유지
 
   // DB 풀들
-  pool,           // crypto_data (기본)
-  tradingPool,    // RT_trading_db (거래 전용)
-  qnaPool,        // qna (Q&A 전용)
-  keycloakPool,   // keycloak (키클락 전용)
+  pool, // crypto_data (기본)
+  tradingPool, // RT_trading_db (거래 전용)
+  qnaPool, // qna (Q&A 전용)
+  keycloakPool, // keycloak (키클락 전용)
 
   // 거래 관련 함수들 추가
   KRWUtils,
@@ -766,5 +1036,5 @@ module.exports = {
   adjustUserBalance,
 
   // KRWUtils 추가
-  KRWUtils
+  KRWUtils,
 };
