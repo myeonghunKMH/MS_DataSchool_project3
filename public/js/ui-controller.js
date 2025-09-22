@@ -333,8 +333,9 @@ export class UIController {
         const price = unit.ask_price || unit.price;
         item.className = 'orderbook-unit ask-item';
 
-        // 현재가와 일치하면 특별 스타일 적용
-        if (Math.abs(price - currentPrice) < 1000) {
+        // 현재가와 일치하면 특별 스타일 적용 (코인별 가격 단위 적용)
+        const priceStep = Utils.getPriceStep(currentPrice, this.state.activeCoin);
+        if (Math.abs(price - currentPrice) < priceStep) {
           item.classList.add('current-price-highlight');
         }
 
@@ -357,8 +358,9 @@ export class UIController {
         const price = unit.bid_price || unit.price;
         item.className = 'orderbook-unit bid-item';
 
-        // 현재가와 일치하면 특별 스타일 적용
-        if (Math.abs(price - currentPrice) < 1000) {
+        // 현재가와 일치하면 특별 스타일 적용 (코인별 가격 단위 적용)
+        const priceStep = Utils.getPriceStep(currentPrice, this.state.activeCoin);
+        if (Math.abs(price - currentPrice) < priceStep) {
           item.classList.add('current-price-highlight');
         }
 
@@ -605,10 +607,10 @@ export class UIController {
   }
 
   calculatePriceChange(price) {
-    // 현재가 대비 변동률 계산
-    const currentPrice = this.state.latestTickerData[this.state.activeCoin]?.trade_price || price;
-    if (currentPrice === price) return 0;
-    return (price - currentPrice) / currentPrice;
+    // 전일 종가 대비 변동률 계산 (업비트 방식)
+    const prevClosingPrice = this.state.latestTickerData[this.state.activeCoin]?.prev_closing_price || price;
+    if (prevClosingPrice === price) return 0;
+    return (price - prevClosingPrice) / prevClosingPrice;
   }
 
   updateCumulativeChart(cumulativeAsks, cumulativeBids) {

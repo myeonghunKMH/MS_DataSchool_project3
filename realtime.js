@@ -101,8 +101,8 @@ class WebSocketManager {
       { ticket: uuidv4() },
       { type: "ticker", codes: CONFIG.MARKET_CODES },
       { type: "orderbook", codes: CONFIG.MARKET_CODES, level: 0 },
-      { type: "orderbook", codes: ["KRW-BTC"], level: 1000000 },
-      { type: "orderbook", codes: ["KRW-ETH"], level: 10000 },
+      { type: "orderbook", codes: ["KRW-BTC"], level: 1000 },
+      { type: "orderbook", codes: ["KRW-ETH"], level: 1000 },
       { type: "orderbook", codes: ["KRW-XRP"], level: 1 },
       { format: "DEFAULT" },
     ];

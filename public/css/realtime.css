@@ -423,6 +423,37 @@ canvas {
   min-height: 24px;
   cursor: pointer;
   position: relative;
+  overflow: hidden;
+}
+
+/* 물량 막대 배경 */
+.orderbook-unit::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 0;
+  height: calc((100% - 8px) * 0.7);
+  width: calc(var(--pressure-width, 0%) * 0.5);
+  max-width: 42%;
+  z-index: 0;
+  pointer-events: none;
+  transition: width 0.2s ease;
+}
+
+/* 매도 호가 물량 막대 (빨간색) */
+.orderbook-unit.ask-item::before {
+  background: rgba(246, 70, 93, 0.2);
+}
+
+/* 매수 호가 물량 막대 (초록색) */
+.orderbook-unit.bid-item::before {
+  background: rgba(14, 203, 129, 0.2);
+}
+
+/* 호가창 아이템들이 막대 위에 표시되도록 */
+.orderbook-item {
+  position: relative;
+  z-index: 1;
 }
 
 .orderbook-unit:hover {
