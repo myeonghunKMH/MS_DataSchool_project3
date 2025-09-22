@@ -339,12 +339,15 @@ export class UIController {
           item.classList.add('current-price-highlight');
         }
 
-        // 일반 호가창도 누적 호가창과 동일한 5열 디자인 사용
-        item.classList.add('cumulative-grid');
-        item.classList.remove('general-grid');
         if (mode === 'general') {
-          this.updateGeneralItemAs5Column(item, unit, 'ask', 0);
+          // 일반 호가창: 원래 3열 디자인 사용
+          item.classList.add('general-grid');
+          item.classList.remove('cumulative-grid');
+          this.updateGeneralItem(item, unit, 'ask', 0);
         } else {
+          // 누적 호가창: 5열 디자인 사용
+          item.classList.add('cumulative-grid');
+          item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'ask', 0);
         }
         item.style.display = 'grid';
@@ -367,12 +370,15 @@ export class UIController {
           item.classList.add('current-price-highlight');
         }
 
-        // 일반 호가창도 누적 호가창과 동일한 5열 디자인 사용
-        item.classList.add('cumulative-grid');
-        item.classList.remove('general-grid');
         if (mode === 'general') {
-          this.updateGeneralItemAs5Column(item, unit, 'bid', 0);
+          // 일반 호가창: 원래 3열 디자인 사용
+          item.classList.add('general-grid');
+          item.classList.remove('cumulative-grid');
+          this.updateGeneralItem(item, unit, 'bid', 0);
         } else {
+          // 누적 호가창: 5열 디자인 사용
+          item.classList.add('cumulative-grid');
+          item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'bid', 0);
         }
         item.style.display = 'grid';
@@ -571,16 +577,18 @@ export class UIController {
     const priceKey = type === 'ask' ? 'ask_price' : 'bid_price';
     const sizeKey = type === 'ask' ? 'ask_size' : 'bid_size';
 
-    // 업비트 스타일: 수량 | 호가 | 호가주문
+    // 업비트 스타일: 수량 | 호가 | 호가주문 (색상만 누적 호가창과 동일하게)
     const price = unit[priceKey];
     const size = unit[sizeKey];
     const priceChange = this.calculatePriceChange(price);
 
     div.innerHTML = `
       <div class="orderbook-item size-item">${Utils.formatCoinAmount(size, 3)}</div>
-      <div class="orderbook-item price-item">${Utils.formatKRW(price)}</div>
-      <div class="orderbook-item order-item">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+      <div class="orderbook-item price-item" style="color: ${type === 'ask' ? '#f6465d' : '#0ecb81'};">${Utils.formatKRW(price)}</div>
+      <div class="orderbook-item order-item" style="color: ${priceChange >= 0 ? '#0ecb81' : '#f6465d'};">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
     `;
+
+    // 배경색은 CSS 클래스(.ask-item, .bid-item)에서 자동 적용
 
     // 압력 바 너비 설정 (개별 수량 기준)
     const individualWidth = unit.individual_percentage || pressureWidth;

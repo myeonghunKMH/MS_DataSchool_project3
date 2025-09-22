@@ -389,11 +389,11 @@ canvas {
 }
 
 .unified-list .orderbook-unit.ask-item {
-  background-color: rgba(246, 70, 93, 0.05);
+  background-color: transparent;
 }
 
 .unified-list .orderbook-unit.bid-item {
-  background-color: rgba(14, 203, 129, 0.05);
+  background-color: transparent;
 }
 
 /* 현재가 하이라이트 */
@@ -648,10 +648,11 @@ canvas {
 .cumulative-orderbook-scroll .orderbook-unit::before {
   content: '';
   position: absolute;
-  top: 4px;
+  top: 50%;
   right: 0;
   height: calc((100% - 8px) * 0.6);
   width: calc(var(--volume-ratio, 0%) * 0.5);
+  transform: translateY(-50%);
   z-index: 0;
   opacity: 0.7;
 }
@@ -666,6 +667,32 @@ canvas {
 
 /* 누적 호가창 아이템들 */
 .cumulative-orderbook-scroll .orderbook-unit > div {
+  position: relative;
+  z-index: 1;
+}
+
+/* 일반 호가창 막대 - 개별 수량 기준 */
+.unified-list .orderbook-unit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  height: calc((100% - 8px) * 0.7);
+  width: var(--pressure-width, 0%);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.unified-list .orderbook-unit.ask-item::before {
+  background: rgba(246, 70, 93, 0.2);
+}
+
+.unified-list .orderbook-unit.bid-item::before {
+  background: rgba(14, 203, 129, 0.2);
+}
+
+/* 일반 호가창 아이템들도 막대 위에 표시되도록 */
+.unified-list .orderbook-unit > div {
   position: relative;
   z-index: 1;
 }
