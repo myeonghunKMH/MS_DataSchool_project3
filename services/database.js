@@ -238,6 +238,45 @@ async function scheduleDeletionImmediately(userId) {
   );
 }
 
+// 신규: 사용자 인구통계 업데이트 (age, gender, city)
+async function updateUserDemographicsIfNull(keycloak_uuid, { age, gender, city } = {}) {
+  // 세 값이 모두 제공되어야 업데이트 수행
+  if (age == null || gender == null || city == null) {
+    return { updated: false, reason: "missing-values" };
+  }
+  try {
+    const [rows] = await pool.query(
+      "SELECT age, gender, city FROM users WHERE keycloak_uuid = ?",
+      [keycloak_uuid]
+    );
+    if (rows.length === 0) return { updated: false, reason: "user-not-found" };
+
+    const row = rows[0];
+    if (row.age == null || row.gender == null || row.city == null) {
+      await pool.query(
+        "UPDATE users SET age = ?, gender = ?, city = ?, updated_at = NOW() WHERE keycloak_uuid = ?",
+        [age, gender, city, keycloak_uuid]
+      );
+      // 캐시 갱신
+      const [fresh] = await pool.query(
+        "SELECT * FROM users WHERE keycloak_uuid = ?",
+        [keycloak_uuid]
+      );
+      if (fresh[0]) setCachedUser(keycloak_uuid, fresh[0]);
+      return { updated: true };
+    }
+    return { updated: false, reason: "already-filled" };
+  } catch (err) {
+    // 컬럼이 없는 경우를 대비한 안전 처리
+    if (err && (err.code === "ER_BAD_FIELD_ERROR" || /Unknown column/.test(String(err.message)))) {
+      console.warn("[DB] users 테이블에 age/gender/city 컬럼이 없어 인구통계 업데이트를 건너뜁니다.");
+      return { updated: false, reason: "columns-missing" };
+    }
+    console.error("updateUserDemographicsIfNull 오류:", err);
+    throw err;
+  }
+}
+
 // === 내보내기 ===
 // - 기존 서버 코드 호환: pool 그대로 export
 // - Q&A 전용 풀 추가: qnaPool
@@ -257,6 +296,7 @@ module.exports = {
   scheduleDeletionImmediately,
   // 유틸
   healthcheck,
+  updateUserDemographicsIfNull,
 };
 
 // ============== 거래 관련 기능 추가 ===============

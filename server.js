@@ -86,6 +86,19 @@ function getLoginName(req) {
   return t?.preferred_username || t?.name || "user";
 }
 
+// Keycloak 토큰에서 커스텀 속성(age, gender, city 등) 안전 추출
+function getUserAttribute(tokenContent, key) {
+  if (!tokenContent) return null;
+  if (tokenContent[key] != null) return tokenContent[key];
+  const attrs = tokenContent.attributes;
+  if (attrs && attrs[key] != null) {
+    const v = attrs[key];
+    if (Array.isArray(v)) return v[0];
+    return v;
+  }
+  return null;
+}
+
 // Keycloak admin 토큰
 async function getKeycloakAdminToken() {
   const params = new URLSearchParams();
@@ -106,6 +119,17 @@ app.use(async (req, res, next) => {
     try {
       const userProfile = req.kauth.grant.access_token.content;
       let user = await db.findOrCreateUser(userProfile);
+
+      // 로그인 시 Keycloak의 age, gender, city를 가져와 DB(users)에 누락 시 채움
+      const rawAge = getUserAttribute(userProfile, 'age');
+      const age = rawAge != null && `${rawAge}`.trim() !== '' ? parseInt(`${rawAge}`, 10) : null;
+      const gender = getUserAttribute(userProfile, 'gender');
+      const city = getUserAttribute(userProfile, 'city');
+      try {
+        await db.updateUserDemographicsIfNull(user.keycloak_uuid, { age, gender, city });
+      } catch (e) {
+        console.warn('사용자 인구통계 업데이트 실패(무시 가능):', e?.message || e);
+      }
 
       if (user.status === "deletion_scheduled") {
         await db.cancelDeletion(user.id);
