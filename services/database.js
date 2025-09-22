@@ -92,6 +92,18 @@ async function findOrCreateUser(profile) {
       'INSERT INTO users (keycloak_uuid, username) VALUES (?, ?)',
       [keycloak_uuid, username]
     );
+
+    // 초기 거래 잔고 설정
+    await pool.query(`
+      UPDATE users
+      SET
+        krw_balance = 10000000,
+        btc_balance = 0.00000000,
+        eth_balance = 0.00000000,
+        xrp_balance = 0.00000000
+      WHERE id = ?
+    `, [result.insertId]);
+
     const [newUserRows] = await pool.query(
       'SELECT * FROM users WHERE id = ?',
       [result.insertId]
