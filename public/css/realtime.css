@@ -353,7 +353,7 @@ canvas {
   font-weight: 700;
 }
 
-/* 누적 차트 */
+/* 누적 차트 - 사용하지 않음
 .cumulative-chart {
   height: 80px;
   padding: 8px 16px;
@@ -365,6 +365,7 @@ canvas {
   width: 100%;
   height: 100%;
 }
+*/
 .orderbook-list {
   flex: 1;
   overflow-y: auto;
@@ -424,6 +425,18 @@ canvas {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+}
+
+/* 호가창 기본 그리드 제거 (개별 클래스로 관리) */
+
+/* 일반 호가창: 3열 (수량, 호가, 변동률) */
+.orderbook-unit.general-grid {
+  grid-template-columns: 1fr 1.5fr 1fr;
+}
+
+/* 누적 호가창: 5열 (호가, 변동률, 수량, 금액, 누적) */
+.orderbook-unit.cumulative-grid {
+  grid-template-columns: 1.2fr 0.8fr 1fr 1.2fr 1.2fr;
 }
 
 /* 물량 막대 배경 */
@@ -577,6 +590,116 @@ canvas {
 
 .orderbook-list::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #666 0%, #444 100%);
+}
+
+/* 누적 호가창 스크롤 스타일 */
+.cumulative-orderbook-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #666 #1e2329;
+}
+
+.cumulative-orderbook-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cumulative-orderbook-scroll::-webkit-scrollbar-track {
+  background: #1e2329;
+}
+
+.cumulative-orderbook-scroll::-webkit-scrollbar-thumb {
+  background: #666;
+  border-radius: 3px;
+}
+
+.cumulative-orderbook-scroll::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* 누적 호가창 스타일 - 일반 호가창과 완전히 동일하게 */
+.cumulative-orderbook-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  max-height: 500px;
+
+  /* 스크롤 성능 최적화 */
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #444 transparent;
+}
+
+/* 누적 호가창도 일반 호가창과 동일한 스타일 적용 */
+.cumulative-orderbook-scroll .orderbook-unit {
+  /* 기본 orderbook-unit 스타일 그대로 적용 */
+  display: grid;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  min-height: 24px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 누적 호가창 물량 막대 - 누적량 기준으로 조정 */
+.cumulative-orderbook-scroll .orderbook-unit::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 0;
+  height: calc((100% - 8px) * 0.6);
+  width: calc(var(--volume-ratio, 0%) * 0.5);
+  z-index: 0;
+  opacity: 0.7;
+}
+
+.cumulative-orderbook-scroll .orderbook-unit.ask-item::before {
+  background: rgba(246, 70, 93, 0.2);
+}
+
+.cumulative-orderbook-scroll .orderbook-unit.bid-item::before {
+  background: rgba(14, 203, 129, 0.2);
+}
+
+/* 누적 호가창 아이템들 */
+.cumulative-orderbook-scroll .orderbook-unit > div {
+  position: relative;
+  z-index: 1;
+}
+
+/* 호가창 컨텐츠 컨테이너 */
+.orderbook-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 누적 호가창은 아래쪽에 배치 */
+#cumulative-orderbook-content {
+  order: 2;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* 호가창이 표시될 때 부모 컨테이너도 가득 채우기 */
+#cumulative-orderbook-content:not(.hidden) {
+  height: 100%;
+  min-height: 500px;
+}
+
+/* hidden 클래스 강화 */
+.orderbook-content.hidden,
+#cumulative-orderbook-content.hidden,
+#general-orderbook-content.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
 }
 .orderbook-price-info {
   text-align: center;

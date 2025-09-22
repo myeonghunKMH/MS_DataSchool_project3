@@ -57,11 +57,11 @@ export class DOMManager {
       timeTabs: document.getElementById("time-tabs"),
       toggleGeneral: document.getElementById("toggle-general"),
       toggleGrouped: document.getElementById("toggle-grouped"),
-      generalOrderbookContainer: document.getElementById(
-        "general-orderbook-container"
+      generalOrderbookContent: document.getElementById(
+        "general-orderbook-content"
       ),
-      groupedOrderbookContainer: document.getElementById(
-        "grouped-orderbook-container"
+      cumulativeOrderbookContent: document.getElementById(
+        "cumulative-orderbook-content"
       ),
       priceBtns: document.querySelectorAll(".price-btn"),
       quantityBtns: document.querySelectorAll(".quantity-btns button"),

@@ -263,10 +263,10 @@ export class UIController {
     // 체결강도 업데이트
     this.updateMarketPressure(asks, bids);
 
-    // 호가창 타입에 따른 업데이트
-    const isCumulative = unifiedListElement.classList.contains('cumulative');
+    // 호가창 타입 판단: ID로 확실하게 구분
+    const isCumulativeElement = unifiedListElement.id === 'grouped-unified-list';
 
-    if (isCumulative) {
+    if (isCumulativeElement) {
       // 누적 호가창 업데이트
       this.updateUnifiedCumulativeOrderbook(unifiedListElement, asks, bids);
     } else {
@@ -340,8 +340,12 @@ export class UIController {
         }
 
         if (mode === 'general') {
+          item.classList.add('general-grid');
+          item.classList.remove('cumulative-grid');
           this.updateGeneralItem(item, unit, 'ask', 0);
         } else {
+          item.classList.add('cumulative-grid');
+          item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'ask', 0);
         }
         item.style.display = 'grid';
@@ -365,8 +369,12 @@ export class UIController {
         }
 
         if (mode === 'general') {
+          item.classList.add('general-grid');
+          item.classList.remove('cumulative-grid');
           this.updateGeneralItem(item, unit, 'bid', 0);
         } else {
+          item.classList.add('cumulative-grid');
+          item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'bid', 0);
         }
         item.style.display = 'grid';
@@ -879,8 +887,9 @@ export class UIController {
         this.dom.elements.generalUnifiedList
       );
     } else {
+      // 누적 호가도 일반 호가 데이터를 사용
       this.updateOrderbook(
-        this.state.latestOrderbookData[code].grouped,
+        this.state.latestOrderbookData[code].general,
         this.dom.elements.groupedUnifiedList
       );
     }

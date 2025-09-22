@@ -12,7 +12,7 @@
   </head>
   <body>
     <!-- 🔧 새로 추가: 사용자 정보 표시 헤더 -->
-    
+
     <div class="user-header">
       <div class="user-info">
         <span id="user-name">로딩 중...</span>
@@ -22,7 +22,10 @@
         <button class="header-btn" onclick="window.location.href='/index.html'">
           메인페이지
         </button>
-         <button class="header-btn" onclick="window.location.href='/mypage.html'">
+        <button
+          class="header-btn"
+          onclick="window.location.href='/mypage.html'"
+        >
           MyPage
         </button>
       </div>
@@ -46,14 +49,27 @@
               </div>
             </div>
             <div class="dropdown-container">
-              <button class="indicator-btn" id="technical-toggle">보조지표 ▼</button>
+              <button class="indicator-btn" id="technical-toggle">
+                보조지표 ▼
+              </button>
               <div class="indicator-panel hidden" id="technical-panel">
-                <label><input type="checkbox" data-indicator="RSI" /> RSI</label>
-                <label><input type="checkbox" data-indicator="MACD" /> MACD</label>
-                <label><input type="checkbox" data-indicator="BB" /> 볼린저밴드</label>
+                <label
+                  ><input type="checkbox" data-indicator="RSI" /> RSI</label
+                >
+                <label
+                  ><input type="checkbox" data-indicator="MACD" /> MACD</label
+                >
+                <label
+                  ><input type="checkbox" data-indicator="BB" />
+                  볼린저밴드</label
+                >
               </div>
             </div>
-            <button class="indicator-btn" id="clear-all-indicators" title="모든 지표 초기화">
+            <button
+              class="indicator-btn"
+              id="clear-all-indicators"
+              title="모든 지표 초기화"
+            >
               초기화
             </button>
           </div>
@@ -71,17 +87,24 @@
           </div>
         </div>
 
-
         <div class="chart-container">
           <div id="priceChart" class="chart-section price-chart"></div>
 
           <!-- RSI 차트 (초기 숨김) -->
-          <div id="rsiChart" class="chart-section indicator-chart hidden" data-indicator="RSI">
+          <div
+            id="rsiChart"
+            class="chart-section indicator-chart hidden"
+            data-indicator="RSI"
+          >
             <div class="chart-content"></div>
           </div>
 
           <!-- MACD 차트 (초기 숨김) -->
-          <div id="macdChart" class="chart-section indicator-chart hidden" data-indicator="MACD">
+          <div
+            id="macdChart"
+            class="chart-section indicator-chart hidden"
+            data-indicator="MACD"
+          >
             <div class="chart-content"></div>
           </div>
 
@@ -92,17 +115,36 @@
       <div class="bottom-content">
         <div class="orderbook-wrapper">
           <div class="orderbook-tab-group">
-            <button id="toggle-general" class="tab-button active">일반 호가</button>
+            <button id="toggle-general" class="tab-button active">
+              일반 호가
+            </button>
             <button id="toggle-grouped" class="tab-button">누적 호가</button>
             <button class="tab-button disabled">호가주문</button>
           </div>
 
-          <!-- 일반 호가창 -->
-          <div class="orderbook-container" id="general-orderbook-container">
+          <!-- 전체 호가창 컨테이너 -->
+          <div class="orderbook-container">
+            <!-- 실제 호가창 (탭 전환에 따라 내용 변경) -->
+            <div class="orderbook-section">
+              <!-- 일반 호가창 내용 -->
+              <div id="general-orderbook-content" class="orderbook-content">
+                <div
+                  class="orderbook-list unified-list"
+                  id="general-unified-list"
+                ></div>
+              </div>
 
-            <!-- 통합 호가창 (매도 + 매수) -->
-            <div class="orderbook-section unified-section">
-              <div class="orderbook-list unified-list" id="general-unified-list"></div>
+              <!-- 누적 호가창 내용 -->
+              <div
+                id="cumulative-orderbook-content"
+                class="orderbook-content hidden"
+              >
+                <!-- 누적 호가 리스트 -->
+                <div
+                  id="cumulative-orderbook-list"
+                  class="cumulative-orderbook-scroll orderbook-list"
+                ></div>
+              </div>
             </div>
 
             <!-- 체결강도 표시 -->
@@ -118,20 +160,6 @@
               </div>
             </div>
           </div>
-
-          <!-- 누적 호가창 -->
-          <div class="orderbook-container hidden" id="grouped-orderbook-container">
-
-            <!-- 통합 호가창 (매도 + 매수) -->
-            <div class="orderbook-section unified-section">
-              <div class="orderbook-list unified-list cumulative" id="grouped-unified-list"></div>
-            </div>
-
-            <!-- 누적 차트 -->
-            <div class="cumulative-chart">
-              <canvas id="cumulative-depth-chart" width="100%" height="100"></canvas>
-            </div>
-          </div>
         </div>
         <div class="trading-panel">
           <div class="trading-tabs">
@@ -142,11 +170,17 @@
             <div class="balance-and-type">
               <div class="available-balance">
                 <span>주문가능</span>
-                <span id="available-amount" class="available-amount-value">0 KRW</span>
+                <span id="available-amount" class="available-amount-value"
+                  >0 KRW</span
+                >
               </div>
               <div class="trading-type">
-                <button class="trading-type-btn active" data-type="limit">지정가</button>
-                <button class="trading-type-btn" data-type="market">시장가</button>
+                <button class="trading-type-btn active" data-type="limit">
+                  지정가
+                </button>
+                <button class="trading-type-btn" data-type="market">
+                  시장가
+                </button>
                 <button class="trading-type-btn disabled">예약</button>
               </div>
             </div>
@@ -188,9 +222,19 @@
           </div>
           <div class="trade-history-container">
             <div class="tabs">
-              <button id="pending-orders-tab" class="tab-button active">대기 주문</button>
-              <button id="filled-orders-tab" class="tab-button">체결 내역</button>
-              <button id="refresh-all-orders" class="tab-button refresh-tab" title="전체 새로고침">🔄</button>
+              <button id="pending-orders-tab" class="tab-button active">
+                대기 주문
+              </button>
+              <button id="filled-orders-tab" class="tab-button">
+                체결 내역
+              </button>
+              <button
+                id="refresh-all-orders"
+                class="tab-button refresh-tab"
+                title="전체 새로고침"
+              >
+                🔄
+              </button>
             </div>
             <div id="pending-orders-section" class="tab-content">
               <div id="pending-orders-list" class="order-list"></div>
@@ -206,47 +250,51 @@
     <!-- 사용자 정보 로딩 스크립트 및 전역 지표함수 (필요시) -->
     <script>
       // 사용자 정보 로딩
-    async function loadUserInfo() {
-      try {
-        console.log('사용자 정보 로딩 시작...');
-        const response = await fetch('/api/user');
-        console.log('API 응답 상태:', response.status);
-        
-        if (response.ok) {
-          const user = await response.json();
-          console.log('받은 사용자 데이터:', user);
-          
-          // 사용자명 표시 (이메일에서 @ 앞부분만 추출)
-          const userName = user.username ? user.username.split('@')[0] : '사용자';
-          console.log('표시할 사용자명:', userName);
-          
-          const userNameElement = document.getElementById('user-name');
-          if (userNameElement) {
-            userNameElement.textContent = userName;
-            console.log('사용자명 업데이트 완료');
-          } else {
-            console.error('user-name 엘리먼트를 찾을 수 없습니다');
-          }
-          
-          // 삭제 예약 사용자 알림
-          if (user.deletion_cancelled) {
-            alert('계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다.');
-          }
-        } else {
-          console.error('사용자 정보 로딩 실패:', response.status);
-          document.getElementById('user-name').textContent = '로그인 오류';
-        }
-      } catch (error) {
-        console.error('사용자 정보 로딩 실패:', error);
-        document.getElementById('user-name').textContent = '네트워크 오류';
-      }
-    }
+      async function loadUserInfo() {
+        try {
+          console.log("사용자 정보 로딩 시작...");
+          const response = await fetch("/api/user");
+          console.log("API 응답 상태:", response.status);
 
-    // 페이지 로드 시 사용자 정보 로딩
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM 로드 완료, 사용자 정보 로딩 시작');
-      loadUserInfo();
-    });
+          if (response.ok) {
+            const user = await response.json();
+            console.log("받은 사용자 데이터:", user);
+
+            // 사용자명 표시 (이메일에서 @ 앞부분만 추출)
+            const userName = user.username
+              ? user.username.split("@")[0]
+              : "사용자";
+            console.log("표시할 사용자명:", userName);
+
+            const userNameElement = document.getElementById("user-name");
+            if (userNameElement) {
+              userNameElement.textContent = userName;
+              console.log("사용자명 업데이트 완료");
+            } else {
+              console.error("user-name 엘리먼트를 찾을 수 없습니다");
+            }
+
+            // 삭제 예약 사용자 알림
+            if (user.deletion_cancelled) {
+              alert(
+                "계정 삭제가 취소되었습니다. 계속 서비스를 이용하실 수 있습니다."
+              );
+            }
+          } else {
+            console.error("사용자 정보 로딩 실패:", response.status);
+            document.getElementById("user-name").textContent = "로그인 오류";
+          }
+        } catch (error) {
+          console.error("사용자 정보 로딩 실패:", error);
+          document.getElementById("user-name").textContent = "네트워크 오류";
+        }
+      }
+
+      // 페이지 로드 시 사용자 정보 로딩
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM 로드 완료, 사용자 정보 로딩 시작");
+        loadUserInfo();
+      });
 
       let currentIndicators = [];
       function addIndicator(type) {

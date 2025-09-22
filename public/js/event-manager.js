@@ -86,11 +86,13 @@ export class EventManager {
 
   setupOrderbookEvents() {
     this.dom.elements.toggleGeneral?.addEventListener("click", () => {
+      console.log("일반 호가 탭 클릭");
       this.state.activeOrderbookType = "general";
       this.dom.elements.toggleGeneral.classList.add("active");
       this.dom.elements.toggleGrouped.classList.remove("active");
-      this.dom.elements.generalOrderbookContainer.classList.remove("hidden");
-      this.dom.elements.groupedOrderbookContainer.classList.add("hidden");
+      this.dom.elements.generalOrderbookContent.classList.remove("hidden");
+      this.dom.elements.cumulativeOrderbookContent.classList.add("hidden");
+      console.log("일반 호가창 표시, 누적 호가창 숨김");
       this.ui.updateOrderbook(
         this.state.latestOrderbookData[this.state.activeCoin]?.general,
         this.dom.elements.generalUnifiedList
@@ -98,16 +100,90 @@ export class EventManager {
     });
 
     this.dom.elements.toggleGrouped?.addEventListener("click", () => {
+      console.log("누적 호가 탭 클릭");
       this.state.activeOrderbookType = "grouped";
       this.dom.elements.toggleGeneral.classList.remove("active");
       this.dom.elements.toggleGrouped.classList.add("active");
-      this.dom.elements.generalOrderbookContainer.classList.add("hidden");
-      this.dom.elements.groupedOrderbookContainer.classList.remove("hidden");
-      this.ui.updateOrderbook(
-        this.state.latestOrderbookData[this.state.activeCoin]?.grouped,
-        this.dom.elements.groupedUnifiedList
-      );
+      this.dom.elements.generalOrderbookContent.classList.add("hidden");
+      this.dom.elements.cumulativeOrderbookContent.classList.remove("hidden");
+      console.log("누적 호가창 표시, 일반 호가창 숨김");
+
+      // 누적 호가창 업데이트
+      this.updateCumulativeOrderbook();
     });
+  }
+
+  updateCumulativeOrderbook() {
+    const data = this.state.latestOrderbookData[this.state.activeCoin]?.general;
+    if (!data?.orderbook_units) return;
+
+    const listElement = document.getElementById('cumulative-orderbook-list');
+    if (!listElement) return;
+
+    // 현재가 정보 가져오기
+    const currentPrice = this.state.latestTickerData[this.state.activeCoin]?.trade_price;
+    const prevClosingPrice = this.state.latestTickerData[this.state.activeCoin]?.prev_closing_price;
+
+    // 매도/매수 데이터 정리 - 일반 호가창과 동일하게 20개씩
+    const asks = data.orderbook_units
+      .filter(unit => unit.ask_price > 0 && unit.ask_size > 0)
+      .sort((a, b) => a.ask_price - b.ask_price)
+      .slice(0, 20);
+    const bids = data.orderbook_units
+      .filter(unit => unit.bid_price > 0 && unit.bid_size > 0)
+      .sort((a, b) => b.bid_price - a.bid_price)
+      .slice(0, 20);
+
+    // 누적 계산
+    let askCumulative = 0;
+    let bidCumulative = 0;
+
+    // 누적량 기준 막대를 위해 먼저 모든 누적량 계산
+    let tempAskCumulative = 0;
+    let tempBidCumulative = 0;
+
+    // 임시로 누적량들 계산해서 최대값 구하기
+    const askCumulatives = asks.map(unit => tempAskCumulative += unit.ask_size);
+    const bidCumulatives = bids.map(unit => tempBidCumulative += unit.bid_size);
+
+    // 최대 누적량 계산 (막대 길이 기준)
+    const maxCumulative = Math.max(...askCumulatives, ...bidCumulatives);
+
+    const askItems = asks.map(unit => {
+      askCumulative += unit.ask_size;
+      const changeRate = prevClosingPrice ? ((unit.ask_price - prevClosingPrice) / prevClosingPrice) * 100 : 0;
+      return {
+        price: unit.ask_price,
+        change: changeRate,
+        size: unit.ask_size,
+        amount: unit.ask_price * unit.ask_size,
+        cumulative: askCumulative,
+        volumeRatio: (askCumulative / maxCumulative) * 100,
+        type: 'ask'
+      };
+    });
+
+    const bidItems = bids.map(unit => {
+      bidCumulative += unit.bid_size;
+      const changeRate = prevClosingPrice ? ((unit.bid_price - prevClosingPrice) / prevClosingPrice) * 100 : 0;
+      return {
+        price: unit.bid_price,
+        change: changeRate,
+        size: unit.bid_size,
+        amount: unit.bid_price * unit.bid_size,
+        cumulative: bidCumulative,
+        volumeRatio: (bidCumulative / maxCumulative) * 100,
+        type: 'bid'
+      };
+    });
+
+    // HTML 생성 - 매도는 뒤집어서 표시
+    const html = [...askItems.reverse(), ...bidItems].map(item => `<div class="orderbook-unit cumulative-grid ${item.type === 'ask' ? 'ask-item' : 'bid-item'}" style="position: relative; --volume-ratio: ${item.volumeRatio}%;"><div class="orderbook-price" style="color: ${item.type === 'ask' ? '#f6465d' : '#0ecb81'}; font-weight: bold;">${item.price.toLocaleString()}</div><div class="change-item" style="text-align: center; color: ${item.change >= 0 ? '#0ecb81' : '#f6465d'};">${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}%</div><div class="size-item" style="text-align: right;">${item.size.toFixed(4)}</div><div class="amount-item" style="text-align: right;">${(item.amount / 1000).toFixed(0)}K</div><div class="cumulative-item" style="text-align: right; font-weight: bold;">${(item.cumulative * item.price / 1000000).toFixed(1)}M</div></div>`).join('');
+
+    listElement.innerHTML = html;
+
+    // 체결강도 업데이트도 함께 수행
+    this.ui.updateMarketPressure(asks, bids);
   }
 
   setupChartEvents() {

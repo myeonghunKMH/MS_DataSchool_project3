@@ -306,29 +306,19 @@ export class WebSocketManager {
     const code = data.code;
     if (!MARKET_CODES.includes(code)) return;
 
-    if (data.level === 0) {
-      this.state.latestOrderbookData[code].general = data;
-      if (
-        code === this.state.activeCoin &&
-        this.state.activeOrderbookType === "general"
-      ) {
+    // 일반 호가 데이터만 저장 (level은 항상 0)
+    this.state.latestOrderbookData[code].general = data;
+
+    if (code === this.state.activeCoin) {
+      if (this.state.activeOrderbookType === "general") {
         this.debouncedUpdateOrderbook(
           "general",
           data,
           document.getElementById("general-unified-list")
         );
-      }
-    } else {
-      this.state.latestOrderbookData[code].grouped = data;
-      if (
-        code === this.state.activeCoin &&
-        this.state.activeOrderbookType === "grouped"
-      ) {
-        this.debouncedUpdateOrderbook(
-          "grouped",
-          data,
-          document.getElementById("grouped-unified-list")
-        );
+      } else if (this.state.activeOrderbookType === "grouped") {
+        // 누적 호가창 실시간 업데이트
+        this.debouncedUpdateCumulativeOrderbook(data);
       }
     }
   }
@@ -346,6 +336,27 @@ export class WebSocketManager {
     this.orderbookUpdateTimers[key] = setTimeout(() => {
       requestAnimationFrame(() => {
         this.ui.updateOrderbook(data, unifiedListElement);
+        delete this.orderbookUpdateTimers[key];
+      });
+    }, 30);
+  }
+
+  // 누적 호가창 업데이트 디바운싱
+  debouncedUpdateCumulativeOrderbook(data) {
+    const key = `${this.state.activeCoin}-cumulative`;
+
+    // 기존 타이머가 있으면 취소
+    if (this.orderbookUpdateTimers[key]) {
+      clearTimeout(this.orderbookUpdateTimers[key]);
+    }
+
+    // 새로운 타이머 설정
+    this.orderbookUpdateTimers[key] = setTimeout(() => {
+      requestAnimationFrame(() => {
+        // event-manager의 updateCumulativeOrderbook 호출
+        if (window.TradingApp?.app()?.eventManager) {
+          window.TradingApp.app().eventManager.updateCumulativeOrderbook();
+        }
         delete this.orderbookUpdateTimers[key];
       });
     }, 30);
