@@ -207,9 +207,9 @@ export class UIController {
 
     if (!data || !container) return;
 
-    const priceChange = data.trade_price - data.prev_closing_price;
+    const priceChange = data.signed_change_price || (data.trade_price - data.prev_closing_price);
     const changePriceClass = priceChange >= 0 ? "positive" : "negative";
-    const changeRateClass = priceChange >= 0 ? "positive" : "negative";
+    const changeRateClass = data.signed_change_price >= 0 ? "positive" : "negative";
 
     container.innerHTML = `
       <div class="summary-left">
@@ -223,8 +223,8 @@ export class UIController {
           <span class="${changePriceClass}">${Utils.formatKRW(
       priceChange
     )} KRW</span>
-          <span class="${changeRateClass}">${Utils.formatPercent(
-      data.change_rate
+          <span class="${changeRateClass}">${Utils.formatPercentWithSign(
+      data.change_rate, data.signed_change_price
     )}%</span>
         </div>
       </div>

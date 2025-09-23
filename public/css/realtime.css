@@ -6,6 +6,7 @@
   align-items: center;
   background-color: #1a1a1a;
   padding: 20px 0;
+  border-radius: 8px;
 }
 .summary-left {
   display: flex;
@@ -25,6 +26,14 @@
 .summary-price {
   font-size: 2.5rem;
   font-weight: bold;
+}
+
+.summary-price.positive {
+  color: #0ECB81;
+}
+
+.summary-price.negative {
+  color: #F6465D;
 }
 .summary-sub {
   font-size: 1rem;
@@ -51,7 +60,7 @@
 }
 /* 상단 차트 섹션 */
 .top-chart-section {
-  background-color: #1c1c1c;
+  background-color: #1a1a1a;
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -66,7 +75,33 @@
   display: flex;
   gap: 5px;
 }
-.coin-tab,
+.coin-tab {
+  padding: 10px 20px;
+  border: 1px solid var(--stroke);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #cfcfcf;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: 0.3s;
+  cursor: pointer;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+}
+.coin-tab:hover {
+  border-color: rgba(var(--glow), 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.coin-tab.active {
+  background: linear-gradient(135deg, var(--accent), #ffb347);
+  border-color: var(--accent);
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+/* Time tabs는 기존 스타일 유지 */
 .time-tab {
   background-color: #2a2a2a;
   border: none;
@@ -76,7 +111,6 @@
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 }
-.coin-tab.active,
 .time-tab.active {
   background: #022c22;
 }
@@ -132,11 +166,25 @@ canvas {
 }
 .tab-button.active {
   color: #e0e0e0;
-  border-bottom: 2px solid #007bff;
+  border-bottom: 2px solid var(--accent);
 }
 .tab-button.disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.tab-button.refresh-tab img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0.8);
+  transition: filter 0.2s;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.tab-button.refresh-tab:hover img {
+  filter: brightness(1.2);
 }
 
 .orderbook-container {
@@ -183,6 +231,7 @@ canvas {
   flex: 1;
   position: relative;
   overflow: hidden;
+  background-color: rgb(26, 26, 26);
 }
 
 .ask-section {
@@ -202,6 +251,7 @@ canvas {
   background: linear-gradient(90deg, #1a1a1a 0%, #141414 100%);
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -221,6 +271,7 @@ canvas {
   background: #1a1a1a;
   padding: 16px;
   border-top: 1px solid #333;
+  border-radius: 0 0 8px 8px;
 }
 
 .strength-info {
@@ -289,11 +340,11 @@ canvas {
 }
 
 .price-change.positive {
-  color: #4caf50;
+  color: #0ECB81;
 }
 
 .price-change.negative {
-  color: #f44336;
+  color: #F6465D;
 }
 
 .spread-value {
@@ -311,6 +362,7 @@ canvas {
   padding: 12px 16px;
   background: #141414;
   border-top: 1px solid #333;
+  border-radius: 0 0 8px 8px;
 }
 
 .pressure-bar {
@@ -323,12 +375,12 @@ canvas {
 }
 
 .ask-pressure {
-  background: linear-gradient(90deg, #f44336 0%, #e53935 100%);
+  background: linear-gradient(90deg, #F6465D 0%, #F23B52 100%);
   transition: width 0.3s ease;
 }
 
 .bid-pressure {
-  background: linear-gradient(90deg, #4caf50 0%, #43a047 100%);
+  background: linear-gradient(90deg, #0ECB81 0%, #0BB574 100%);
   transition: width 0.3s ease;
 }
 
@@ -341,11 +393,11 @@ canvas {
 }
 
 .ask-label {
-  color: #f44336;
+  color: #F6465D;
 }
 
 .bid-label {
-  color: #4caf50;
+  color: #0ECB81;
 }
 
 .pressure-ratio {
@@ -419,9 +471,9 @@ canvas {
   display: grid;
   align-items: center;
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
-  min-height: 24px;
+  min-height: 26px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -498,39 +550,39 @@ canvas {
 }
 
 .orderbook-price.ask {
-  color: #4caf50;
+  color: #F6465D;
 }
 
 .orderbook-price.bid {
-  color: #f44336;
+  color: #0ECB81;
 }
 
 .orderbook-size {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* 변동률 */
 .change-item {
   font-weight: 400;
   text-align: center;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .ask-list .change-item {
-  color: #f6465d;
+  color: #F6465D;
 }
 
 .bid-list .change-item {
-  color: #0ecb81;
+  color: #0ECB81;
 }
 
 /* 통합 리스트 변동률 색상 */
 .unified-list .ask-item .change-item {
-  color: #f6465d;
+  color: #F6465D;
 }
 
 .unified-list .bid-item .change-item {
-  color: #0ecb81;
+  color: #0ECB81;
 }
 
 /* 금액 */
@@ -538,22 +590,22 @@ canvas {
   font-weight: 400;
   color: #b7bdc6;
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 /* 누적 */
 .cumulative-item {
   font-weight: 500;
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .ask-list .cumulative-item {
-  color: #f6465d;
+  color: #F6465D;
 }
 
 .bid-list .cumulative-item {
-  color: #0ecb81;
+  color: #0ECB81;
 }
 
 /* 호가주문 */
@@ -561,7 +613,7 @@ canvas {
   font-weight: 400;
   color: #f6465d;  /* 양수일때 빨간색 */
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 /* 애니메이션 효과 */
@@ -636,9 +688,9 @@ canvas {
   display: grid;
   align-items: center;
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
-  min-height: 24px;
+  min-height: 26px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -735,6 +787,7 @@ canvas {
   font-size: 1.2rem;
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
+  border-radius: 4px;
 }
 /* 우측 하단: 주문창 섹션 */
 .trading-panel {
@@ -759,11 +812,11 @@ canvas {
 }
 .trading-tab:first-child {
   border-radius: 5px 0 0 5px;
-  background-color: #d64d50;
+  background-color: #0ECB81;
 }
 .trading-tab:last-child {
   border-radius: 0 5px 5px 0;
-  background-color: #5d94d8;
+  background-color: #F6465D;
 }
 .trading-tab.active {
   font-weight: bold;
@@ -958,24 +1011,25 @@ canvas {
   transition: background-color 0.3s;
 }
 .bid-button {
-  background-color: #d64d50;
+  background-color: #0ECB81;
   color: white;
 }
 .bid-button:hover {
-  background-color: #c23e41;
+  background-color: #0BB574;
 }
 .ask-button {
-  background-color: #5d94d8;
+  background-color: #F6465D;
   color: white;
 }
 .ask-button:hover {
-  background-color: #4a7bc8;
+  background-color: #F23B52;
 }
 /* 대기 주문 섹션 */
 .pending-orders-section {
   border-top: 1px solid #333;
   padding-top: 16px;
   margin-top: 16px;
+  border-radius: 8px 8px 0 0;
 }
 .pending-orders-header {
   display: flex;
@@ -1110,11 +1164,11 @@ canvas {
   align-items: center;
 }
 .order-side.positive {
-  color: #c84a31;
+  color: rgba(14, 203, 129, 0.5);
   font-weight: 600;
 }
 .order-side.negative {
-  color: #1261c4;
+  color: rgba(246, 70, 93, 0.5);
   font-weight: 600;
 }
 .coin-name {
@@ -1226,11 +1280,11 @@ canvas {
   margin-bottom: 8px;
 }
 .tx-side.positive {
-  color: #c84a31;
+  color: rgba(14, 203, 129, 0.5);
   font-weight: 600;
 }
 .tx-side.negative {
-  color: #1261c4;
+  color: rgba(246, 70, 93, 0.5);
   font-weight: 600;
 }
 .tx-coin {
@@ -1361,6 +1415,7 @@ canvas {
   min-height: 120px; /* 🔧 최소 높이 설정 */
   width: 100%;
   border-top: 1px solid #333; /* 구분선 */
+  border-radius: 0 0 8px 8px;
 }
 /* 🔧 차트 간 여백 제거 */
 #priceChart,
@@ -1382,43 +1437,11 @@ canvas {
     min-height: 100px;
   }
 }
-/* 드롭다운 공통 스타일 */
-.indicator-dropdown,
-.timeframe-dropdown {
-  background-color: #2a2a2a;
-  color: #e0e0e0;
-  border: 1px solid #444;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-  min-width: 120px;
-}
-.indicator-dropdown:hover,
-.timeframe-dropdown:hover {
-  background-color: #444;
-  border-color: #666;
-}
-.indicator-dropdown:focus,
-.timeframe-dropdown:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-}
 /* 시간단위 컨트롤 스타일 */
 .time-controls {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-.time-controls label {
-  color: #e0e0e0;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-.timeframe-dropdown {
-  min-width: 80px;
 }
 /* 기존 indicator-controls 스타일 수정 */
 .indicator-controls {
@@ -1448,8 +1471,7 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   .indicator-controls {
     gap: 10px;
   }
-  .indicator-dropdown,
-  .timeframe-dropdown {
+  .indicator-btn {
     min-width: 100px;
     font-size: 0.8rem;
     padding: 6px 10px;
@@ -1480,6 +1502,30 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
 }
 .indicator-panel input[type="checkbox"] {
   margin-right: 8px;
+}
+
+/* 시간봉 라디오 버튼 스타일 - 라디오 동그라미 숨기기 */
+.indicator-panel input[type="radio"] {
+  display: none;
+}
+
+.indicator-panel label {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: block;
+}
+
+.indicator-panel label:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 선택된 라디오 버튼 라벨 스타일 */
+.indicator-panel label.selected {
+  background-color: var(--accent);
+  color: #1a1a1a;
+  font-weight: 600;
 }
 /* 보조지표 차트 레이아웃 */
 .chart-section {
@@ -1517,28 +1563,29 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   border: none;
 }
 .indicator-btn {
-  display: inline-flex;          /* 내용 크기에 맞춰 버튼 길이 */
-  align-items: center;
-  gap: 6px;                      /* 텍스트와 화살표 간격 */
-  padding: 8px 12px;
-  background: #1f2937;           /* 다크톤 */
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--stroke);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #cfcfcf;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  transition: 0.3s;
   cursor: pointer;
-  font-weight: 500;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: background 0.2s ease, transform 0.1s ease;
-  font-size: 14px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
 }
-
 .indicator-btn:hover {
-  background: #374151;           /* hover 시 살짝 밝게 */
+  border-color: rgba(var(--glow), 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
 }
-
-.indicator-btn:active {
-  background: #4b5563;           /* active 시 포인트 느낌 */
-  transform: scale(0.97);        /* 눌린 듯한 효과 */
+.indicator-btn.active {
+  background: linear-gradient(135deg, var(--accent), #ffb347);
+  border-color: var(--accent);
+  color: #1a1a1a;
+  font-weight: 700;
 }
 
 /* 화살표만 오른쪽 붙이기 */
@@ -1581,7 +1628,8 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   min-height: 80px;
   border-top: none; /* 🔧 볼륨 차트 구분선도 제거 */
 }
-/* 사용자 헤더 */
+/* 사용자 헤더 - 비활성화 (새로운 스타일로 대체됨) */
+/*
 .user-header {
   background-color: #0f0f0f;
   padding: 10px 20px;
@@ -1626,29 +1674,34 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   background-color: #444;
   border-color: #666;
 }
+*/
+
 /* 기존 컨테이너 여백 조정 */
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 15px 20px; /* 상단 여백 줄임 */
 }
+
 /* 반응형 */
 @media (max-width: 768px) {
+  /*
   .user-header {
     padding: 8px 15px;
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .user-info, .header-actions {
     width: 100%;
     justify-content: center;
   }
-  
+
   .header-btn {
     flex: 1;
     max-width: 100px;
   }
+  */
 }
 
 /* --- [지표 상태 요약 칸 추가] --- */
@@ -1656,7 +1709,7 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   display: flex;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #151515, #1a1a1a);
   border: 1px solid #2b2b2b;
   align-items: center;
@@ -1667,7 +1720,7 @@ a[href*="tradingview.com"]:not([class*="button"]):not([class*="link"]) {
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #171717;
   border: 1px solid #262626;
   min-width: 130px;

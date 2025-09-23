@@ -277,16 +277,7 @@ export class EventManager {
         this.chart.fetchAndRender();
       }
     });
-    const timeframeSelect = document.getElementById("timeframe-select");
-    timeframeSelect?.addEventListener("change", (e) => {
-      const selectedUnit = e.target.value;
-      console.log(
-        `⏰ 시간단위 변경: ${this.state.activeUnit} → ${selectedUnit}`
-      );
-
-      this.state.activeUnit = selectedUnit;
-      this.chart.fetchAndRender();
-    });
+    // 기존 select 방식은 제거됨 - 새로운 드롭다운 방식은 setupDropdownEvents에서 처리
   }
 
   setupTradingEvents() {
@@ -537,6 +528,58 @@ export class EventManager {
       }
     });
 
+    // 시간봉 토글
+    const timeframeToggle = document.getElementById("timeframe-toggle");
+    const timeframePanel = document.getElementById("timeframe-panel");
+    const timeframeContainer = timeframeToggle?.parentElement; // dropdown-container
+
+    timeframeToggle?.addEventListener("click", (e) => {
+      e.stopPropagation(); // 이벤트 버블링 방지
+      timeframePanel.classList.toggle("hidden");
+
+      // 다른 드롭다운 닫기
+      if (maPanel && !maPanel.classList.contains("hidden")) {
+        maPanel.classList.add("hidden");
+      }
+      if (techPanel && !techPanel.classList.contains("hidden")) {
+        techPanel.classList.add("hidden");
+      }
+    });
+
+    // 🔧 시간봉 드롭다운 외부 클릭 시 닫기
+    if (timeframeContainer && timeframePanel) {
+      this.setupDropdownAutoClose(timeframeContainer, timeframePanel);
+    }
+
+    // 시간봉 라디오 버튼들
+    timeframePanel?.addEventListener("change", (e) => {
+      if (e.target.type === "radio" && e.target.name === "timeframe") {
+        const selectedUnit = e.target.value;
+        const selectedText = e.target.parentElement.textContent.trim();
+
+        // 모든 라벨에서 selected 클래스 제거
+        timeframePanel.querySelectorAll("label").forEach(label => {
+          label.classList.remove("selected");
+        });
+
+        // 선택된 라벨에 selected 클래스 추가
+        e.target.parentElement.classList.add("selected");
+
+        // 버튼 텍스트 업데이트
+        if (timeframeToggle) {
+          timeframeToggle.textContent = `${selectedText} ▼`;
+        }
+
+        // 시간단위 변경
+        console.log(`⏰ 시간단위 변경: ${this.state.activeUnit} → ${selectedUnit}`);
+        this.state.activeUnit = selectedUnit;
+        this.chart.fetchAndRender();
+
+        // 드롭다운 닫기
+        timeframePanel.classList.add("hidden");
+      }
+    });
+
     // 🔧 전체 문서 클릭 시 모든 드롭다운 닫기
     document.addEventListener("click", (e) => {
       const isDropdownClick = e.target.closest(".dropdown-container");
@@ -544,6 +587,7 @@ export class EventManager {
         // 모든 드롭다운 닫기
         if (maPanel) maPanel.classList.add("hidden");
         if (techPanel) techPanel.classList.add("hidden");
+        if (timeframePanel) timeframePanel.classList.add("hidden");
       }
     });
   }
@@ -699,9 +743,29 @@ export class EventManager {
       });
 
       // 드롭다운과 동기화
-      const timeframeSelect = document.getElementById("timeframe-select");
-      if (timeframeSelect) {
-        timeframeSelect.value = unit;
+      const timeframeToggle = document.getElementById("timeframe-toggle");
+      const timeframePanel = document.getElementById("timeframe-panel");
+
+      if (timeframePanel) {
+        // 해당 라디오 버튼 선택
+        const radioButton = timeframePanel.querySelector(`input[value="${unit}"]`);
+        if (radioButton) {
+          radioButton.checked = true;
+
+          // 모든 라벨에서 selected 클래스 제거
+          timeframePanel.querySelectorAll("label").forEach(label => {
+            label.classList.remove("selected");
+          });
+
+          // 선택된 라벨에 selected 클래스 추가
+          radioButton.parentElement.classList.add("selected");
+
+          // 버튼 텍스트 업데이트
+          if (timeframeToggle) {
+            const selectedText = radioButton.parentElement.textContent.trim();
+            timeframeToggle.textContent = `${selectedText} ▼`;
+          }
+        }
       }
 
       this.chart.fetchAndRender();
@@ -726,7 +790,7 @@ export class EventManager {
       const button = this.dom.elements.refreshAllOrders;
       if (button) {
         button.disabled = false;
-        button.textContent = "🔄";
+        button.innerHTML = '<img src="images/refresh.png" alt="새로고침" />';
       }
     }
   }

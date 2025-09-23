@@ -11,7 +11,16 @@ export class Utils {
   }
 
   static formatPercent(rate) {
-    return (Number(rate || 0) * 100).toFixed(2);
+    const numRate = Number(rate || 0);
+    const percent = (numRate * 100).toFixed(2);
+    return numRate >= 0 ? `+${percent}` : percent;
+  }
+
+  static formatPercentWithSign(rate, signedChangePrice) {
+    const numRate = Number(rate || 0);
+    const percent = (numRate * 100).toFixed(2);
+    const isPositive = Number(signedChangePrice || 0) >= 0;
+    return isPositive ? `+${percent}` : `-${percent}`;
   }
 
   static parseNumber(value) {

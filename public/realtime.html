@@ -2,250 +2,379 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>실시간 암호화폐 모의투자</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>실시간 암호화폐 모의투자 | ITC</title>
+    <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="css/common.css" />
     <link rel="stylesheet" href="css/realtime.css" />
     <link rel="stylesheet" href="css/chat-widget.css" />
     <!-- TradingView Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts@5.0.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --accent: #ffd166;
+        --stroke: #2b2b2b;
+        --glow: 255, 255, 255;
+      }
+
+      /* ===== Global ===== */
+      html,
+      body {
+        min-height: 100%;
+      }
+      body {
+        margin: 0;
+        color: #eaeaea;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background: radial-gradient(
+            1200px 600px at 50% -10%,
+            rgba(255, 255, 255, 0.12),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 600px at 50% 120%,
+            rgba(255, 255, 255, 0.08),
+            transparent 60%
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.03) 0 2px,
+            rgba(0, 0, 0, 0) 2px 8px
+          ),
+          linear-gradient(#151515, #0a0a0a);
+        background-attachment: fixed;
+      }
+      * {
+        box-sizing: border-box;
+      }
+
+      /* ===== Header ===== */
+      header {
+        position: fixed;
+        inset: 12px 12px auto 12px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: saturate(120%) blur(2px);
+      }
+      .brand img {
+        width: 120px;
+        height: auto;
+        filter: drop-shadow(0 10px 26px rgba(var(--glow), 0.22))
+          drop-shadow(0 0 20px rgba(var(--glow), 0.18));
+      }
+      nav {
+        display: flex;
+        gap: 8px;
+      }
+      .navbtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--stroke);
+        color: #f3f3f3;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.22s;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .navbtn img {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        display: block;
+      }
+      .navbtn:hover {
+        border-color: rgba(var(--glow), 0.32);
+        box-shadow: 0 0 12px rgba(var(--glow), 0.22);
+        transform: translateY(-1px);
+        color: #fff;
+      }
+
+      /* ===== Layout ===== */
+      main {
+        width: min(1400px, 92vw);
+        margin: 100px auto 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+
+      /* ===== Trading Container ===== */
+      .trading-container {
+        background: #1a1a1a;
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        position: relative;
+      }
+
+
+      /* ===== Footer ===== */
+      footer {
+        display: flex;
+        justify-content: center;
+        margin: 50px 0 160px;
+        color: #9a9a9a;
+        font-size: 12px;
+        text-align: center;
+        line-height: 1.4;
+        padding: 0 16px;
+      }
+    </style>
   </head>
   <body>
-    <!-- 🔧 새로 추가: 사용자 정보 표시 헤더 -->
-
-    <div class="user-header">
-      <div class="user-info">
-        <span id="user-name">로딩 중...</span>
-        <span class="user-status">로그인됨</span>
-      </div>
-      <div class="header-actions">
-        <button class="header-btn" onclick="window.location.href='/index.html'">
-          메인페이지
-        </button>
-        <button
-          class="header-btn"
-          onclick="window.location.href='/mypage.html'"
+    <header>
+      <a class="brand" href="index.html"
+        ><img src="/images/logo.png" alt="ITC 로고"
+      /></a>
+      <nav>
+        <a class="navbtn" href="guide.html"
+          ><img src="/images/Document.png" alt="" />GUIDE</a
         >
-          MyPage
-        </button>
-      </div>
-    </div>
-    <div class="container">
-      <div class="header-summary" id="coin-summary"></div>
-      <div class="top-chart-section">
-        <div class="chart-controls">
-          <div class="coin-tabs" id="coin-tabs"></div>
-          <!-- 지표 및 차트 설정 드롭다운들 -->
-          <div class="indicator-controls">
-            <div class="dropdown-container">
-              <button class="indicator-btn" id="ma-toggle">이동평균선 ▼</button>
-              <div class="indicator-panel hidden" id="ma-panel">
-                <label><input type="checkbox" data-ma="5" /> MA5</label>
-                <label><input type="checkbox" data-ma="10" /> MA10</label>
-                <label><input type="checkbox" data-ma="20" /> MA20</label>
-                <label><input type="checkbox" data-ma="50" /> MA50</label>
-                <label><input type="checkbox" data-ma="100" /> MA100</label>
-                <label><input type="checkbox" data-ma="200" /> MA200</label>
-              </div>
-            </div>
-            <div class="dropdown-container">
-              <button class="indicator-btn" id="technical-toggle">
-                보조지표 ▼
-              </button>
-              <div class="indicator-panel hidden" id="technical-panel">
-                <label
-                  ><input type="checkbox" data-indicator="RSI" /> RSI</label
-                >
-                <label
-                  ><input type="checkbox" data-indicator="MACD" /> MACD</label
-                >
-                <label
-                  ><input type="checkbox" data-indicator="BB" />
-                  볼린저밴드</label
-                >
-              </div>
-            </div>
-            <button
-              class="indicator-btn"
-              id="clear-all-indicators"
-              title="모든 지표 초기화"
-            >
-              초기화
-            </button>
-          </div>
-          <!-- 시간단위 선택 -->
-          <div class="time-controls">
-            <select id="timeframe-select" class="timeframe-dropdown">
-              <option value="1">1분</option>
-              <option value="5">5분</option>
-              <option value="15">15분</option>
-              <option value="30">30분</option>
-              <option value="60" selected>1시간</option>
-              <option value="240">4시간</option>
-              <option value="1D">1일</option>
-            </select>
-          </div>
-        </div>
+        <a class="navbtn" href="mypage.html">MyPage</a>
+        <a class="navbtn" href="index.html">← Back</a>
+      </nav>
+    </header>
 
-        <div class="chart-container">
-          <div id="priceChart" class="chart-section price-chart"></div>
+    <main>
+      <!-- 트레이딩 컨텐츠 카드 -->
+      <div class="trading-container">
+        <div class="header-summary" id="coin-summary"></div>
 
-          <!-- RSI 차트 (초기 숨김) -->
-          <div
-            id="rsiChart"
-            class="chart-section indicator-chart hidden"
-            data-indicator="RSI"
-          >
-            <div class="chart-content"></div>
-          </div>
-
-          <!-- MACD 차트 (초기 숨김) -->
-          <div
-            id="macdChart"
-            class="chart-section indicator-chart hidden"
-            data-indicator="MACD"
-          >
-            <div class="chart-content"></div>
-          </div>
-
-          <div id="volumeChart" class="chart-section volume-chart"></div>
-        </div>
-      </div>
-
-      <div class="bottom-content">
-        <div class="orderbook-wrapper">
-          <div class="orderbook-tab-group">
-            <button id="toggle-general" class="tab-button active">
-              일반 호가
-            </button>
-            <button id="toggle-grouped" class="tab-button">누적 호가</button>
-            <button class="tab-button disabled">호가주문</button>
-          </div>
-
-          <!-- 전체 호가창 컨테이너 -->
-          <div class="orderbook-container">
-            <!-- 실제 호가창 (탭 전환에 따라 내용 변경) -->
-            <div class="orderbook-section">
-              <!-- 일반 호가창 내용 -->
-              <div id="general-orderbook-content" class="orderbook-content">
-                <div
-                  class="orderbook-list unified-list"
-                  id="general-unified-list"
-                ></div>
-              </div>
-
-              <!-- 누적 호가창 내용 -->
-              <div
-                id="cumulative-orderbook-content"
-                class="orderbook-content hidden"
-              >
-                <!-- 누적 호가 리스트 -->
-                <div
-                  id="cumulative-orderbook-list"
-                  class="cumulative-orderbook-scroll orderbook-list"
-                ></div>
-              </div>
-            </div>
-
-            <!-- 체결강도 표시 -->
-            <div class="market-pressure">
-              <div class="pressure-bar">
-                <div class="ask-pressure" id="ask-pressure-bar"></div>
-                <div class="bid-pressure" id="bid-pressure-bar"></div>
-              </div>
-              <div class="pressure-labels">
-                <span class="ask-label">매도압력</span>
-                <span class="pressure-ratio" id="pressure-ratio">50:50</span>
-                <span class="bid-label">매수압력</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="trading-panel">
-          <div class="trading-tabs">
-            <button class="trading-tab active" data-side="bid">매수</button>
-            <button class="trading-tab" data-side="ask">매도</button>
-          </div>
-          <div class="trading-content">
-            <div class="balance-and-type">
-              <div class="available-balance">
-                <span>주문가능</span>
-                <span id="available-amount" class="available-amount-value"
-                  >0 KRW</span
-                >
-              </div>
-              <div class="trading-type">
-                <button class="trading-type-btn active" data-type="limit">
-                  지정가
+        <div class="top-chart-section">
+          <div class="chart-controls">
+            <div class="coin-tabs" id="coin-tabs"></div>
+            <!-- 지표 및 차트 설정 드롭다운들 -->
+            <div class="indicator-controls">
+              <div class="dropdown-container">
+                <button class="indicator-btn" id="ma-toggle">
+                  이동평균선 ▼
                 </button>
-                <button class="trading-type-btn" data-type="market">
-                  시장가
+                <div class="indicator-panel hidden" id="ma-panel">
+                  <label><input type="checkbox" data-ma="5" /> MA5</label>
+                  <label><input type="checkbox" data-ma="10" /> MA10</label>
+                  <label><input type="checkbox" data-ma="20" /> MA20</label>
+                  <label><input type="checkbox" data-ma="50" /> MA50</label>
+                  <label><input type="checkbox" data-ma="100" /> MA100</label>
+                  <label><input type="checkbox" data-ma="200" /> MA200</label>
+                </div>
+              </div>
+              <div class="dropdown-container">
+                <button class="indicator-btn" id="technical-toggle">
+                  보조지표 ▼
                 </button>
-                <button class="trading-type-btn disabled">예약</button>
+                <div class="indicator-panel hidden" id="technical-panel">
+                  <label
+                    ><input type="checkbox" data-indicator="RSI" /> RSI</label
+                  >
+                  <label
+                    ><input type="checkbox" data-indicator="MACD" /> MACD</label
+                  >
+                  <label
+                    ><input type="checkbox" data-indicator="BB" />
+                    볼린저밴드</label
+                  >
+                </div>
               </div>
-            </div>
-            <div class="trading-input-group price-input-group">
-              <label for="order-price">주문가</label>
-              <input type="text" id="order-price" placeholder="0" />
-              <div class="price-controls">
-                <select id="price-percentage-dropdown"></select>
-                <button class="price-btn minus">-</button>
-                <button class="price-btn plus">+</button>
-              </div>
-            </div>
-            <div class="trading-input-group quantity-input-group">
-              <label for="order-quantity">주문수량</label>
-              <input type="text" id="order-quantity" placeholder="0" />
-              <div class="quantity-btns">
-                <button data-percent="10">10%</button>
-                <button data-percent="25">25%</button>
-                <button data-percent="50">50%</button>
-                <button data-percent="100">최대</button>
-              </div>
-            </div>
-            <div class="trading-input-group total-input-group">
-              <label for="order-total">주문총액</label>
-              <input type="text" id="order-total" placeholder="0" />
-            </div>
-            <div class="trading-input-group market-total-group hidden">
-              <label for="order-total-market">주문총액</label>
-              <input type="text" id="order-total-market" placeholder="0" />
-              <div class="quantity-btns">
-                <button data-percent="10">10%</button>
-                <button data-percent="25">25%</button>
-                <button data-percent="50">50%</button>
-                <button data-percent="100">최대</button>
-              </div>
-            </div>
-            <button class="trade-button bid-button">매수</button>
-            <button class="trade-button ask-button hidden">매도</button>
-          </div>
-          <div class="trade-history-container">
-            <div class="tabs">
-              <button id="pending-orders-tab" class="tab-button active">
-                대기 주문
-              </button>
-              <button id="filled-orders-tab" class="tab-button">
-                체결 내역
-              </button>
               <button
-                id="refresh-all-orders"
-                class="tab-button refresh-tab"
-                title="전체 새로고침"
+                class="indicator-btn"
+                id="clear-all-indicators"
+                title="모든 지표 초기화"
               >
-                🔄
+                초기화
               </button>
             </div>
-            <div id="pending-orders-section" class="tab-content">
-              <div id="pending-orders-list" class="order-list"></div>
+            <!-- 시간단위 선택 -->
+            <div class="time-controls">
+              <div class="dropdown-container">
+                <button class="indicator-btn" id="timeframe-toggle">
+                  1시간 ▼
+                </button>
+                <div class="indicator-panel hidden" id="timeframe-panel">
+                  <label><input type="radio" name="timeframe" value="1" /> 1분</label>
+                  <label><input type="radio" name="timeframe" value="5" /> 5분</label>
+                  <label><input type="radio" name="timeframe" value="15" /> 15분</label>
+                  <label><input type="radio" name="timeframe" value="30" /> 30분</label>
+                  <label class="selected"><input type="radio" name="timeframe" value="60" checked /> 1시간</label>
+                  <label><input type="radio" name="timeframe" value="240" /> 4시간</label>
+                  <label><input type="radio" name="timeframe" value="1D" /> 1일</label>
+                </div>
+              </div>
             </div>
-            <div id="filled-orders-section" class="tab-content hidden">
-              <div id="filled-orders-list" class="order-list"></div>
+          </div>
+
+          <div class="chart-container">
+            <div id="priceChart" class="chart-section price-chart"></div>
+
+            <!-- RSI 차트 (초기 숨김) -->
+            <div
+              id="rsiChart"
+              class="chart-section indicator-chart hidden"
+              data-indicator="RSI"
+            >
+              <div class="chart-content"></div>
+            </div>
+
+            <!-- MACD 차트 (초기 숨김) -->
+            <div
+              id="macdChart"
+              class="chart-section indicator-chart hidden"
+              data-indicator="MACD"
+            >
+              <div class="chart-content"></div>
+            </div>
+
+            <div id="volumeChart" class="chart-section volume-chart"></div>
+          </div>
+        </div>
+
+        <div class="bottom-content">
+          <div class="orderbook-wrapper">
+            <div class="orderbook-tab-group">
+              <button id="toggle-general" class="tab-button active">
+                일반 호가
+              </button>
+              <button id="toggle-grouped" class="tab-button">누적 호가</button>
+              <button class="tab-button disabled">호가주문</button>
+            </div>
+
+            <!-- 전체 호가창 컨테이너 -->
+            <div class="orderbook-container">
+              <!-- 실제 호가창 (탭 전환에 따라 내용 변경) -->
+              <div class="orderbook-section">
+                <!-- 일반 호가창 내용 -->
+                <div id="general-orderbook-content" class="orderbook-content">
+                  <div
+                    class="orderbook-list unified-list"
+                    id="general-unified-list"
+                  ></div>
+                </div>
+
+                <!-- 누적 호가창 내용 -->
+                <div
+                  id="cumulative-orderbook-content"
+                  class="orderbook-content hidden"
+                >
+                  <!-- 누적 호가 리스트 -->
+                  <div
+                    id="cumulative-orderbook-list"
+                    class="cumulative-orderbook-scroll orderbook-list"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- 체결강도 표시 -->
+              <div class="market-pressure">
+                <div class="pressure-bar">
+                  <div class="ask-pressure" id="ask-pressure-bar"></div>
+                  <div class="bid-pressure" id="bid-pressure-bar"></div>
+                </div>
+                <div class="pressure-labels">
+                  <span class="ask-label">매도압력</span>
+                  <span class="pressure-ratio" id="pressure-ratio">50:50</span>
+                  <span class="bid-label">매수압력</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="trading-panel">
+            <div class="trading-tabs">
+              <button class="trading-tab active" data-side="bid">매수</button>
+              <button class="trading-tab" data-side="ask">매도</button>
+            </div>
+            <div class="trading-content">
+              <div class="balance-and-type">
+                <div class="available-balance">
+                  <span>주문가능</span>
+                  <span id="available-amount" class="available-amount-value"
+                    >0 KRW</span
+                  >
+                </div>
+                <div class="trading-type">
+                  <button class="trading-type-btn active" data-type="limit">
+                    지정가
+                  </button>
+                  <button class="trading-type-btn" data-type="market">
+                    시장가
+                  </button>
+                  <button class="trading-type-btn disabled">예약</button>
+                </div>
+              </div>
+              <div class="trading-input-group price-input-group">
+                <label for="order-price">주문가</label>
+                <input type="text" id="order-price" placeholder="0" />
+                <div class="price-controls">
+                  <select id="price-percentage-dropdown"></select>
+                  <button class="price-btn minus">-</button>
+                  <button class="price-btn plus">+</button>
+                </div>
+              </div>
+              <div class="trading-input-group quantity-input-group">
+                <label for="order-quantity">주문수량</label>
+                <input type="text" id="order-quantity" placeholder="0" />
+                <div class="quantity-btns">
+                  <button data-percent="10">10%</button>
+                  <button data-percent="25">25%</button>
+                  <button data-percent="50">50%</button>
+                  <button data-percent="100">최대</button>
+                </div>
+              </div>
+              <div class="trading-input-group total-input-group">
+                <label for="order-total">주문총액</label>
+                <input type="text" id="order-total" placeholder="0" />
+              </div>
+              <div class="trading-input-group market-total-group hidden">
+                <label for="order-total-market">주문총액</label>
+                <input type="text" id="order-total-market" placeholder="0" />
+                <div class="quantity-btns">
+                  <button data-percent="10">10%</button>
+                  <button data-percent="25">25%</button>
+                  <button data-percent="50">50%</button>
+                  <button data-percent="100">최대</button>
+                </div>
+              </div>
+              <button class="trade-button bid-button">매수</button>
+              <button class="trade-button ask-button hidden">매도</button>
+            </div>
+            <div class="trade-history-container">
+              <div class="tabs">
+                <button id="pending-orders-tab" class="tab-button active">
+                  대기 주문
+                </button>
+                <button id="filled-orders-tab" class="tab-button">
+                  체결 내역
+                </button>
+                <button
+                  id="refresh-all-orders"
+                  class="tab-button refresh-tab"
+                  title="전체 새로고침"
+                >
+                  <img src="images/refresh.png" alt="새로고침" />
+                </button>
+              </div>
+              <div id="pending-orders-section" class="tab-content">
+                <div id="pending-orders-list" class="order-list"></div>
+              </div>
+              <div id="filled-orders-section" class="tab-content hidden">
+                <div id="filled-orders-list" class="order-list"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
     <!-- 사용자 정보 로딩 스크립트 및 전역 지표함수 (필요시) -->
     <script>
@@ -260,20 +389,6 @@
             const user = await response.json();
             console.log("받은 사용자 데이터:", user);
 
-            // 사용자명 표시 (이메일에서 @ 앞부분만 추출)
-            const userName = user.username
-              ? user.username.split("@")[0]
-              : "사용자";
-            console.log("표시할 사용자명:", userName);
-
-            const userNameElement = document.getElementById("user-name");
-            if (userNameElement) {
-              userNameElement.textContent = userName;
-              console.log("사용자명 업데이트 완료");
-            } else {
-              console.error("user-name 엘리먼트를 찾을 수 없습니다");
-            }
-
             // 삭제 예약 사용자 알림
             if (user.deletion_cancelled) {
               alert(
@@ -282,11 +397,9 @@
             }
           } else {
             console.error("사용자 정보 로딩 실패:", response.status);
-            document.getElementById("user-name").textContent = "로그인 오류";
           }
         } catch (error) {
           console.error("사용자 정보 로딩 실패:", error);
-          document.getElementById("user-name").textContent = "네트워크 오류";
         }
       }
 
@@ -321,5 +434,13 @@
     <script src="js/TechnicalIndicatorManager.js"></script>
     <script src="js/AIAssistant.js"></script>
     <script type="module" src="js/main.js"></script>
+
+    <footer>
+      본 서비스는 학습과 연습을 목적으로 제공되는 모의투자 시스템입니다.<br />
+      제공되는 데이터와 시뮬레이션 결과는 실제 시장과 다를 수 있으며, 이로 인해
+      발생하는 모든 손실과 불이익에 대해서 운영자는 책임을 지지 않습니다.<br />
+      본 서비스는 투자 권유가 아니며, 실제 투자를 결정할 때는 이용자 본인의
+      판단과 책임에 따라야 합니다.
+    </footer>
   </body>
 </html>
