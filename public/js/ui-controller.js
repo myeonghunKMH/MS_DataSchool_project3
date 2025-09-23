@@ -149,11 +149,14 @@ export class UIController {
         return `
           <div class="transaction-item">
             <div class="transaction-header">
-              <span class="tx-side ${sideClass}">${sideText}</span>
-              <span class="tx-coin">${coinSymbol}</span>
-              <span class="tx-type">${
-                t.type === "market" ? "시장가" : "지정가"
-              }</span>
+              <div>
+                <span class="tx-side ${sideClass}">${sideText}</span>
+                <span class="tx-coin">${coinSymbol}</span>
+                <span class="tx-type">${
+                  t.type === "market" ? "시장가" : "지정가"
+                }</span>
+              </div>
+              <div class="tx-time">${Utils.formatDateTime(t.created_at)}</div>
             </div>
             <div class="transaction-details">
               <span class="tx-price">체결가: ${Utils.formatKRW(
@@ -167,7 +170,6 @@ export class UIController {
                 t.total_amount
               )}원</span>
             </div>
-            <div class="tx-time">${Utils.formatDateTime(t.created_at)}</div>
           </div>
         `;
       })
