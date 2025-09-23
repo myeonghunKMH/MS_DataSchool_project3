@@ -243,12 +243,12 @@ export class EventManager {
       const cumulativeDiv = element.children[4];
 
       priceDiv.textContent = item.price.toLocaleString();
-      priceDiv.style.color = item.type === 'ask' ? '#f6465d' : '#0ecb81';
+      priceDiv.style.color = item.type === 'ask' ? '#1763b6' : '#e12343';
       priceDiv.style.fontWeight = 'bold';
 
       changeDiv.textContent = `${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}%`;
       changeDiv.style.textAlign = 'center';
-      changeDiv.style.color = item.change >= 0 ? '#0ecb81' : '#f6465d';
+      changeDiv.style.color = item.change >= 0 ? '#e12343' : '#1763b6';
 
       sizeDiv.textContent = item.size.toFixed(4);
       sizeDiv.style.textAlign = 'right';

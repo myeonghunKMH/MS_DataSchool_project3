@@ -386,7 +386,7 @@ export class ChartManager {
         time,
         value: Math.max(0, volume),
         color:
-          close >= open ? "rgba(14, 203, 129, 0.5)" : "rgba(246, 70, 93, 0.5)",
+          close >= open ? "rgba(225, 35, 67, 0.5)" : "rgba(23, 99, 182, 0.5)",
       });
     }
 
@@ -538,11 +538,11 @@ export class ChartManager {
     });
 
     this.priceSeries = this.priceChart.addSeries(LightweightCharts.CandlestickSeries, {
-      upColor: "#0ECB81",
-      downColor: "#F6465D",
+      upColor: "#e12343",
+      downColor: "#1763b6",
       borderVisible: false,
-      wickUpColor: "#0ECB81",
-      wickDownColor: "#F6465D",
+      wickUpColor: "#e12343",
+      wickDownColor: "#1763b6",
       priceFormat: {
         type: "price",
         precision: 0,
@@ -648,7 +648,7 @@ export class ChartManager {
     });
 
     this.volumeSeries = this.volumeChart.addSeries(LightweightCharts.HistogramSeries, {
-      color: "#0ECB81",
+      color: "#e12343",
       priceFormat: {
         type: "volume",
         formatter: (volume) => {
@@ -999,7 +999,7 @@ export class ChartManager {
         result.histogram.push({
           time,
           value: histogramValue,
-          color: histogramValue >= 0 ? "#0ECB81" : "#F6465D",
+          color: histogramValue >= 0 ? "#e12343" : "#1763b6",
         });
       } else {
         // null 값도 추가하여 인덱스 일치 유지
@@ -1290,7 +1290,7 @@ export class ChartManager {
       });
 
       this.macdHistogramSeries = this.macdChart.addSeries(LightweightCharts.HistogramSeries, {
-        color: "#0ECB81",
+        color: "#e12343",
       });
 
       if (this.lastCandleData && this.lastCandleData.length >= 35) {
@@ -1746,7 +1746,7 @@ export class ChartManager {
         time,
         value: Math.max(0, volume),
         color:
-          close >= open ? "rgba(14, 203, 129, 0.5)" : "rgba(246, 70, 93, 0.5)",
+          close >= open ? "rgba(225, 35, 67, 0.5)" : "rgba(23, 99, 182, 0.5)",
       });
     }
 

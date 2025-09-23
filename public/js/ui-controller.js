@@ -586,8 +586,8 @@ export class UIController {
 
     div.innerHTML = `
       <div class="orderbook-item size-item">${Utils.formatCoinAmount(size, 3)}</div>
-      <div class="orderbook-item price-item" style="color: ${type === 'ask' ? '#f6465d' : '#0ecb81'};">${Utils.formatKRW(price)}</div>
-      <div class="orderbook-item order-item" style="color: ${priceChange >= 0 ? '#0ecb81' : '#f6465d'};">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+      <div class="orderbook-item price-item" style="color: ${type === 'ask' ? '#1763b6' : '#e12343'};">${Utils.formatKRW(price)}</div>
+      <div class="orderbook-item order-item" style="color: ${priceChange >= 0 ? '#e12343' : '#1763b6'};">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
     `;
 
     // 배경색은 CSS 클래스(.ask-item, .bid-item)에서 자동 적용
@@ -605,14 +605,29 @@ export class UIController {
     const price = unit[priceKey];
     const size = unit[sizeKey];
     const amount = price * size;
-    const priceChange = this.calculatePriceChange(price);
+
+    // 변동률 계산 - 코인 서머리와 동일한 방식
+    const tickerData = this.state.latestTickerData[this.state.activeCoin];
+    const prevClosingPrice = tickerData?.prev_closing_price;
+    let changePercent = 0;
+    let changeColor = '#999';
+
+    if (prevClosingPrice && prevClosingPrice > 0) {
+      changePercent = ((price - prevClosingPrice) / prevClosingPrice) * 100;
+      const signedChange = tickerData?.signed_change_price;
+      const isPositive = signedChange !== undefined ? signedChange >= 0 : changePercent >= 0;
+      changeColor = isPositive ? '#e12343' : '#1763b6';
+    }
 
     // 일반 호가창에서는 총계 열에 총 거래대금 표시
     const totalAmount = amount;
 
+    const changeText = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
+    const finalChangeColor = changeText.startsWith('-') ? '#1763b6' : '#e12343';
+
     div.innerHTML = `
-      <div class="orderbook-price" style="color: ${type === 'ask' ? '#f6465d' : '#0ecb81'}; font-weight: bold;">${price.toLocaleString()}</div>
-      <div class="change-item" style="text-align: center; color: ${priceChange >= 0 ? '#0ecb81' : '#f6465d'};">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+      <div class="orderbook-price" style="color: ${type === 'ask' ? '#1763b6' : '#e12343'}; font-weight: bold;">${price.toLocaleString()}</div>
+      <div class="change-item" style="color: ${finalChangeColor}; text-align: center;">${changeText}</div>
       <div class="size-item" style="text-align: right;">${size.toFixed(4)}</div>
       <div class="amount-item" style="text-align: right;">${(amount / 1000).toFixed(0)}K</div>
       <div class="total-item" style="text-align: right; font-weight: bold;">${(totalAmount / 1000000).toFixed(1)}M</div>
@@ -636,7 +651,7 @@ export class UIController {
 
     div.innerHTML = `
       <div class="orderbook-item price-item">${Utils.formatKRW(price)}</div>
-      <div class="orderbook-item change-item">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
+      <div class="orderbook-item order-item" style="color: ${priceChange >= 0 ? '#e12343' : '#1763b6'};">${priceChange >= 0 ? '+' : ''}${(priceChange * 100).toFixed(2)}%</div>
       <div class="orderbook-item size-item">${Utils.formatCoinAmount(size, 3)}</div>
       <div class="orderbook-item amount-item">${Utils.formatKRW(amount).replace('원', '').replace(',', '.')}</div>
       <div class="orderbook-item cumulative-item">${Utils.formatKRW(cumulativeAmount).replace('원', '').replace(',', '.')}</div>

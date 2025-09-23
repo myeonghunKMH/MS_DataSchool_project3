@@ -381,13 +381,10 @@
       // 사용자 정보 로딩
       async function loadUserInfo() {
         try {
-          console.log("사용자 정보 로딩 시작...");
           const response = await fetch("/api/user");
-          console.log("API 응답 상태:", response.status);
 
           if (response.ok) {
             const user = await response.json();
-            console.log("받은 사용자 데이터:", user);
 
             // 삭제 예약 사용자 알림
             if (user.deletion_cancelled) {
@@ -396,16 +393,13 @@
               );
             }
           } else {
-            console.error("사용자 정보 로딩 실패:", response.status);
           }
         } catch (error) {
-          console.error("사용자 정보 로딩 실패:", error);
         }
       }
 
       // 페이지 로드 시 사용자 정보 로딩
       document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOM 로드 완료, 사용자 정보 로딩 시작");
         loadUserInfo();
       });
 
@@ -416,7 +410,6 @@
           const indicator = app.chartManager.addIndicator(type);
           if (indicator) {
             currentIndicators.push({ type, series: indicator });
-            console.log(`${type} 지표가 추가되었습니다.`);
           }
         }
       }
@@ -427,7 +420,6 @@
           }
         });
         currentIndicators = [];
-        console.log("모든 지표가 제거되었습니다.");
       }
     </script>
 
