@@ -349,37 +349,20 @@ export class EventManager {
       this.ui.updateOrderTotal();
     });
 
-    // 🔧 주문총액 입력 이벤트 (1000원 단위 적용)
+    // 🔧 주문총액 입력 이벤트 (사용자 직접 입력 시에는 자유 입력)
     this.dom.elements.orderTotalInput?.addEventListener("input", (e) => {
-      let value = Utils.parseNumber(e.target.value);
-
-      // 🔧 비트코인/이더리움의 경우 1000원 단위로 조정
-      if (
-        this.state.activeCoin === "KRW-BTC" ||
-        this.state.activeCoin === "KRW-ETH"
-      ) {
-        value = Math.floor(value / 1000) * 1000;
-      }
-
-      e.target.value = Utils.formatKRW(value);
+      // 사용자가 직접 입력할 때는 단위 조정 없이 자유롭게 입력 허용
+      // %버튼이나 다른 자동 계산에 의한 입력은 이미 올바른 단위로 설정됨
 
       // 총액 변경 시 수량 자동 계산
       this.ui.updateQuantityFromTotal();
     });
 
-    // 시장가 주문총액 입력 이벤트 (1000원 단위 적용)
+    // 시장가 주문총액 입력 이벤트 (사용자 직접 입력 시에는 자유 입력)
     this.dom.elements.orderTotalMarketInput?.addEventListener("input", (e) => {
-      let value = Utils.parseNumber(e.target.value);
+      // 사용자가 직접 입력할 때는 단위 조정 없이 자유롭게 입력 허용
+      // %버튼이나 다른 자동 계산에 의한 입력은 이미 올바른 단위로 설정됨
 
-      // 🔧 비트코인/이더리움의 경우 1000원 단위로 조정
-      if (
-        this.state.activeCoin === "KRW-BTC" ||
-        this.state.activeCoin === "KRW-ETH"
-      ) {
-        value = Math.floor(value / 1000) * 1000;
-      }
-
-      e.target.value = Utils.formatKRW(value);
       this.ui.updateMarketQuantity();
     });
 

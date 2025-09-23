@@ -237,6 +237,23 @@ export class TradingManager {
       return false;
     }
 
+    // 🔧 비트코인/이더리움 총액 단위 체크 (1000원 단위)
+    if (
+      (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") &&
+      totalAmount % 1000 !== 0
+    ) {
+      const adjustedTotal = Math.floor(totalAmount / 1000) * 1000;
+      this.dom.showOrderResult(
+        `${
+          this.state.activeCoin.split("-")[1]
+        } 주문총액은 1000원 단위로 입력해주세요. (권장: ${Utils.formatKRW(
+          adjustedTotal
+        )}원)`,
+        false
+      );
+      return false;
+    }
+
     // 코인별 가격 단위 체크
     const priceStep = Utils.getPriceStep(price, this.state.activeCoin);
     if (price % priceStep !== 0) {
@@ -293,6 +310,23 @@ export class TradingManager {
     if (totalAmount < minOrderAmount) {
       this.dom.showOrderResult(
         `최소 주문 금액은 ${minOrderAmount.toLocaleString()}원입니다.`,
+        false
+      );
+      return false;
+    }
+
+    // 🔧 비트코인/이더리움 총액 단위 체크 (1000원 단위)
+    if (
+      (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") &&
+      totalAmount % 1000 !== 0
+    ) {
+      const adjustedTotal = Math.floor(totalAmount / 1000) * 1000;
+      this.dom.showOrderResult(
+        `${
+          this.state.activeCoin.split("-")[1]
+        } 주문총액은 1000원 단위로 입력해주세요. (권장: ${Utils.formatKRW(
+          adjustedTotal
+        )}원)`,
         false
       );
       return false;
