@@ -1030,24 +1030,49 @@ div.orderbook-price {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 6px;
 }
 .total-input-group label {
   width: 80px;
   font-size: 0.9rem;
+  color: #e0e0e0;
+  font-weight: 500;
 }
 .total-input-group input {
   flex-grow: 1;
-  background-color: #2a2a2a;
-  border: 1px solid #444;
-  color: #e0e0e0;
-  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--stroke);
+  color: #cfcfcf;
+  padding: 8px 12px;
   border-radius: 5px;
   font-size: 1rem;
+  font-weight: 600;
+  transition: 0.3s;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+}
+.total-input-group input:hover {
+  border-color: rgba(var(--glow), 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
 }
 .total-input-group input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  border-color: var(--accent);
+  box-shadow: 0 0 5px rgba(255, 209, 102, 0.3);
   outline: none;
+}
+.total-input-group input:disabled {
+  background-color: #1a1a1a;
+  border-color: #333;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.total-input-group input.error {
+  border-color: #c84a31;
+  box-shadow: 0 0 5px rgba(200, 74, 49, 0.3);
+}
+.total-input-group input.success {
+  border-color: #00ff88;
+  box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
 }
 .total-controls {
   display: flex;
@@ -1261,32 +1286,6 @@ div.orderbook-price {
   font-size: 10px;
 }
 
-/* 주문총액 입력 필드 스타일링 */
-#order-total,
-#order-total-market {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid var(--stroke) !important;
-  color: #cfcfcf !important;
-  padding: 8px 12px !important;
-  border-radius: 5px !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  transition: 0.3s !important;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05) !important;
-}
-
-#order-total:hover,
-#order-total-market:hover {
-  border-color: rgba(var(--glow), 0.25) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-#order-total:focus,
-#order-total-market:focus {
-  outline: none;
-  border-color: rgba(var(--glow), 0.4) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-}
 .cancel-btn {
   background: #c84a31;
   color: white;
