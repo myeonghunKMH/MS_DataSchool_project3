@@ -235,20 +235,21 @@ export class TradingManager {
     }
 
     // 🔧 비트코인/이더리움 총액 단위 체크 (1000원 단위)
-    if (
-      (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") &&
-      totalAmount % 1000 !== 0
-    ) {
-      const adjustedTotal = Math.floor(totalAmount / 1000) * 1000;
-      this.dom.showOrderResult(
-        `${
-          this.state.activeCoin.split("-")[1]
-        } 주문총액은 1000원 단위로 입력해주세요. (권장: ${Utils.formatKRW(
-          adjustedTotal
-        )}원)`,
-        false
-      );
-      return false;
+    if (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") {
+      // 부동소수점 정확도 문제 해결을 위해 반올림 후 검증
+      const roundedTotal = Math.round(totalAmount);
+      if (roundedTotal % 1000 !== 0) {
+        const adjustedTotal = Math.floor(roundedTotal / 1000) * 1000;
+        this.dom.showOrderResult(
+          `${
+            this.state.activeCoin.split("-")[1]
+          } 주문총액은 1000원 단위로 입력해주세요. (권장: ${Utils.formatKRW(
+            adjustedTotal
+          )}원)`,
+          false
+        );
+        return false;
+      }
     }
 
     // 코인별 가격 단위 체크
@@ -313,20 +314,21 @@ export class TradingManager {
     }
 
     // 🔧 비트코인/이더리움 총액 단위 체크 (1000원 단위)
-    if (
-      (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") &&
-      totalAmount % 1000 !== 0
-    ) {
-      const adjustedTotal = Math.floor(totalAmount / 1000) * 1000;
-      this.dom.showOrderResult(
-        `${
-          this.state.activeCoin.split("-")[1]
-        } 주문총액은 1000원 단위로 입력해주세요. (권장: ${Utils.formatKRW(
-          adjustedTotal
-        )}원)`,
-        false
-      );
-      return false;
+    if (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") {
+      // 부동소수점 정확도 문제 해결을 위해 반올림 후 검증
+      const roundedTotal = Math.round(totalAmount);
+      if (roundedTotal % 1000 !== 0) {
+        const adjustedTotal = Math.floor(roundedTotal / 1000) * 1000;
+        this.dom.showOrderResult(
+          `${
+            this.state.activeCoin.split("-")[1]
+          } 주문총액은 1000원 단위로 입력해주세요. (권장: ${Utils.formatKRW(
+            adjustedTotal
+          )}원)`,
+          false
+        );
+        return false;
+      }
     }
 
     if (this.state.userKRWBalance < totalAmount) {
