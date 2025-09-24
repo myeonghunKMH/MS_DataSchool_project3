@@ -439,48 +439,118 @@ async function computePeerAvgReturnSeriesRobust_KST(openingEq, startUTC, endUTC,
       WHERE t.created_at>=? AND t.created_at<?
       ORDER BY user_id, created_at, id`, [startUTC, endUTC]
   );
-  if (!rows.length) return daysKST.map(()=>0);
+  
+  if (!rows.length) {
+    return daysKST.map(()=>0);
+  }
 
-  const byUser=new Map();
+  // 사용자별 거래 그룹핑
+  const byUser = new Map();
   for (const r of rows){
     if(!byUser.has(r.user_id)) byUser.set(r.user_id, []);
     byUser.get(r.user_id).push(r);
   }
 
+  // 현재가 및 일봉 데이터 가져오기
+  const allMarkets = [...new Set(rows.map(r => addKRW(stripKRW(r.market))))];
+  const tickers = await fetchTickers(allMarkets);
+  const closes = await fetchDailyCloses(allMarkets, daysKST);
+
   const retByDay = daysKST.map(()=>[]);
+  let validUsers = 0;
+  let debugCount = 0;
 
-  for (const [,list] of byUser){
-    // 간이 equity: 체결가 기준, 포지션/현금 업데이트
-    let cash = openingEq;
-    const pos={}, last={}, eqByDay={};
-
-    for (const t of list){
-      const sym=stripKRW(t.market), side=String(t.side||'').toLowerCase();
-      const qty=Number(t.quantity)||0, px=Number(t.price)||0, amt=px*qty;
-      if (side==='buy'||side==='bid'){ cash-=amt; pos[sym]=(pos[sym]||0)+qty; last[sym]=px; }
-      else if (side==='sell'||side==='ask'){ cash+=amt; pos[sym]=(pos[sym]||0)-qty; last[sym]=px; }
-      const eqNow = cash + Object.keys(pos).reduce((s,k)=> s + (pos[k]||0)*(last[k]||0), 0);
-      eqByDay[toKSTDateKey(t.created_at)] = eqNow;
+  for (const [userId, list] of byUser){
+    // 각 사용자별로 일자별 포지션과 현금 추적
+    let cash = INIT_CASH;
+    const pos = {}; // 종목별 보유량
+    const lastPrice = {}; // 종목별 마지막 체결가
+    
+    // 거래를 날짜별로 그룹핑
+    const txByDay = new Map();
+    for (const t of list) {
+      const dayKey = toKSTDateKey(t.created_at);
+      if (!txByDay.has(dayKey)) txByDay.set(dayKey, []);
+      txByDay.get(dayKey).push(t);
     }
 
-    // 일자별 곡선(거래 없으면 전일값 유지)
-    let prev = openingEq;
-    const curve=[];
-    for (const d of daysKST){
-      const v = (eqByDay[d] != null) ? eqByDay[d] : prev;
-      curve.push(v); prev=v;
+    const curve = [];
+    
+    // 각 날짜별로 equity 계산
+    for (let dayIdx = 0; dayIdx < daysKST.length; dayIdx++) {
+      const dayKey = daysKST[dayIdx];
+      const isLastDay = dayIdx === daysKST.length - 1;
+      
+      // 해당 일자의 거래들 처리
+      const dayTxs = txByDay.get(dayKey) || [];
+      for (const t of dayTxs) {
+        const sym = stripKRW(t.market);
+        const side = String(t.side||'').toLowerCase();
+        const qty = Number(t.quantity)||0;
+        const px = Number(t.price)||0;
+        const amt = px * qty;
+        
+        if (side==='buy'||side==='bid') {
+          cash -= amt;
+          pos[sym] = (pos[sym]||0) + qty;
+          lastPrice[sym] = px;
+        } else if (side==='sell'||side==='ask') {
+          cash += amt;
+          pos[sym] = (pos[sym]||0) - qty;
+          lastPrice[sym] = px;
+        }
+      }
+      
+      // 해당 일자 종료 시점의 equity 계산
+      let dayEquity = cash;
+      for (const sym of Object.keys(pos)) {
+        const position = pos[sym] || 0;
+        if (Math.abs(position) < 1e-8) continue; // 포지션이 0에 가까우면 스킵
+        
+        const market = addKRW(sym);
+        let price;
+        
+        if (isLastDay && tickers[market]) {
+          // 마지막 날은 현재가 사용
+          price = tickers[market];
+        } else if (closes[market] && closes[market][dayKey]) {
+          // 해당 일자 종가 사용
+          price = closes[market][dayKey];
+        } else {
+          // 종가가 없으면 마지막 체결가 사용
+          price = lastPrice[sym] || 0;
+        }
+        
+        dayEquity += position * price;
+      }
+      
+      curve.push(dayEquity);
     }
 
-    const base = curve[0];
-    if (!Number.isFinite(base) || Math.abs(base) < 1e-8) continue; // 비정상 사용자 제외
+    const baseEq = curve[0] || INIT_CASH;
+    
+    // 유효성 검사
+    if (!Number.isFinite(baseEq) || Math.abs(baseEq) < 1000) {
+      continue;
+    }
 
-    for (let i=0;i<daysKST.length;i++){
-      let r = ((curve[i] - base) / base) * 100;
-      if (!Number.isFinite(r)) continue;
-      retByDay[i].push(clampPct(r, -300, 300)); // ±300% 클리핑
+    validUsers++;
+    
+    // 일별 수익률 계산 및 추가
+    for (let i = 0; i < daysKST.length; i++){
+      const returnPct = ((curve[i] - baseEq) / baseEq) * 100;
+      if (!Number.isFinite(returnPct)) continue;
+      
+      const clampedReturn = clampPct(returnPct, -300, 300);
+      retByDay[i].push(clampedReturn);
     }
   }
 
-  // 날짜별 상하 10% 절단 평균
-  return daysKST.map((_,i)=> trimmedMean(retByDay[i], 0.10));
+  const result = daysKST.map((_,i) => {
+    const dayReturns = retByDay[i];
+    if (!dayReturns.length) return 0;
+    return trimmedMean(dayReturns, 0.10);
+  });
+
+  return result;
 }
