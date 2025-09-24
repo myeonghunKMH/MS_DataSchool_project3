@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="css/common.css" />
     <link rel="stylesheet" href="css/realtime.css" />
     <link rel="stylesheet" href="css/chat-widget.css" />
-    <link rel="stylesheet" href="css/tutorial.css" />
     <!-- TradingView Lightweight Charts -->
     <script src="https://unpkg.com/lightweight-charts@5.0.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -132,16 +131,6 @@
         text-align: center;
         line-height: 1.4;
         padding: 0 16px;
-      }
-      html, body {
-        overflow-y: scroll;  /* 스크롤은 가능하게 유지 */
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE, 구 Edge */
-      }
-
-      html::-webkit-scrollbar,
-      body::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, 신 Edge */
       }
     </style>
   </head>
@@ -386,37 +375,7 @@
         </div>
       </div>
     </main>
-    <!-- Tutorial System Markup (from index.html) -->
-    <div class="tutorial-overlay" id="tutorialOverlay"></div>
-    <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
-    
-    <div class="tutorial-mascot" id="tutorialMascot">
-      <img class="mascot-img" id="mascotImg" src="/images/coin_good1.png" alt="마스코트">
-      <div class="tts-icon" id="ttsIcon" title="음성으로 듣기">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path
-            d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-        </svg>
-      </div>
-    </div>
-    
-    <div class="tutorial-bubble" id="tutorialBubble">
-      <h3 class="bubble-title" id="bubbleTitle"></h3>
-      <p class="bubble-text" id="bubbleText"></p>
-      <div class="tutorial-controls">
-        <button class="tutorial-btn skip" id="skipBtn">건너뛰기</button>
-        <button class="tutorial-btn next" id="nextBtn">다음</button>
-      </div>
-    </div>
-    
-    <div class="tutorial-progress" id="tutorialProgress"></div>
-    
-    <button class="help-button" id="helpButton">
-      <img src="/images/coin_good1.png" alt="튜토리얼 마스코트" style="width:24px;height:24px;border-radius:50%;">
-      실시간 튜토리얼
-    </button>
 
-    <!-- End Tutorial System Markup -->
     <!-- 사용자 정보 로딩 스크립트 및 전역 지표함수 (필요시) -->
     <script>
       // 사용자 정보 로딩
@@ -466,137 +425,6 @@
 
     <script src="js/TechnicalIndicatorManager.js"></script>
     <script src="js/AIAssistant.js"></script>
-
-    <!-- 도움말 버튼: 챗봇 버튼 왼쪽에 항상 고정 (대치할 스크립트) -->
-    <script>
-      (function () {
-        const helpBtn = document.getElementById('helpButton');
-        if (!helpBtn) return;
-
-        // 찾을 챗봇 셀렉터 후보 (실제 셀렉터가 있으면 앞에 하나만 남겨)
-        const CHAT_SELECTORS = [
-          '#aiAssistantToggle',
-          '#chatToggle',
-          '#chat-widget-toggle',
-          '.chat-widget-toggle',
-          'button[data-role="chat-toggle"]',
-          'button[id*="chat"][id*="toggle"]',
-          'button[class*="chat"][class*="toggle"]'
-        ];
-
-        // 기본 고정값(챗봇 못찾을 때)
-        const DEFAULT_BOTTOM_PX = 18;
-        const DEFAULT_RIGHT_PX = 18;
-        const GAP_PX = 12;
-
-        function findChatButton() {
-          for (const s of CHAT_SELECTORS) {
-            const el = document.querySelector(s);
-            if (el) return el;
-          }
-          // 보수적 후보 탐색: fixed 포지션이면서 클래스/아이디에 chat 포함된 버튼
-          const candidates = Array.from(document.querySelectorAll('button')).filter(b => {
-            const st = getComputedStyle(b);
-            const idc = (b.id + ' ' + b.className).toLowerCase();
-            return st.position === 'fixed' && idc.includes('chat');
-          });
-          return candidates[0] || null;
-        }
-
-        // helpBtn을 body에 붙이고 기본 스타일(모양 유지, 위치는 JS로 설정)
-        function ensureMounted() {
-          if (helpBtn.parentElement !== document.body) {
-            document.body.appendChild(helpBtn);
-          }
-          helpBtn.style.position = 'fixed';
-          helpBtn.style.display = 'inline-flex';
-          helpBtn.style.boxSizing = 'border-box';
-          // 초기 visibility hidden -> 계산 후 보여줌
-          helpBtn.style.visibility = 'hidden';
-        }
-
-        function placeRelativeToChat(chatEl) {
-          ensureMounted();
-
-          // 챗봇 버튼 위치/크기
-          const chatRect = chatEl.getBoundingClientRect();
-
-          // helpBtn 크기 계산 (보여주기 전에 측정)
-          helpBtn.style.visibility = 'hidden';
-          helpBtn.style.left = '0px'; // 측정용 초기화
-          helpBtn.style.bottom = '0px';
-          helpBtn.style.right = 'auto';
-          // 강제로 렌더해서 크기 확보
-          const helpWidth = helpBtn.offsetWidth || 56;
-          const helpHeight = helpBtn.offsetHeight || 50;
-
-          // helpBtn을 챗봇 버튼의 왼쪽에 붙이기
-          // left = chatRect.left - gap - helpWidth (픽셀 절대 좌표)
-          const left = Math.max(8, Math.round(chatRect.left - GAP_PX - helpWidth));
-          // bottom = (viewport bottom) - chatRect.bottom
-          const bottom = Math.max(8, Math.round(window.innerHeight - chatRect.bottom));
-
-          helpBtn.style.left = left + 'px';
-          helpBtn.style.right = 'auto';
-          helpBtn.style.bottom = bottom + 'px';
-          helpBtn.style.top = 'auto';
-
-          // z-index: 챗봇보다 한 단계 위로
-          const chatZ = parseInt(getComputedStyle(chatEl).zIndex || '1000', 10);
-          helpBtn.style.zIndex = (isNaN(chatZ) ? 1000 : (chatZ + 1));
-
-          helpBtn.style.visibility = 'visible';
-        }
-
-        function placeDefault() {
-          ensureMounted();
-          helpBtn.style.visibility = 'visible';
-          helpBtn.style.left = 'auto';
-          helpBtn.style.right = DEFAULT_RIGHT_PX + 'px';
-          helpBtn.style.bottom = DEFAULT_BOTTOM_PX + 'px';
-          helpBtn.style.top = 'auto';
-          helpBtn.style.zIndex = 1000;
-        }
-
-        // 시도해서 배치 성공하면 true 반환
-        function tryPlace() {
-          const chat = findChatButton();
-          if (chat) {
-            placeRelativeToChat(chat);
-            return true;
-          }
-          return false;
-        }
-
-        // 초기 실행 + resize 관찰
-        function initPlacement() {
-          // 항상 마운트해서 스크롤 내부에 남지 않게 한다
-          ensureMounted();
-
-          // 우선 시도해서 배치. 실패하면 기본 위치로 두고 관찰 시작
-          if (!tryPlace()) {
-            placeDefault();
-            const obs = new MutationObserver(() => {
-              if (tryPlace()) obs.disconnect();
-            });
-            obs.observe(document.body, { childList: true, subtree: true });
-            // 안전장치: 10초 후에도 안 나타나면 옵저버 끔
-            setTimeout(() => obs.disconnect(), 10000);
-          }
-        }
-
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initPlacement);
-        } else {
-          initPlacement();
-        }
-        window.addEventListener('resize', () => {
-          // 재계산: 챗봇 있으면 왼쪽에, 없으면 기본
-          tryPlace() || placeDefault();
-        });
-      })();
-    </script>
-
     <script type="module" src="js/main.js"></script>
 
     <footer>
@@ -606,122 +434,5 @@
       본 서비스는 투자 권유가 아니며, 실제 투자를 결정할 때는 이용자 본인의
       판단과 책임에 따라야 합니다.
     </footer>
-    <!-- Tutorial System JS -->
-    <script src="js/tutorial-core.js"></script>
-    <script>
-      const stepsRealtime = [
-          {
-            title: "환영합니다!",
-            text: "이 페이지에서는 모의로 실시간 거래를 체험할 수 있습니다. 차트, 보조지표 등 다양한 기능을 살펴보며 코인투자의 전체 흐름을 이해해보세요.",
-            target: null,
-            mascot: "coin_good1",
-            position: "right",
-            audio: "voice/1.mp3",
-            scroll: { mode: "pixel", offsetPx: 0 }
-          },
-          {
-            title: "코인 선택",
-            text: "비트코인, 이더리움, 리플 중 원하는 종목을 선택할 수 있습니다. 선택 시 해당 코인의 차트와 주문 정보가 자동으로 갱신됩니다.",
-            target: "#coin-tabs",
-            mascot: "coin_good1",
-            position: "right",
-            audio: "voice/2.mp3",
-            scroll: { mode: "pixel", offsetPx: 0 }
-          },
-          {
-            title: "보조지표",
-            text: "이동평균선, 거래량과 같은 보조지표를 차트 위에 추가해 흐름을 분석할 수 있습니다. 필요할 경우 한 번에 초기화하여 깔끔하게 정리할 수도 있습니다.",
-            target: ".indicator-controls",
-            mascot: "coin_good1",
-            position: "left",
-            audio: "voice/4.mp3",
-            scroll: { mode: "pixel", offsetPx: 0 }
-          },
-          {
-            title: "단위시간 변경",
-            text: "이 버튼으로 1분, 5분, 1시간, 1일 단위 등 다양한 캔들 차트를 전환할 수 있습니다. 이를 통해 단기 변동부터 장기 추세까지 한눈에 비교할 수 있습니다.",
-            target: "#timeframe-toggle",
-            mascot: "coin_good1",
-            position: "left",
-            audio: "voice/3b.mp3",
-            scroll: { mode: "pixel", offsetPx: 0 }
-          },
-          {
-            title: "차트",
-            text: "메인 차트에서는 선택한 코인의 가격 변화를 직관적으로 확인할 수 있습니다. 시간 단위를 바꾸면 단기 트레이딩 혹은 장기 투자의 관점에서 시장 흐름을 파악할 수 있습니다.",
-            target: "#priceChart",
-            mascot: "coin_good1",
-            position: "bottom",
-            audio: "voice/3.mp3",
-            scroll: { mode: "pixel", offsetPx: 297 }
-          },
-          {
-            title: "호가창",
-            text: "실시간으로 매수·매도 호가가 변동되는 구간입니다. 현재 시장에서 형성되는 유동성과 가격대를 빠르게 확인할 수 있습니다.",
-            target: ".orderbook-container",
-            mascot: "coin_good1",
-            position: "right",
-            audio: "voice/5.mp3",
-            scroll: { mode: "pixel", offsetPx: 750 }
-          },
-          {
-            title: "주문 입력",
-            text: "가격과 수량을 직접 입력하거나, 시장가를 선택해 즉시 거래를 실행할 수 있습니다. 원하는 전략에 따라 신속하게 주문을 넣을 수 있는 핵심 기능입니다.",
-            target: ".trading-content",
-            mascot: "coin_good1",
-            position: "left",
-            audio: "voice/6.mp3",
-            scroll: { mode: "pixel", offsetPx: 750 }
-          },
-          {
-            title: "매수/매도 전환",
-            text: "상단 탭에서 ‘매수 ↔ 매도’를 전환하면, 아래 입력 폼과 주문 버튼이 알맞게 바뀝니다. 거래 방향에 따라 전환해 사용하세요.",
-            target: ".trading-tabs",
-            mascot: "coin_good1",
-            position: "bottom",
-            audio: "voice/8.mp3",
-            scroll: { mode: "pixel", offsetPx: 750 }
-          },
-          {
-            title: "매수/매도 버튼",
-            text: "모든 입력이 완료되면 이 버튼을 눌러 실제 주문을 실행합니다. 모의투자이니 걱정말고 거래하세요.",
-            target: ".trade-button.bid-button",
-            mascot: "coin_good1",
-            position: "top",
-            audio: "voice/7.mp3",
-            scroll: { mode: "pixel", offsetPx: 750 }
-          },
-          {
-            title: "잔고 및 주문 가능 금액",
-            text: "여기서 현재 계정에 남아 있는 잔고와 실제로 주문에 사용할 수 있는 가능 금액을 확인할 수 있습니다. 거래 전에 반드시 체크해야 하는 중요한 영역입니다.",
-            target: ".available-balance",
-            mascot: "coin_good1",
-            position: "right",
-            audio: "voice/9.mp3",
-            scroll: { mode: "pixel", offsetPx: 750 }
-          },
-          {
-            title: "체결 내역",
-            text: "내가 낸 주문이 체결되었는지, 그리고 과거에 어떤 거래가 이루어졌는지를 확인할 수 있습니다. 실시간으로 갱신되므로 거래 기록을 빠르게 추적할 수 있습니다.",
-            target: ".trade-history-container",
-            mascot: "coin_good1",
-            position: "top",
-            audio: "voice/10.mp3",
-            scroll: { mode: "pixel", offsetPx: 750 }
-          },
-          {
-            title: "마무리",
-            text: "튜토리얼이 모두 끝났습니다. 필요할 때는 언제든 도움말 버튼을 눌러 다시 가이드를 실행할 수 있습니다. 실전 거래 전에 반복 학습용으로도 활용해보세요.",
-            target: ".help-button",
-            mascot: "coin_good1",
-            position: "bottom",
-            audio: "voice/11.mp3",
-            scroll: { mode: "pixel", offsetPx: 0 }
-          }
-        ];
-
-      const tutorial = new TutorialSystem(stepsRealtime);
-    </script>
-    <!-- End Tutorial System JS -->
   </body>
 </html>
