@@ -95,6 +95,9 @@ export class UIController {
               <div class="order-main-info">
                 <span class="order-side ${sideClass}">${sideText}</span>
                 <span class="coin-name">${coinSymbol}</span>
+                <span class="order-time-inline">| ${Utils.formatDateTime(
+                  order.created_at
+                )}</span>
                 ${statusBadge}
               </div>
               <button class="cancel-btn" data-order-id="${
@@ -120,9 +123,6 @@ export class UIController {
             `
                 : ""
             }
-            <div class="order-time">${Utils.formatDateTime(
-              order.created_at
-            )}</div>
           </div>
         `;
       })
@@ -149,14 +149,14 @@ export class UIController {
         return `
           <div class="transaction-item">
             <div class="transaction-header">
-              <div>
+              <div class="tx-main-info">
                 <span class="tx-side ${sideClass}">${sideText}</span>
                 <span class="tx-coin">${coinSymbol}</span>
-                <span class="tx-type">${
-                  t.type === "market" ? "시장가" : "지정가"
-                }</span>
+                <span class="tx-time-inline">| ${Utils.formatDateTime(t.created_at)}</span>
               </div>
-              <div class="tx-time">${Utils.formatDateTime(t.created_at)}</div>
+              <span class="tx-type">${
+                t.type === "market" ? "시장가" : "지정가"
+              }</span>
             </div>
             <div class="transaction-details">
               <span class="tx-price">체결가: ${Utils.formatKRW(
@@ -744,6 +744,16 @@ export class UIController {
   updateTradingPanel() {
     const coinCode = this.state.activeCoin;
     const coinName = coinCode.split("-")[1];
+
+    // 🔧 시장가/지정가에 따른 패널 클래스 관리
+    const tradingPanel = document.querySelector('.trading-panel');
+    if (tradingPanel) {
+      if (this.state.activeTradingType === 'market') {
+        tradingPanel.classList.add('market-mode');
+      } else {
+        tradingPanel.classList.remove('market-mode');
+      }
+    }
 
     if (this.state.activeTradingSide === "bid") {
       this.dom.updateAvailableAmount(this.state.userKRWBalance, "KRW");

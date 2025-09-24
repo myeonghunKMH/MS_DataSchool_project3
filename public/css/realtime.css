@@ -1193,6 +1193,17 @@ div.orderbook-price {
   border: 1px solid #2b2e36;
   border-radius: 6px;
   background: #1a1a1a;
+  transition: max-height 0.3s ease;
+}
+
+/* 시장가 모드일 때 대기주문/체결내역 컨테이너 높이 증가 */
+.trading-panel.market-mode .pending-orders-list,
+.trading-panel.market-mode .filled-orders-list {
+  max-height: 450px; /* 시장가일 때 더 높게 */
+}
+
+.trading-panel.market-mode .order-list {
+  max-height: 400px; /* 시장가일 때 더 높게 */
 }
 /* 🎨 개선된 스크롤바 스타일 */
 .order-list::-webkit-scrollbar,
@@ -1242,17 +1253,15 @@ div.orderbook-price {
   background: #181a20;
   border: 1px solid #2b3139;
   border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: 10px;
+  margin-bottom: 6px;
   font-size: 11px;
   border-left: 3px solid transparent;
   transition: all 0.3s ease;
   position: relative;
 }
 .pending-order-item:hover {
-  border-left-color: #007bff;
   background: #2b3139;
-  transform: translateX(2px);
 }
 .pending-order-item.partial-filled {
   border-left-color: #2196f3;
@@ -1292,6 +1301,12 @@ div.orderbook-price {
 .coin-name {
   color: #f1f1f4;
   font-weight: 500;
+}
+.order-time-inline {
+  color: #8991a0;
+  font-size: 10px;
+  margin-left: 8px;
+  font-weight: 400;
 }
 .order-time {
   color: #8991a0;
@@ -1411,12 +1426,24 @@ div.orderbook-price {
   color: #f1f1f4;
   font-weight: 500;
 }
+.tx-time-inline {
+  color: #8991a0;
+  font-size: 10px;
+  margin-left: 8px;
+  font-weight: 400;
+}
+.tx-main-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .tx-type {
   background: #444;
   color: #ccc;
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 8px;
+  font-weight: 500;
 }
 .transaction-details {
   display: flex;
