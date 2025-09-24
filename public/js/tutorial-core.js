@@ -82,12 +82,30 @@ class TutorialSystem {
         document.body.style.overflow = this.originalOverflow || "";
         this.isActive = false;
 
+        // 모든 활성 상태 해제
         this.overlay.classList.remove("active");
         this.mascot.classList.remove("active");
         this.bubble.classList.remove("active");
-        this.progress.classList.remove("active");
-        this.progress.innerHTML = "";
+        if (this.progress) {
+            this.progress.classList.remove("active");
+            this.progress.innerHTML = "";
+        }
 
+        // 🔹 스포트라이트도 확실히 숨기고 좌표 초기화
+        if (this.spotlight) {
+            this.spotlight.style.display = "none";
+            this.spotlight.style.width = "0px";
+            this.spotlight.style.height = "0px";
+            this.spotlight.style.top = "0px";
+            this.spotlight.style.left = "0px";
+        }
+
+        // 마스코트/버블 위치 초기화
+        this.mascot.style.cssText = "";
+        this.bubble.style.cssText = "";
+        this.bubble.className = "tutorial-bubble";
+
+        // 진행 중 오디오 정리
         if (this.currentAudio) {
             this.currentAudio.pause();
             this.currentAudio = null;
@@ -302,40 +320,6 @@ class TutorialSystem {
             window.scrollTo({ top: y, behavior: "smooth" });
         } else if (step.scroll.mode === "pixel") {
             window.scrollTo({ top: step.scroll.offsetPx || 0, behavior: "smooth" });
-        }
-    }
-
-    end() {
-        document.body.style.overflow = "";
-        this.isActive = false;
-
-        // 모든 활성 상태 해제
-        this.overlay.classList.remove("active");
-        this.mascot.classList.remove("active");
-        this.bubble.classList.remove("active");
-        if (this.progress) {
-            this.progress.classList.remove("active");
-            this.progress.innerHTML = "";
-        }
-
-        // 🔹 스포트라이트도 확실히 숨기고 좌표 초기화
-        if (this.spotlight) {
-            this.spotlight.style.display = "none";
-            this.spotlight.style.width = "0px";
-            this.spotlight.style.height = "0px";
-            this.spotlight.style.top = "0px";
-            this.spotlight.style.left = "0px";
-        }
-
-        // 마스코트/버블 위치 초기화 (다음 시작시 깨끗하게)
-        this.mascot.style.cssText = "";
-        this.bubble.style.cssText = "";
-        this.bubble.className = "tutorial-bubble";
-
-        // 진행 중 오디오 정리
-        if (this.currentAudio) {
-            this.currentAudio.pause();
-            this.currentAudio = null;
         }
     }
 }
