@@ -918,8 +918,42 @@ export class UIController {
       dropdown.appendChild(option);
     });
 
+    // 드롭다운 자동 접힘 기능 개선
+    let dropdownTimeout;
+
     dropdown.addEventListener("blur", () => {
-      dropdown.value = "";
+      // 약간의 지연을 두어 옵션 선택 시간을 제공
+      dropdownTimeout = setTimeout(() => {
+        dropdown.value = "";
+      }, 150);
+    });
+
+    // 포커스가 다시 돌아오면 타임아웃 취소
+    dropdown.addEventListener("focus", () => {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+        dropdownTimeout = null;
+      }
+    });
+
+    // 마우스가 드롭다운을 떠날 때도 자동 접힘
+    dropdown.addEventListener("mouseleave", () => {
+      // 포커스가 없고 값이 선택되지 않았을 때만 접기
+      if (document.activeElement !== dropdown && dropdown.value === "") {
+        dropdown.blur();
+      }
+    });
+
+    // 옵션 선택 시 즉시 접힘
+    dropdown.addEventListener("change", () => {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+        dropdownTimeout = null;
+      }
+      // 값 처리 후 드롭다운 접기
+      setTimeout(() => {
+        dropdown.value = "";
+      }, 100);
     });
   }
 

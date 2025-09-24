@@ -990,18 +990,42 @@ div.orderbook-price {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--stroke);
   color: #cfcfcf;
-  padding: 5px 8px;
+  padding: 8px 32px 8px 16px;
   border-radius: 5px;
-  font-size: 0.8rem;
+  font-size: 13px;
   font-weight: 600;
   transition: 0.3s;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cfcfcf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
 }
 #price-percentage-dropdown:hover {
   border-color: rgba(var(--glow), 0.25);
-  background: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.06);
   color: #fff;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+#price-percentage-dropdown:focus {
+  border-color: rgba(var(--glow), 0.25);
+  box-shadow: none;
+  outline: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+#price-percentage-dropdown option {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  padding: 8px;
+  border: none;
 }
 .quantity-btns {
   display: flex;
