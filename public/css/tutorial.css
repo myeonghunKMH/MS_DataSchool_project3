@@ -1,0 +1,293 @@
+/* Tutorial Overlay */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .85);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .3s, visibility .3s;
+    z-index: 9998;
+}
+
+.tutorial-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Spotlight */
+.tutorial-spotlight {
+    position: fixed;
+    border: 3px solid var(--accent);
+    border-radius: 20px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85),
+        0 0 40px rgba(255, 209, 102, 0.5),
+        inset 0 0 20px rgba(255, 209, 102, 0.1);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+    pointer-events: none;
+    display: none;
+}
+.tutorial-spotlight.no-anim {
+    transition: none !important;
+}
+
+/* Mascot */
+.tutorial-mascot {
+    position: fixed;
+    z-index: 10001;
+    transition: all .5s cubic-bezier(.4, 0, .2, 1);
+    display: none;
+}
+
+.tutorial-mascot.active {
+    display: block;
+}
+
+.mascot-img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .5));
+}
+
+/* TTS Icon */
+.tts-icon {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 209, 102, .9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: .2s;
+    box-shadow: 0 2px 8px rgba(255, 209, 102, .3);
+    z-index: 1;
+}
+
+.tts-icon:hover {
+    background: rgba(255, 209, 102, 1);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 209, 102, .5);
+}
+
+.tts-icon svg {
+    width: 14px;
+    height: 14px;
+    fill: #1a1a1a;
+}
+
+/* Bubble */
+.tutorial-bubble {
+    position: fixed;
+    z-index: 10005;
+    max-width: 420px;
+    min-width: 320px;
+    padding: 24px 28px;
+    background: #fff;
+    color: #1a1a1a;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .3), 0 0 30px rgba(255, 209, 102, .2);
+    z-index: 10001;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .3s ease .2s;
+    display: none;
+}
+
+.tutorial-bubble.active {
+    display: block;
+}
+
+.tutorial-bubble.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Bubble Arrow (방향별) */
+.tutorial-bubble::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(245, 245, 245, .95));
+    transform: rotate(45deg);
+}
+
+.tutorial-bubble.left::before {
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.tutorial-bubble.right::before {
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.tutorial-bubble.top::before {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.tutorial-bubble.bottom::before {
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.bubble-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+}
+
+.bubble-text {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 20px 0;
+    color: #333;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+/* Controls */
+.tutorial-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.tutorial-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.tutorial-btn.skip {
+    background: rgba(0, 0, 0, .1);
+    color: #666;
+}
+
+.tutorial-btn.skip:hover {
+    background: rgba(0, 0, 0, .2);
+}
+
+.tutorial-btn.next {
+    background: linear-gradient(135deg, var(--accent), #ffb347);
+    color: #1a1a1a;
+    box-shadow: 0 4px 15px rgba(255, 209, 102, .3);
+}
+
+.tutorial-btn.next:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 209, 102, .4);
+}
+
+.tutorial-btn.finish {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: #fff;
+}
+
+/* Progress Dots */
+.tutorial-progress {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    gap: 8px;
+    z-index: 10002;
+}
+
+.tutorial-progress.active {
+    display: flex;
+}
+
+.progress-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .3);
+    transition: .3s;
+}
+
+.progress-dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 209, 102, .5);
+    transform: scale(1.2);
+}
+
+/* Help Button */
+.help-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    background: linear-gradient(135deg, rgba(255, 209, 102, .9), rgba(255, 193, 77, .8));
+    border: 1px solid rgba(255, 209, 102, .6);
+    border-radius: 50px;
+    padding: 12px 20px;
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 25px rgba(255, 209, 102, .3), 0 0 20px rgba(255, 209, 102, .15);
+    transition: .3s;
+    backdrop-filter: blur(10px);
+    animation: gentle-pulse 3s ease-in-out infinite;
+    cursor: pointer;
+}
+
+.help-button:hover {
+    background: linear-gradient(135deg, rgba(255, 209, 102, 1), rgba(255, 193, 77, .95));
+    box-shadow: 0 12px 35px rgba(255, 209, 102, .4), 0 0 30px rgba(255, 209, 102, .25);
+    transform: translateY(-2px) scale(1.05);
+    animation: none;
+}
+
+.help-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+@keyframes gentle-pulse {
+
+    0%,
+    100% {
+        transform: scale(1)
+    }
+
+    50% {
+        transform: scale(1.02)
+    }
+}
+
+@media (max-width:640px) {
+    .mascot-img {
+        width: 100px;
+        height: 100px;
+    }
+
+    .tutorial-bubble {
+        max-width: 280px;
+        padding: 16px 20px;
+    }
+}
