@@ -31,7 +31,6 @@ export class TradingState {
   setUser(user) {
     this.currentUser = user;
     this.isAuthenticated = !!user;
-    console.log('사용자 설정됨:', user?.preferred_username || user?.email);
   }
 
   // 🔧 새로 추가: 현재 사용자 정보 반환

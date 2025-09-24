@@ -107,9 +107,6 @@ export class CacheManager {
     });
 
     if (addedCount > 0) {
-      console.log(
-        `💾 캔들 캐시 추가: ${key} - ${addedCount}개 (총 ${candleSet.size}개)`
-      );
     }
 
     // 캐시 크기 제한
@@ -139,9 +136,6 @@ export class CacheManager {
     });
 
     if (cachedCandles.length > 0) {
-      console.log(
-        `📦 캔들 캐시 히트: ${key} - ${cachedCandles.length}개/${requestedTimestamps.length}개`
-      );
     }
 
     return cachedCandles;
@@ -210,7 +204,6 @@ export class CacheManager {
           this.candleData.delete(candleKey);
         });
 
-        console.log(`🗑️ 캔들 캐시 정리: ${key} - ${toRemove.length}개 제거`);
       }
     }
   }
@@ -299,9 +292,6 @@ export class CacheManager {
 
     const totalDeleted = keysToDelete.length + candleKeysToDelete.length;
     if (totalDeleted > 0) {
-      console.log(
-        `🧹 캐시 정리: ${totalDeleted}개 항목 삭제 (일반: ${keysToDelete.length}, 캔들: ${candleKeysToDelete.length})`
-      );
     }
   }
 
@@ -349,7 +339,6 @@ export class CacheManager {
     const candleSet = this.loadedCandles.get(key);
 
     if (!candleSet) {
-      console.log(`❌ ${key}: 캐시된 캔들 없음`);
       return;
     }
 
@@ -357,7 +346,5 @@ export class CacheManager {
     const earliest = new Date(timestamps[0] * 1000);
     const latest = new Date(timestamps[timestamps.length - 1] * 1000);
 
-    console.log(`📊 ${key}: ${candleSet.size}개 캔들 캐시됨`);
-    console.log(`📅 범위: ${earliest.toISOString()} ~ ${latest.toISOString()}`);
   }
 }

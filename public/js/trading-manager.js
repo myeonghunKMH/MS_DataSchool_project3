@@ -55,7 +55,6 @@ export class TradingManager {
         );
       }
     } catch (error) {
-      console.error("주문 취소 오류:", error);
       this.dom.showOrderResult("주문 취소 중 오류가 발생했습니다.", false);
     }
   }
@@ -156,7 +155,6 @@ export class TradingManager {
         );
       }
     } catch (error) {
-      console.error("주문 요청 오류:", error);
       this.dom.showOrderResult("주문 요청 중 오류가 발생했습니다.", false);
     } finally {
       // 🔧 버튼 복구
@@ -188,7 +186,6 @@ export class TradingManager {
 
       return { pendingOrders, filledOrders };
     } catch (error) {
-      console.error("데이터 새로고침 오류:", error);
       throw error;
     }
   }
@@ -398,7 +395,6 @@ export class TradingManager {
 
       return data;
     } catch (error) {
-      console.error("잔고 데이터 로딩 오류:", error);
       throw error;
     }
   }
@@ -417,7 +413,6 @@ export class TradingManager {
 
       return this.state.filledOrders;
     } catch (error) {
-      console.error("체결 내역 조회 오류:", error);
       this.state.filledOrders = [];
       return [];
     }
@@ -437,7 +432,6 @@ export class TradingManager {
 
       return this.state.pendingOrders;
     } catch (error) {
-      console.error("대기 주문 조회 오류:", error);
       this.state.pendingOrders = [];
       return [];
     }

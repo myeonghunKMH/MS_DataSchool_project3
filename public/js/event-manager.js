@@ -62,7 +62,6 @@ export class EventManager {
         this.dom.showOrderResult("모든 데이터가 새로고침되었습니다.", true);
       } catch (error) {
         this.dom.showOrderResult("새로고침 중 오류가 발생했습니다.", false);
-        console.error("새로고침 오류:", error);
       } finally {
         this.hideRefreshSpinner("all");
       }
@@ -86,13 +85,11 @@ export class EventManager {
 
   setupOrderbookEvents() {
     this.dom.elements.toggleGeneral?.addEventListener("click", () => {
-      console.log("일반 호가 탭 클릭");
       this.state.activeOrderbookType = "general";
       this.dom.elements.toggleGeneral.classList.add("active");
       this.dom.elements.toggleGrouped.classList.remove("active");
       this.dom.elements.generalOrderbookContent.classList.remove("hidden");
       this.dom.elements.cumulativeOrderbookContent.classList.add("hidden");
-      console.log("일반 호가창 표시, 누적 호가창 숨김");
       this.ui.updateOrderbook(
         this.state.latestOrderbookData[this.state.activeCoin]?.general,
         this.dom.elements.generalUnifiedList
@@ -100,13 +97,11 @@ export class EventManager {
     });
 
     this.dom.elements.toggleGrouped?.addEventListener("click", () => {
-      console.log("누적 호가 탭 클릭");
       this.state.activeOrderbookType = "grouped";
       this.dom.elements.toggleGeneral.classList.remove("active");
       this.dom.elements.toggleGrouped.classList.add("active");
       this.dom.elements.generalOrderbookContent.classList.add("hidden");
       this.dom.elements.cumulativeOrderbookContent.classList.remove("hidden");
-      console.log("누적 호가창 표시, 일반 호가창 숨김");
 
       // 누적 호가창 업데이트
       this.updateCumulativeOrderbook();
@@ -554,7 +549,6 @@ export class EventManager {
         }
 
         // 시간단위 변경
-        console.log(`⏰ 시간단위 변경: ${this.state.activeUnit} → ${selectedUnit}`);
         this.state.activeUnit = selectedUnit;
         this.chart.fetchAndRender();
 
@@ -621,7 +615,6 @@ export class EventManager {
       this.chart.removeMovingAverage(period);
       // 🔧 상태에서 이동평균선 제거
       this.state.activeIndicators.movingAverages.delete(period.toString());
-      console.log(`MA${period} 이동평균선이 제거되었습니다.`, this.state.activeIndicators);
     }
   }
 
@@ -647,7 +640,6 @@ export class EventManager {
             period: period,
           });
         }
-        console.log(`MA${period} 이동평균선이 추가되었습니다.`, this.state.activeIndicators);
       }
     }
   }
@@ -676,7 +668,6 @@ export class EventManager {
       // 🔧 상태에 기술지표 추가 저장
       this.state.activeIndicators.technicalIndicators.add(type);
     }
-    console.log(`${type} 지표가 추가되었습니다.`, this.state.activeIndicators);
   }
 
   hideIndicatorChart(type) {
@@ -701,14 +692,12 @@ export class EventManager {
       // 🔧 상태에서 기술지표 제거
       this.state.activeIndicators.technicalIndicators.delete(type);
     }
-    console.log(`${type} 지표가 제거되었습니다.`, this.state.activeIndicators);
   }
 
   // 🔧 차트 타입 변경 메서드
   changeChartType(chartType) {
     if (this.chart && typeof this.chart.changeChartType === "function") {
       this.chart.changeChartType(chartType);
-      console.log(`차트 타입이 ${chartType}으로 변경되었습니다.`);
     }
   }
 
@@ -752,7 +741,6 @@ export class EventManager {
       }
 
       this.chart.fetchAndRender();
-      console.log(`시간단위가 ${unit}으로 변경되었습니다.`);
     }
   }
 
@@ -791,12 +779,10 @@ export class EventManager {
 
   // 🔧 모든 지표 끄기 기능
   clearAllIndicators() {
-    console.log("모든 지표 끄기 시작...");
 
     // 모든 이동평균선 제거
     const activeMA = [...this.state.activeIndicators.movingAverages];
     activeMA.forEach(period => {
-      console.log(`MA${period} 제거 중...`);
 
       // 차트에서 제거
       if (this.chart?.removeMovingAverage) {
@@ -813,7 +799,6 @@ export class EventManager {
     // 모든 기술지표 제거
     const activeTechnical = [...this.state.activeIndicators.technicalIndicators];
     activeTechnical.forEach(indicator => {
-      console.log(`${indicator} 지표 제거 중...`);
 
       // 차트에서 제거
       if (this.chart?.removeIndicator) {
@@ -840,6 +825,5 @@ export class EventManager {
     this.state.activeIndicators.movingAverages.clear();
     this.state.activeIndicators.technicalIndicators.clear();
 
-    console.log("모든 지표 끄기 완료!", this.state.activeIndicators);
   }
 }

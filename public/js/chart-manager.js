@@ -50,44 +50,9 @@ export class ChartManager {
     // 이동평균선 상태 추적을 위한 속성 추가
     this._activeMovingAverages = new Set(); // 활성화된 이동평균선 기간 저장 (예: 5, 20, 50)
 
-    // 🔍 디버깅용 상태 추적
-    this._debugMode = true;
-    this._syncEvents = [];
   }
 
-  // 🔍 디버깅 헬퍼 메서드
-  _debug(message, data = {}) {
-    if (this._debugMode) {
-      console.log(`🔍 ChartManager Debug: ${message}`, data);
-      this._syncEvents.push({
-        timestamp: Date.now(),
-        message,
-        data
-      });
-    }
-  }
 
-  // 🔍 현재 모든 차트의 뷰포트 상태 출력
-  logAllViewportStates() {
-    const states = {
-      priceTime: this.priceChart?.timeScale().getVisibleTimeRange?.(),
-      priceLogical: this.priceChart?.timeScale().getVisibleLogicalRange(),
-      volumeTime: this.volumeChart?.timeScale().getVisibleTimeRange?.(),
-      volumeLogical: this.volumeChart?.timeScale().getVisibleLogicalRange(),
-      rsiTime: this.rsiChart?.timeScale().getVisibleTimeRange?.(),
-      rsiLogical: this.rsiChart?.timeScale().getVisibleLogicalRange(),
-      macdTime: this.macdChart?.timeScale().getVisibleTimeRange?.(),
-      macdLogical: this.macdChart?.timeScale().getVisibleLogicalRange(),
-      dataLengths: {
-        price: this.lastCandleData?.length || 0,
-        rsi: this.rsiSeries ? "unknown" : 0,
-        macd: this.macdSeries ? "unknown" : 0,
-      }
-    };
-
-    console.table(states);
-    return states;
-  }
 
   // 🔧 새로운 비동기 헬퍼 메서드들
   async waitForChartReady(chart, maxWait = 2000) {
@@ -104,17 +69,14 @@ export class ChartManager {
           const priceScale = chart.priceScale();
 
           if (timeScale && priceScale) {
-            console.log("✅ 차트 준비 완료");
             resolve(true);
           } else if (Date.now() - startTime > maxWait) {
-            console.warn("⚠️ 차트 준비 시간 초과");
             resolve(false);
           } else {
             setTimeout(checkReady, 50);
           }
         } catch (error) {
           if (Date.now() - startTime > maxWait) {
-            console.warn("⚠️ 차트 준비 실패:", error);
             resolve(false);
           } else {
             setTimeout(checkReady, 50);
@@ -134,10 +96,8 @@ export class ChartManager {
 
       try {
         series.setData(data);
-        console.log("✅ 데이터 설정 완료");
         setTimeout(() => resolve(true), 100);
       } catch (error) {
-        console.warn("⚠️ 데이터 설정 실패:", error);
         resolve(false);
       }
     });
@@ -151,9 +111,7 @@ export class ChartManager {
           barSpacing: this.priceChart.timeScale().options().barSpacing,
           timestamp: Date.now(),
         };
-        console.log("🔒 뷰포인트 보존:", this._preservedViewport.logicalRange);
       } catch (error) {
-        console.warn("뷰포인트 보존 실패:", error);
       }
     }
   }
@@ -168,7 +126,6 @@ export class ChartManager {
 
       if (!mainLogicalRange) return;
 
-      console.log("🔄 로지컬 범위 뷰포트 동기화 실행:", mainLogicalRange);
 
       // 모든 차트를 메인 차트와 동일한 로지컬 범위로 동기화
       if (this.rsiChart) {
@@ -186,15 +143,12 @@ export class ChartManager {
         this.volumeChart.timeScale().applyOptions({ barSpacing: mainBarSpacing });
       }
 
-      console.log("✅ 로지컬 범위 뷰포트 동기화 완료");
     } catch (error) {
-      console.warn("뷰포트 동기화 실패:", error);
     }
   }
 
   // 폴백용 로지컬 동기화
   fallbackLogicalSync() {
-    console.log("🔄 폴백: 로지컬 동기화 실행");
     const mainRange = this.priceChart.timeScale().getVisibleLogicalRange();
     if (!mainRange) return;
 
@@ -245,18 +199,8 @@ export class ChartManager {
       const finalRange = targetChart.timeScale().getVisibleLogicalRange();
       const mainRange = this.priceChart?.timeScale().getVisibleLogicalRange();
 
-      console.log("🔍 뷰포트 복원 검증:", {
-        preserved: this._preservedViewport.logicalRange,
-        main: mainRange,
-        target: finalRange,
-        synced: mainRange && finalRange &&
-                Math.abs(mainRange.from - finalRange.from) < 0.1 &&
-                Math.abs(mainRange.to - finalRange.to) < 0.1
-      });
-
       return true;
     } catch (error) {
-      console.warn("뷰포인트 복원 실패:", error);
       return false;
     }
   }
@@ -271,11 +215,6 @@ export class ChartManager {
       null
     );
     if (cachedData) {
-      console.log(
-        "📦 캐시된 데이터 사용:",
-        this.state.activeCoin,
-        this.state.activeUnit
-      );
       this.processAndRenderData(cachedData);
       return;
     }
@@ -287,7 +226,6 @@ export class ChartManager {
       const data = await response.json();
 
       if (!data || data.length === 0) {
-        console.error("캔들 데이터가 비어있습니다.");
         return;
       }
 
@@ -295,7 +233,6 @@ export class ChartManager {
       this.cacheManager.set(this.state.activeCoin, this.state.activeUnit, data);
       this.processAndRenderData(data);
     } catch (error) {
-      console.error("차트 데이터 로딩 오류:", error);
     }
   }
 
@@ -320,7 +257,6 @@ export class ChartManager {
 
       // 필수 필드 존재 확인
       if (!d || !d.candle_date_time_kst) {
-        console.warn("데이터 누락:", i, d);
         continue;
       }
 
@@ -332,11 +268,9 @@ export class ChartManager {
         timeValue = kstDate.getTime();
 
         if (isNaN(timeValue)) {
-          console.warn("잘못된 시간:", kstTimeString);
           continue;
         }
       } catch (error) {
-        console.warn("시간 파싱 오류:", d.candle_date_time_kst, error);
         continue;
       }
 
@@ -348,7 +282,6 @@ export class ChartManager {
       const oneYearLater = currentTime + 365 * 24 * 60 * 60;
 
       if (time < oneYearAgo || time > oneYearLater) {
-        console.warn("비정상적인 시간 값:", time, new Date(time * 1000));
         continue;
       }
 
@@ -370,13 +303,11 @@ export class ChartManager {
         low <= 0 ||
         close <= 0
       ) {
-        console.warn("잘못된 OHLC 값:", { open, high, low, close });
         continue;
       }
 
       // OHLC 논리 검증
       if (high < Math.max(open, close) || low > Math.min(open, close)) {
-        console.warn("OHLC 논리 오류:", { open, high, low, close });
         continue;
       }
 
@@ -390,7 +321,6 @@ export class ChartManager {
       });
     }
 
-    console.log(`유효한 데이터: ${candleData.length}/${sortedData.length}`);
 
     // 시간 순 정렬
     candleData.sort((a, b) => a.time - b.time);
@@ -398,7 +328,6 @@ export class ChartManager {
 
     // 최소 데이터 개수 확인
     if (candleData.length < 5) {
-      console.error("유효한 데이터가 너무 적습니다:", candleData.length);
       return;
     }
 
@@ -406,7 +335,6 @@ export class ChartManager {
     const ma5Data = this.calculateSafeMA(candleData, 5);
     const ma20Data = this.calculateSafeMA(candleData, 20);
 
-    console.log("차트 렌더링 시작");
     this.renderCharts(candleData, volumeData);
   }
 
@@ -447,12 +375,10 @@ export class ChartManager {
   renderCharts(candleData, volumeData) {
     // 데이터 유효성 최종 검사
     if (!Array.isArray(candleData) || candleData.length === 0) {
-      console.error("캔들 데이터 없음");
       return;
     }
 
     if (!Array.isArray(volumeData) || volumeData.length === 0) {
-      console.error("볼륨 데이터 없음");
       return;
     }
 
@@ -463,7 +389,6 @@ export class ChartManager {
     const volumeContainer = document.getElementById("volumeChart");
 
     if (!priceContainer || !volumeContainer) {
-      console.error("차트 컨테이너 엘리먼트를 찾을 수 없습니다.");
       return;
     }
 
@@ -699,7 +624,6 @@ export class ChartManager {
           this.macdChart.timeScale().setVisibleLogicalRange(logicalRange);
         }
       } catch (error) {
-        console.warn("차트 동기화 오류:", error);
       } finally {
         this._syncing = false;
       }
@@ -757,7 +681,6 @@ export class ChartManager {
           this.updateCrosshairVisibility(null);
         }
       } catch (error) {
-        console.warn("크로스헤어 동기화 오류:", error);
       } finally {
         this._crosshairSyncing = false;
       }
@@ -775,13 +698,6 @@ export class ChartManager {
     const dataLength = candleData.length;
     const visibleCount = Math.min(50, dataLength); // 최대 50개 캔들 표시
     const startIndex = Math.max(0, dataLength - visibleCount);
-
-    console.log("📊 초기 뷰포트 설정:", {
-      총데이터: dataLength,
-      표시할데이터: visibleCount,
-      시작인덱스: startIndex,
-      끝인덱스: dataLength - 1
-    });
 
     this.priceChart.timeScale().setVisibleLogicalRange({
       from: startIndex,
@@ -837,7 +753,6 @@ export class ChartManager {
     const result = [];
 
     if (candleData.length < period + 1) {
-      console.warn("RSI 계산에 충분한 데이터가 없습니다:", candleData.length, "< ", period + 1);
       return result;
     }
 
@@ -887,7 +802,6 @@ export class ChartManager {
       result.push({ time: candleData[i + 1].time, value: rsi });
     }
 
-    console.log(`RSI 계산 완료: ${result.length}개 값 생성 (전체 데이터: ${candleData.length}개)`);
     return result;
   }
 
@@ -898,11 +812,6 @@ export class ChartManager {
     signalPeriod = 9
   ) {
     // 🔧 디버깅: 입력 데이터 검증
-    console.log("MACD 계산 시작:", {
-      dataLength: candleData.length,
-      firstTime: candleData[0]?.time,
-      lastTime: candleData[candleData.length - 1]?.time,
-    });
 
     // EMA 계산 함수 - 🔧 null 체크 강화
     const calculateEMA = (data, period) => {
@@ -942,12 +851,6 @@ export class ChartManager {
     const slowEMA = calculateEMA(closes, slowPeriod);
 
     // 🔧 EMA 결과 검증
-    console.log("EMA 계산 결과:", {
-      fastEMALength: fastEMA.length,
-      slowEMALength: slowEMA.length,
-      fastEMAHasNull: fastEMA.some((v) => v == null || isNaN(v)),
-      slowEMAHasNull: slowEMA.some((v) => v == null || isNaN(v)),
-    });
 
     const macdLine = [];
     for (let i = 0; i < closes.length; i++) {
@@ -1010,14 +913,6 @@ export class ChartManager {
     }
 
     // 🔧 최종 검증
-    console.log("MACD 최종 결과:", {
-      macdLength: result.macd.length,
-      signalLength: result.signal.length,
-      histogramLength: result.histogram.length,
-      hasNullValues: result.histogram.some(
-        (h) => h.value == null || isNaN(h.value)
-      ),
-    });
 
     return result;
   }
@@ -1027,7 +922,6 @@ export class ChartManager {
     const container = document.querySelector("#rsiChart .chart-content");
     if (!container) return null;
 
-    console.log("🔄 RSI 차트 생성 시작...");
     this._isIndicatorCreating = true;
 
     // CSS transition 비활성화
@@ -1099,17 +993,7 @@ export class ChartManager {
       let rsiData = [];
       if (this.lastCandleData && this.lastCandleData.length >= 15) {
         rsiData = this.calculateRSI(this.lastCandleData, 14);
-        console.log("🔍 RSI 초기 생성:", {
-          candleCount: this.lastCandleData.length,
-          rsiCount: rsiData.length,
-          첫번째캔들시간: new Date(this.lastCandleData[0].time * 1000),
-          첫번째RSI시간: rsiData[0] ? new Date(rsiData[0].time * 1000) : null,
-          RSI시작인덱스차이: rsiData[0] ?
-            this.lastCandleData.findIndex(candle => candle.time === rsiData[0].time) : -1
-        });
         await this.waitForDataSet(this.rsiSeries, rsiData);
-      } else {
-        console.warn("⚠️ RSI 생성을 위한 데이터가 부족합니다:", this.lastCandleData?.length);
       }
 
       // RSI 차트를 메인 차트와 같은 뷰포트로 동기화
@@ -1120,7 +1004,6 @@ export class ChartManager {
             this.rsiChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
           }
         } catch (error) {
-          console.warn("RSI 초기 뷰포트 동기화 실패:", error);
         }
       }
 
@@ -1137,15 +1020,8 @@ export class ChartManager {
         }
       }, 50);
 
-      // 추가: 강제 동기화로 확실히 보장
-      setTimeout(() => {
-        this.forceSyncAllViewports();
-      }, 100);
-
-      console.log("✅ RSI 차트 생성 완료");
       return this.rsiChart;
     } catch (error) {
-      console.error("RSI 차트 생성 중 오류:", error);
       return null;
     } finally {
       this._isIndicatorCreating = false;
@@ -1214,7 +1090,6 @@ export class ChartManager {
     const container = document.querySelector("#macdChart .chart-content");
     if (!container) return null;
 
-    console.log("🔄 MACD 차트 생성 시작...");
     this._isIndicatorCreating = true;
 
     // CSS transition 비활성화
@@ -1295,16 +1170,6 @@ export class ChartManager {
 
       if (this.lastCandleData && this.lastCandleData.length >= 35) {
         const macdData = this.calculateMACD(this.lastCandleData);
-        console.log("🔍 MACD 초기 생성:", {
-          candleCount: this.lastCandleData.length,
-          macdCount: macdData.macd.length,
-          signalCount: macdData.signal.length,
-          histogramCount: macdData.histogram.length,
-          첫번째캔들시간: new Date(this.lastCandleData[0].time * 1000),
-          첫번째MACD시간: macdData.macd[0] ? new Date(macdData.macd[0].time * 1000) : null,
-          MACD시작인덱스차이: macdData.macd[0] ?
-            this.lastCandleData.findIndex(candle => candle.time === macdData.macd[0].time) : -1
-        });
 
         await this.waitForDataSet(this.macdSeries, macdData.macd);
         await this.waitForDataSet(this.macdSignalSeries, macdData.signal);
@@ -1318,11 +1183,9 @@ export class ChartManager {
               this.macdChart.timeScale().setVisibleLogicalRange(mainLogicalRange);
             }
           } catch (error) {
-            console.warn("MACD 초기 뷰포트 동기화 실패:", error);
           }
         }
       } else {
-        console.warn("⚠️ MACD 생성을 위한 데이터가 부족합니다:", this.lastCandleData?.length);
       }
 
       this.setupMACDEventListeners();
@@ -1343,10 +1206,8 @@ export class ChartManager {
         this.forceSyncAllViewports();
       }, 100);
 
-      console.log("✅ MACD 차트 생성 완료");
       return this.macdChart;
     } catch (error) {
-      console.error("MACD 차트 생성 중 오류:", error);
       return null;
     } finally {
       this._isIndicatorCreating = false;
@@ -1413,7 +1274,6 @@ export class ChartManager {
 
   addIndicatorToMainChart(ma5Data, ma20Data) {
     if (!this.priceChart) {
-      console.warn("가격 차트가 없어서 지표 추가 불가");
       return;
     }
 
@@ -1557,7 +1417,6 @@ export class ChartManager {
     }
 
     if (shouldUpdate) {
-      console.log("차트 업데이트 실행!");
       this.fetchAndRender();
     }
   }
@@ -1573,17 +1432,13 @@ export class ChartManager {
       clearTimeout(scrollTimeout);
 
       scrollTimeout = setTimeout(() => {
-        console.log("무한스크롤 트리거 - range.from:", range.from);
         this.loadMoreHistoricalData()
           .then((success) => {
             if (success) {
-              console.log("추가 데이터 차트에 적용 완료");
             } else {
-              console.warn("추가 데이터가 없습니다.");
             }
           })
           .catch((error) => {
-            console.error("무한스크롤 오류:", error);
           });
       }, 400);
     });
@@ -1593,17 +1448,14 @@ export class ChartManager {
     if (this.isLoadingMore || this.allCandleData.length === 0) return false;
 
     this.isLoadingMore = true;
-    console.log("추가 히스토리 데이터 로딩...");
 
     try {
       const to = this.calculateNonOverlappingTime(this.allCandleData);
 
       if (!to) {
-        console.warn("시간 계산 실패로 추가 로딩 중단");
         return false;
       }
 
-      console.log("연속 구간 요청:", to);
 
       const response = await fetch(
         `/api/candles?unit=${this.state.activeUnit}&market=${
@@ -1612,9 +1464,7 @@ export class ChartManager {
       );
 
       if (!response.ok) {
-        console.error("API 응답 오류:", response.status);
         if (response.status === 500) {
-          console.log("서버 오류로 인해 추가 로딩을 중단합니다.");
           return false;
         }
         return false;
@@ -1623,7 +1473,6 @@ export class ChartManager {
       const apiData = await response.json();
 
       if (!apiData || apiData.length === 0) {
-        console.log("더 이상 가져올 데이터가 없습니다");
         return false;
       }
 
@@ -1636,12 +1485,10 @@ export class ChartManager {
       let finalData = [];
 
       if (smartResult.cached.length > 0) {
-        console.log("캔들 캐시 활용:", smartResult.cached.length + "개");
         finalData.push(...smartResult.cached);
       }
 
       if (smartResult.missing.length > 0) {
-        console.log("새 데이터 추가:", smartResult.missing.length + "개");
         finalData.push(...smartResult.missing);
 
         this.cacheManager.addCandles(
@@ -1655,7 +1502,6 @@ export class ChartManager {
         smartResult.missing.length === 0 &&
         smartResult.cached.length === apiData.length
       ) {
-        console.log("완전 캐시 히트! API 데이터를 100% 캐시에서 제공");
       }
 
       const filteredNewData = finalData.filter(
@@ -1669,23 +1515,12 @@ export class ChartManager {
 
       if (filteredNewData.length > 0) {
         this.allCandleData.push(...filteredNewData);
-        console.log(
-          "최종 추가 데이터:",
-          filteredNewData.length + "개",
-          "(캐시 활용률:",
-          (
-            ((apiData.length - smartResult.missing.length) / apiData.length) *
-            100
-          ).toFixed(1) + "%)"
-        );
         this.appendHistoricalData(filteredNewData);
         return true;
       } else {
-        console.log("새로운 데이터가 없습니다 (모두 중복)");
         return false;
       }
     } catch (error) {
-      console.error("추가 데이터 로딩 실패:", error);
       return false;
     } finally {
       this.isLoadingMore = false;
@@ -1693,17 +1528,11 @@ export class ChartManager {
   }
 
   appendHistoricalData(newData) {
-    console.log("🔍 appendHistoricalData 시작", {
-      newDataLength: newData.length,
-      hasLastCandleData: !!this.lastCandleData,
-      lastCandleDataLength: this.lastCandleData?.length || 0,
-    });
 
     const sortedNewData = newData.reverse();
     const newCandleData = [];
     const newVolumeData = [];
 
-    console.log("🔍 데이터 처리 시작");
 
     for (let i = 0; i < sortedNewData.length; i++) {
       const d = sortedNewData[i];
@@ -1750,41 +1579,27 @@ export class ChartManager {
       });
     }
 
-    console.log("🔍 데이터 처리 완료", {
-      newCandleDataLength: newCandleData.length,
-      newVolumeDataLength: newVolumeData.length,
-    });
 
     newCandleData.sort((a, b) => a.time - b.time);
     newVolumeData.sort((a, b) => a.time - b.time);
 
-    console.log("🔍 가격 시리즈 업데이트 시작");
     if (this.priceSeries && newCandleData.length > 0) {
       const existingData = this.lastCandleData || [];
       const combinedData = [...newCandleData, ...existingData];
-      console.log("🔍 가격 데이터 결합", {
-        newLength: newCandleData.length,
-        existingLength: existingData.length,
-        combinedLength: combinedData.length,
-      });
       this.priceSeries.setData(combinedData);
       this.lastCandleData = combinedData;
-      console.log("🔍 가격 시리즈 업데이트 완료");
     }
 
-    console.log("🔍 볼륨 시리즈 업데이트 시작");
     if (this.volumeSeries && newVolumeData.length > 0) {
       this.volumeSeries.setData([
         ...newVolumeData,
         ...(this.lastVolumeData || []),
       ]);
       this.lastVolumeData = [...newVolumeData, ...(this.lastVolumeData || [])];
-      console.log("🔍 볼륨 시리즈 업데이트 완료");
     }
 
     // RSI/MACD 차트 업데이트 추가
     if (newCandleData.length > 0) {
-      console.log("🔍 RSI/MACD 업데이트 준비");
       const allCandleData = [...newCandleData, ...this.lastCandleData];
 
       // 🔧 중복 제거 - 시간 기준으로 유니크하게
@@ -1798,17 +1613,10 @@ export class ChartManager {
         }, [])
         .sort((a, b) => a.time - b.time);
 
-      console.log("🔍 중복 제거 후 데이터 상태", {
-        beforeLength: allCandleData.length,
-        afterLength: uniqueCandleData.length,
-        removedDuplicates: allCandleData.length - uniqueCandleData.length,
-      });
 
       // RSI 업데이트 - 전체 데이터로 다시 계산하여 완전한 지표 생성
       if (this.rsiSeries && uniqueCandleData.length >= 15) { // RSI 계산 최소 요구 데이터
-        console.log("🔍 RSI 전체 재계산 시작 - 데이터 개수:", uniqueCandleData.length);
         const rsiData = this.calculateRSI(uniqueCandleData, 14);
-        console.log("🔍 RSI 계산 결과:", rsiData.length, "개 포인트");
 
         if (rsiData.length > 0) {
           this.rsiSeries.setData(rsiData);
@@ -1822,13 +1630,7 @@ export class ChartManager {
         this.macdHistogramSeries &&
         uniqueCandleData.length >= 35 // MACD 계산 최소 요구 데이터 (26 + 9)
       ) {
-        console.log("🔍 MACD 전체 재계산 시작 - 데이터 개수:", uniqueCandleData.length);
         const macdData = this.calculateMACD(uniqueCandleData);
-        console.log("🔍 MACD 계산 결과:", {
-          macd: macdData.macd.length,
-          signal: macdData.signal.length,
-          histogram: macdData.histogram.length
-        });
 
         if (macdData.macd.length > 0) {
           this.macdSeries.setData(macdData.macd);
@@ -1843,7 +1645,6 @@ export class ChartManager {
       this.forceSyncAllViewports();
     }, 200);
 
-    console.log("🔍 appendHistoricalData 완료");
   }
 
   calculateNonOverlappingTime(allCandleData) {
@@ -1866,14 +1667,12 @@ export class ChartManager {
 
       return targetTime.toISOString();
     } catch (error) {
-      console.error("시간 계산 오류:", error);
       return oldestCandle.candle_date_time_utc;
     }
   }
 
   addMovingAverage(period) {
     if (!this.priceChart || !this.lastCandleData) {
-      console.warn("차트 또는 캔들 데이터가 없어서 이동평균선 추가 불가");
       return null;
     }
 
@@ -1906,7 +1705,6 @@ export class ChartManager {
 
     this.indicatorSeries[key] = maSeries;
     this._activeMovingAverages.add(period); // 상태 추적
-    console.log(`MA${period} 추가됨`);
     return maSeries;
   }
 
@@ -1916,7 +1714,6 @@ export class ChartManager {
       this.priceChart.removeSeries(this.indicatorSeries[key]);
       delete this.indicatorSeries[key];
       this._activeMovingAverages.delete(period); // 상태 업데이트
-      console.log(`MA${period} 제거됨`);
       return true;
     }
     return false;
@@ -1924,7 +1721,6 @@ export class ChartManager {
 
   async addIndicator(type) {
     if (!this.priceChart || !this.lastCandleData) {
-      console.warn("차트 또는 데이터가 준비되지 않음");
       return null;
     }
 
@@ -1985,11 +1781,9 @@ export class ChartManager {
             .setVisibleLogicalRange(this._preservedViewport.logicalRange);
         }
 
-        console.log("✅ 볼린저밴드 추가 완료");
         return this.indicatorSeries["BB"];
       }
     } catch (error) {
-      console.error(`${type} 지표 추가 실패:`, error);
       return null;
     }
 
@@ -2002,7 +1796,6 @@ export class ChartManager {
       this.rsiChart.remove();
       this.rsiChart = null;
       this.rsiSeries = null;
-      console.log("RSI 차트 제거됨");
       return true;
     } else if (type === "MACD" && this.macdChart) {
       this._activeIndicators.MACD = false; // 상태 업데이트
@@ -2011,7 +1804,6 @@ export class ChartManager {
       this.macdSeries = null;
       this.macdSignalSeries = null;
       this.macdHistogramSeries = null;
-      console.log("MACD 차트 제거됨");
       return true;
     } else if (type === "BB" && this.indicatorSeries["BB"]) {
       this._activeIndicators.BB = false; // 상태 업데이트
@@ -2023,7 +1815,6 @@ export class ChartManager {
       this.bbUpperSeries = null;
       this.bbMiddleSeries = null;
       this.bbLowerSeries = null;
-      console.log("볼린저밴드 제거됨");
       return true;
     }
 
@@ -2044,7 +1835,6 @@ export class ChartManager {
     this._activeIndicators.MACD = false;
     this._activeIndicators.BB = false;
 
-    console.log("모든 지표 제거됨");
   }
 
   // 🔧 커스텀 크로스헤어 초기화 (하이브리드 모드)
@@ -2063,7 +1853,6 @@ export class ChartManager {
     // 메인 차트 컨테이너 찾기
     const chartWrapper = document.querySelector('.chart-container');
     if (!chartWrapper) {
-      console.warn('차트 컨테이너를 찾을 수 없습니다.');
       return;
     }
 
@@ -2136,7 +1925,6 @@ export class ChartManager {
     // TradingView 차트들에 마우스 이벤트 리스너 추가
     this.attachCustomCrosshairEvents();
 
-    console.log('✅ 커스텀 크로스헤어 초기화 완료 (하이브리드 모드)');
   }
 
   // 커스텀 크로스헤어 이벤트 연결
@@ -2270,7 +2058,6 @@ export class ChartManager {
           });
         }
       } catch (error) {
-        console.warn(`차트 ${name} 가시성 업데이트 실패:`, error);
       }
     });
   }
@@ -2285,16 +2072,11 @@ export class ChartManager {
 
   // 활성화된 보조지표들을 자동으로 복원하는 메서드
   async restoreActiveIndicators() {
-    console.log("🔄 활성화된 보조지표 복원 시작:", {
-      indicators: this._activeIndicators,
-      movingAverages: Array.from(this._activeMovingAverages)
-    });
 
     const promises = [];
 
     // RSI가 활성화되어 있었다면 다시 생성
     if (this._activeIndicators.RSI && !this.rsiChart) {
-      console.log("📊 RSI 차트 복원 중...");
       promises.push(this.createRSIChart());
 
       // UI 체크박스 상태 동기화
@@ -2308,7 +2090,6 @@ export class ChartManager {
 
     // MACD가 활성화되어 있었다면 다시 생성
     if (this._activeIndicators.MACD && !this.macdChart) {
-      console.log("📊 MACD 차트 복원 중...");
       promises.push(this.createMACDChart());
 
       // UI 체크박스 상태 동기화
@@ -2322,7 +2103,6 @@ export class ChartManager {
 
     // BB가 활성화되어 있었다면 다시 생성
     if (this._activeIndicators.BB && !this.indicatorSeries["BB"]) {
-      console.log("📊 볼린저밴드 복원 중...");
       promises.push(this.restoreBollingerBands());
 
       // UI 체크박스 상태 동기화
@@ -2332,7 +2112,6 @@ export class ChartManager {
 
     // 이동평균선들을 복원
     if (this._activeMovingAverages.size > 0) {
-      console.log("📊 이동평균선 복원 중:", Array.from(this._activeMovingAverages));
 
       // 복원할 이동평균선 복사 (복원 중 수정되지 않도록)
       const periodsToRestore = Array.from(this._activeMovingAverages);
@@ -2348,9 +2127,7 @@ export class ChartManager {
             const maCheckbox = document.querySelector(`input[data-ma="${period}"]`);
             if (maCheckbox) maCheckbox.checked = true;
 
-            console.log(`✅ MA${period} 복원 완료`);
           } catch (error) {
-            console.error(`❌ MA${period} 복원 실패:`, error);
           }
         }
       }
@@ -2360,17 +2137,14 @@ export class ChartManager {
     if (promises.length > 0) {
       try {
         await Promise.all(promises);
-        console.log("✅ 모든 활성화된 보조지표 복원 완료");
 
         // 복원 후 뷰포트 동기화
         setTimeout(() => {
           this.forceSyncAllViewports();
         }, 200);
       } catch (error) {
-        console.error("❌ 보조지표 복원 중 오류:", error);
       }
     } else {
-      console.log("ℹ️ 복원할 활성화된 보조지표가 없습니다");
     }
   }
 
@@ -2417,16 +2191,13 @@ export class ChartManager {
           .setVisibleLogicalRange(this._preservedViewport.logicalRange);
       }
 
-      console.log("✅ 볼린저밴드 복원 완료");
     } catch (error) {
-      console.error("❌ 볼린저밴드 복원 실패:", error);
     }
   }
 
   // 이동평균선 복원을 위한 별도 메서드 (상태 중복 추가 방지)
   restoreMovingAverage(period) {
     if (!this.priceChart || !this.lastCandleData) {
-      console.warn("차트 또는 캔들 데이터가 없어서 이동평균선 복원 불가");
       return null;
     }
 
@@ -2459,7 +2230,6 @@ export class ChartManager {
 
     this.indicatorSeries[key] = maSeries;
     // 복원 시에는 이미 _activeMovingAverages에 있으므로 다시 추가하지 않음
-    console.log(`MA${period} 복원됨`);
     return maSeries;
   }
 }

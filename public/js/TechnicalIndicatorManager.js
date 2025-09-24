@@ -185,7 +185,6 @@ const TechnicalIndicatorManager = (() => {
     const calculateAllIndicators = (candles) => {
         // Assuming candles are sorted from oldest to newest
         if (!candles || candles.length < 52) {
-            console.warn("Not enough candle data to calculate all indicators. Need at least 52 data points.");
             return null;
         }
 

@@ -967,11 +967,9 @@ export class UIController {
   async restoreActiveIndicators() {
     if (!this.chart) return;
 
-    console.log("기술지표 복원 시작:", this.state.activeIndicators);
 
     // 이동평균선 복원
     for (const maPeriod of this.state.activeIndicators.movingAverages) {
-      console.log(`MA${maPeriod} 복원 중...`);
       await this.chart.addMovingAverage(parseInt(maPeriod));
 
       // UI 체크박스 상태 동기화
@@ -981,7 +979,6 @@ export class UIController {
 
     // 기술지표 복원
     for (const indicator of this.state.activeIndicators.technicalIndicators) {
-      console.log(`${indicator} 지표 복원 중...`);
       await this.chart.addIndicator(indicator);
 
       // UI 체크박스 상태 동기화
@@ -998,7 +995,6 @@ export class UIController {
       }
     }
 
-    console.log("기술지표 복원 완료");
   }
 
   async fetchUserData() {
@@ -1016,7 +1012,6 @@ export class UIController {
       };
       this.dom.updateAvailableAmount(this.state.userKRWBalance);
     } catch (error) {
-      console.error("사용자 데이터 불러오기 오류:", error);
     }
   }
 

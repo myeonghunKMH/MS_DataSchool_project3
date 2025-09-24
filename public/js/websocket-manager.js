@@ -45,16 +45,13 @@ export class WebSocketManager {
     };
 
     this.ws.onerror = (error) => {
-      console.error("웹소켓 오류:", error);
     };
 
     this.ws.onclose = () => {
-      console.log("웹소켓 연결 종료 - 재연결 시도 중...");
       this.handleReconnection();
     };
 
     this.ws.onopen = () => {
-      console.log("✅ 웹소켓 연결 성공");
       this.reconnectAttempts = 0; // 연결 성공 시 재시도 횟수 리셋
 
       // 사용자 인증 정보 전송 (현재 로그인한 사용자 ID)
@@ -76,12 +73,9 @@ export class WebSocketManager {
           userId: user.id
         }));
 
-        console.log(`👤 사용자 인증 전송: ${user.id}`);
       } else {
-        console.warn('⚠️ 사용자 정보를 가져올 수 없습니다.');
       }
     } catch (error) {
-      console.error('사용자 인증 전송 실패:', error);
     }
   }
 
@@ -90,15 +84,9 @@ export class WebSocketManager {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
 
-      console.log(
-        `재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts} (${
-          delay / 1000
-        }초 후)`
-      );
 
       setTimeout(() => this.connect(), delay);
     } else {
-      console.error("웹소켓 재연결 실패 - 최대 시도 횟수 초과");
       if (this.ui?.dom?.showOrderResult) {
         this.ui.dom.showOrderResult(
           "실시간 데이터 연결이 끊어졌습니다.",
@@ -125,13 +113,11 @@ export class WebSocketManager {
         this.handleOrderbookData(message);
       }
     } catch (error) {
-      console.error("웹소켓 메시지 파싱 오류:", error);
     }
   }
 
   // 주문 체결 알림 처리
   async handleOrderFillNotification(orderData) {
-    console.log("🎯 주문 체결 알림 수신:", orderData);
 
     // 체결 타입에 따른 다른 메시지
     let message;
@@ -195,7 +181,6 @@ export class WebSocketManager {
         this.playTone(audioContext, 660, 0.15, 0.2); // 미
       }
     } catch (error) {
-      console.log("사운드 재생 실패:", error);
     }
   }
 

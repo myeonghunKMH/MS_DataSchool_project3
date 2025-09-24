@@ -46,7 +46,6 @@ export class CryptoTradingApp {
       this.tradingManager
     );
 
-    console.log("매니저 간 참조 설정 완료");
   }
 
   async initialize() {
@@ -83,9 +82,7 @@ export class CryptoTradingApp {
         }
       }, 1000);
 
-      console.log("✅ 암호화폐 거래 시스템 초기화 완료");
     } catch (error) {
-      console.error("초기화 중 오류 발생:", error);
       alert("시스템 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.");
     }
   }
@@ -104,7 +101,6 @@ export class CryptoTradingApp {
   }
 
   handleError(error, context = "알 수 없는 오류") {
-    console.error(`${context}:`, error);
 
     const errorMessages = {
       network: "네트워크 연결을 확인해주세요.",
@@ -119,7 +115,6 @@ export class CryptoTradingApp {
       "일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
 
     if (!error.message?.includes("WebSocket")) {
-      console.warn("사용자 알림:", message);
     }
   }
 
