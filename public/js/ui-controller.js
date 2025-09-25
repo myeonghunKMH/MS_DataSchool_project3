@@ -77,7 +77,7 @@ export class UIController {
           ? '<span class="status-badge partial">부분체결</span>'
           : "";
 
-        const totalAmount = order.price * order.quantity;
+        const totalAmount = order.total_amount || (order.price * order.quantity);
         const totalText = `총 ${Utils.formatKRW(totalAmount)}원`;
 
         const progressPercent = isPartialFilled
@@ -868,7 +868,7 @@ export class UIController {
       Utils.parseNumber(this.dom.elements.orderPrice?.value) || 0;
 
     if (orderPrice > 0 && orderTotal > 0) {
-      const quantity = Utils.calculateQuantityFromTotal(orderTotal, orderPrice);
+      const quantity = Utils.calculateQuantityFromTotal(orderTotal, orderPrice, this.state.activeCoin);
       this.dom.elements.orderQuantity.value = Utils.formatCoinAmount(quantity);
     }
   }
@@ -883,7 +883,7 @@ export class UIController {
       Utils.parseNumber(this.dom.elements.orderPrice?.value) || 0;
 
     if (orderPrice > 0 && orderTotal > 0) {
-      const quantity = Utils.calculateQuantityFromTotal(orderTotal, orderPrice);
+      const quantity = Utils.calculateQuantityFromTotal(orderTotal, orderPrice, this.state.activeCoin);
       this.dom.elements.orderQuantity.value = Utils.formatCoinAmount(quantity);
     }
   }

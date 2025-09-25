@@ -48,6 +48,13 @@ export class TradingManager {
         this.dom.showOrderResult(result.message, true);
         // 🔧 취소 후 자동 새로고침
         await this.refreshAllData();
+
+        // 🔧 주문 취소 후 마이페이지 보유항목도 새로고침
+        if (window.loadHoldings && typeof window.loadHoldings === 'function') {
+          setTimeout(() => {
+            window.loadHoldings();
+          }, 500);
+        }
       } else {
         this.dom.showOrderResult(
           result.error || "주문 취소에 실패했습니다.",
@@ -90,8 +97,13 @@ export class TradingManager {
         }
         return { success: false };
       }
+
+      // 🔧 지정가 주문에서 사용자가 입력한 총액도 함께 전송
+      const totalAmount = Utils.parseNumber(this.dom.elements.orderTotal?.value) || (price * quantity);
+
       orderData.price = price;
       orderData.quantity = quantity;
+      orderData.total = totalAmount;  // 총액 정보 추가
     } else if (this.state.activeTradingType === "market") {
       if (side === "bid") {
         const totalAmount = Utils.parseNumber(
@@ -144,6 +156,13 @@ export class TradingManager {
 
         // 🔧 주문 성공 후 모든 데이터 새로고침
         await this.refreshAllData();
+
+        // 🔧 마이페이지 보유항목도 강제 새로고침 (500ms 후 실행)
+        if (window.loadHoldings && typeof window.loadHoldings === 'function') {
+          setTimeout(() => {
+            window.loadHoldings();
+          }, 500);
+        }
 
         this.clearOrderInputs();
 
@@ -221,9 +240,14 @@ export class TradingManager {
       return false;
     }
 
-    // 코인별 최소 주문 금액 체크
+    // 코인별 최소 주문 금액 체크 - DOM에서 입력된 총액 사용 (재계산 방지)
     const minOrderAmount = MIN_ORDER_AMOUNTS[this.state.activeCoin] || 5000;
-    const totalAmount = price * quantity;
+    const inputTotalAmount = Utils.parseNumber(this.dom.elements.orderTotal?.value) || 0;
+    const calculatedTotalAmount = price * quantity;
+
+    // 입력된 총액이 있으면 우선 사용, 없으면 계산된 총액 사용
+    const totalAmount = inputTotalAmount > 0 ? inputTotalAmount : calculatedTotalAmount;
+
     if (totalAmount < minOrderAmount) {
       this.dom.showOrderResult(
         `${
@@ -236,10 +260,10 @@ export class TradingManager {
 
     // 🔧 비트코인/이더리움 총액 단위 체크 (1000원 단위)
     if (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") {
-      // 부동소수점 정확도 문제 해결을 위해 반올림 후 검증
-      const roundedTotal = Math.round(totalAmount);
-      if (roundedTotal % 1000 !== 0) {
-        const adjustedTotal = Math.floor(roundedTotal / 1000) * 1000;
+      // 정수 단위로 변환하여 정확한 검증
+      const integerTotal = Math.floor(totalAmount);
+      if (integerTotal % 1000 !== 0) {
+        const adjustedTotal = Math.floor(integerTotal / 1000) * 1000;
         this.dom.showOrderResult(
           `${
             this.state.activeCoin.split("-")[1]
@@ -315,10 +339,10 @@ export class TradingManager {
 
     // 🔧 비트코인/이더리움 총액 단위 체크 (1000원 단위)
     if (this.state.activeCoin === "KRW-BTC" || this.state.activeCoin === "KRW-ETH") {
-      // 부동소수점 정확도 문제 해결을 위해 반올림 후 검증
-      const roundedTotal = Math.round(totalAmount);
-      if (roundedTotal % 1000 !== 0) {
-        const adjustedTotal = Math.floor(roundedTotal / 1000) * 1000;
+      // 정수 단위로 변환하여 정확한 검증
+      const integerTotal = Math.floor(totalAmount);
+      if (integerTotal % 1000 !== 0) {
+        const adjustedTotal = Math.floor(integerTotal / 1000) * 1000;
         this.dom.showOrderResult(
           `${
             this.state.activeCoin.split("-")[1]

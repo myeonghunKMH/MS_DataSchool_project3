@@ -41,7 +41,8 @@ class TradingService {
     side,
     type,
     normalizedPrice,
-    normalizedQuantity
+    normalizedQuantity,
+    originalTotalAmount = null
   ) {
     let finalPrice, finalQuantity, totalAmount;
 
@@ -63,10 +64,16 @@ class TradingService {
         totalAmount = this.KRWUtils.calculateTotal(finalPrice, finalQuantity);
       }
     } else {
-      // 지정가 주문
+      // 🔧 지정가 주문: 클라이언트에서 전송한 총액 보존
       finalPrice = this.KRWUtils.toInteger(normalizedPrice);
       finalQuantity = normalizedQuantity;
-      totalAmount = this.KRWUtils.calculateTotal(finalPrice, finalQuantity);
+
+      // 클라이언트에서 총액을 전송했으면 그것을 사용, 아니면 계산
+      if (originalTotalAmount && originalTotalAmount > 0) {
+        totalAmount = this.KRWUtils.toInteger(originalTotalAmount);
+      } else {
+        totalAmount = this.KRWUtils.calculateTotal(finalPrice, finalQuantity);
+      }
 
       console.log(
         `📝 지정가 주문 접수: ${market} ${side} - 가격: ${finalPrice.toLocaleString()}, 수량: ${finalQuantity}, 총액: ${totalAmount.toLocaleString()}`
@@ -76,7 +83,7 @@ class TradingService {
     return { finalPrice, finalQuantity, totalAmount };
   }
 
-  async executeOrder(userId, market, side, type, normalizedPrice, normalizedQuantity) {
+  async executeOrder(userId, market, side, type, normalizedPrice, normalizedQuantity, originalTotalAmount = null) {
 
     const { finalPrice, finalQuantity, totalAmount } =
       this.calculateTradeAmounts(
@@ -84,7 +91,8 @@ class TradingService {
         side,
         type,
         normalizedPrice,
-        normalizedQuantity
+        normalizedQuantity,
+        originalTotalAmount
       );
 
     if (type === "limit") {

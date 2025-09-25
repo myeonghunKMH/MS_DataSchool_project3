@@ -524,6 +524,22 @@ async function saveCompletedOrderToTransactions(userId, orderId) {
 
     const order = orderRows[0];
 
+    // 🔧 중복 저장 방지: 이미 저장된 거래인지 확인
+    const [existingRows] = await connection.execute(
+      `
+      SELECT id FROM transactions
+      WHERE user_id = ? AND market = ? AND side = ?
+        AND price = ? AND quantity = ?
+        AND ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) <= 10
+    `,
+      [userId, order.market, order.side, order.price, order.quantity]
+    );
+
+    if (existingRows.length > 0) {
+      console.log(`✅ 이미 저장된 거래 건너뜀: 주문ID ${orderId}`);
+      return;
+    }
+
     await connection.execute(
       `
       INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type, created_at)
@@ -664,29 +680,49 @@ async function cancelPendingOrder(userId, orderId) {
         executedQuantity
       );
 
-      await tradingConnection.execute(
+      // 🔧 중복 저장 방지: 이미 저장된 거래인지 확인 (부분체결)
+      const [existingRows] = await tradingConnection.execute(
         `
-        INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'limit', NOW())
+        SELECT id FROM transactions
+        WHERE user_id = ? AND market = ? AND side = ?
+          AND price = ? AND quantity = ?
+          AND ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) <= 10
       `,
-        [
-          userId,
-          order.market,
-          order.side,
-          order.price,
-          executedQuantity,
-          executedAmount,
-        ]
+        [userId, order.market, order.side, order.price, executedQuantity]
       );
+
+      if (existingRows.length === 0) {
+        await tradingConnection.execute(
+          `
+          INSERT INTO transactions (user_id, market, side, price, quantity, total_amount, type, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, 'limit', NOW())
+        `,
+          [
+            userId,
+            order.market,
+            order.side,
+            order.price,
+            executedQuantity,
+            executedAmount,
+          ]
+        );
+        console.log(`✅ 부분체결 거래 저장: 주문ID ${orderId}, 실행수량 ${executedQuantity}`);
+      } else {
+        console.log(`✅ 이미 저장된 부분체결 거래 건너뜀: 주문ID ${orderId}`);
+      }
     }
 
     // 4. 잔고 복구 (crypto_data에서)
     if (order.side === "bid") {
       // 매수 주문 취소: KRW 잔고 복구
-      const refundAmount = KRWUtils.calculateTotal(
-        order.price,
-        order.remaining_quantity
-      );
+      // 🔧 부분체결인 경우 남은 비율만큼만 복구
+      let refundAmount;
+      if (order.status === "partial") {
+        const remainingRatio = order.remaining_quantity / order.quantity;
+        refundAmount = Math.floor(order.total_amount * remainingRatio);
+      } else {
+        refundAmount = order.total_amount;
+      }
 
       await cryptoConnection.execute(
         `

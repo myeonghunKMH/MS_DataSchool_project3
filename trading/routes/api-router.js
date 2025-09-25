@@ -48,7 +48,7 @@ class APIRouter {
   }
 
   async postTrade(req, res) {
-    const { market, side, type, price, quantity } = req.body;
+    const { market, side, type, price, quantity, total } = req.body;
 
     // 입력값 유효성 검사
     const validation = ValidationUtils.validateTradeInput(
@@ -73,7 +73,8 @@ class APIRouter {
         side,
         type,
         validation.normalizedPrice,
-        validation.normalizedQuantity
+        validation.normalizedQuantity,
+        total  // 🔧 총액 정보 전달
       );
 
       res.status(200).json({

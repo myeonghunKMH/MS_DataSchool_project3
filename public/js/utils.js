@@ -58,21 +58,16 @@ export class Utils {
     return Math.floor(total);
   }
 
-  // 🔧 총액에서 수량 역계산 (1000원 단위 고려)
+  // 🔧 총액에서 수량 역계산 (1000원 단위 중복 조정 방지)
   static calculateQuantityFromTotal(total, price, market = null) {
     const parsedTotal = this.parseNumber(total);
     const parsedPrice = this.parseNumber(price);
 
     if (parsedPrice <= 0) return 0;
 
-    let adjustedTotal = parsedTotal;
-
-    // 🔧 비트코인/이더리움의 경우 총액을 1000원 단위로 조정
-    if (market === "KRW-BTC" || market === "KRW-ETH") {
-      adjustedTotal = Math.floor(parsedTotal / 1000) * 1000;
-    }
-
-    return adjustedTotal / parsedPrice;
+    // 🔧 1000원 단위 중복 조정 방지:
+    // 이미 UI에서 1000원 단위로 조정된 값이 들어오므로 추가 조정 없이 바로 계산
+    return parsedTotal / parsedPrice;
   }
 
   // 🔧 코인별 총액 단위 조정
