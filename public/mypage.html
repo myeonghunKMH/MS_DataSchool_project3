@@ -10,8 +10,8 @@
       color-scheme: dark;
       --stroke:#2b2b2b;
       --glow:255,255,255;
-      --card-bg-1: rgba(255,255,255,.06); /* ↑ 밝게 (기존 .03) */
-      --card-bg-2: rgba(255,255,255,.02); /* ↑ 밝게 (기존 .01) */
+      --card-bg-1: rgba(255,255,255,.06);
+      --card-bg-2: rgba(255,255,255,.02);
     }
     body{
       margin:0; color:#eaeaea;
@@ -36,6 +36,14 @@
       filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
               drop-shadow(0 0 20px rgba(var(--glow),.18));
     }
+    
+    /* Header 우측 버튼 그룹 */
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
     .navbtn{
       display:inline-flex; align-items:center; gap:8px;
       height:36px; padding:0 12px; border-radius:10px;
@@ -47,6 +55,18 @@
       border-color:rgba(var(--glow),.32);
       box-shadow:0 0 12px rgba(var(--glow),.22);
       transform:translateY(-1px); color:#fff;
+    }
+    
+    /* Admin 버튼 일반 스타일로 변경 */
+    .admin-btn {
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke);
+      color:#f3f3f3;
+    }
+    .admin-btn:hover {
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      color:#fff;
     }
 
     /* Layout */
@@ -62,23 +82,23 @@
       filter: drop-shadow(0 12px 36px rgba(var(--glow),.18)) drop-shadow(0 0 24px rgba(var(--glow),.14));
     }
 
-    /* Card — 밝기 업그레이드 */
+    /* Card */
     .card{
       position:relative;
       background:linear-gradient(180deg, var(--card-bg-1), var(--card-bg-2) 40%, rgba(255,255,255,.00));
-      border:1px solid rgba(255,255,255,.12);      /* 경계선도 살짝 밝게 */
+      border:1px solid rgba(255,255,255,.12);
       border-radius:16px;
       box-shadow:
         0 8px 22px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.08),       /* 내부 하이라이트 ↑ */
-        inset 0 0 30px rgba(255,255,255,.03);      /* 은은한 내부 광택 추가 */
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 0 30px rgba(255,255,255,.03);
       overflow:hidden;
       transition:.28s;
       padding:22px;
     }
     .card::after{
       content:""; position:absolute; inset:auto 0 0 0; height:46px;
-      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.08)); /* 하단도 살짝 밝게 */
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.08));
       pointer-events:none;
     }
     .card:hover{
@@ -144,9 +164,13 @@
     .wallet{ margin-top:8px; padding-top:16px; border-top:1px dashed #616161; display:grid; gap:14px; }
     .cash{
       display:flex; align-items:center; justify-content:space-between;
-      background:rgba(255,255,255,.05); /* 살짝만 밝게 조정해도 느낌 통일 */
+      background:rgba(255,255,255,.05);
       border:1px solid var(--stroke); border-radius:12px; padding:12px 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .cash-amount {
+      color: #ffd700; /* 금액 텍스트 노란색 */
+      font-weight: 700;
     }
     .holdings{
       background:rgba(255,255,255,.04);
@@ -159,16 +183,11 @@
     th{ background:rgba(255,255,255,.04); font-weight:700; }
     tr:last-child td{ border-bottom:none; }
 
-    /* 종목 ↔ 수량 사이 */
-    /* 종목 칸 */
-th:first-child, td:first-child{ width:25%; border-right:1px solid var(--stroke); }
-
-/* 보유수량 칸 */
-th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke); }
-
-    /* 수량 ↔ 평가금액 사이 */
-    th:nth-child(2), td:nth-child(2){ border-right:1px solid var(--stroke); }
-
+    /* 테이블 컬럼 너비 조정 - 4개 컬럼으로 확장 */
+    th:nth-child(1), td:nth-child(1){ width:20%; border-right:1px solid var(--stroke); }
+    th:nth-child(2), td:nth-child(2){ width:25%; border-right:1px solid var(--stroke); }
+    th:nth-child(3), td:nth-child(3){ width:25%; border-right:1px solid var(--stroke); }
+    th:nth-child(4), td:nth-child(4){ width:30%; }
 
     /* Bottom links */
     .actions-row{
@@ -180,18 +199,11 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
       border-radius:11px; height:40px; padding:0 14px; text-decoration:none; font-weight:800;
       display:inline-flex; align-items:center; gap:10px; transition:.24s;
     }
-    .pill-link:hover{ border-color:rgba(var(--glow),.30); box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35); color:#fff; transform:translateY(-1px); }
-
-    /* Admin button special styling */
-    .admin-pill{
-      background:linear-gradient(135deg, rgba(255,215,0,.08), rgba(255,165,0,.06));
-      border:1px solid rgba(255,215,0,.3);
-      color:#ffd700;
-    }
-    .admin-pill:hover{
-      border-color:rgba(255,215,0,.6);
-      box-shadow:0 0 16px rgba(255,215,0,.3), 0 10px 20px rgba(0,0,0,.45);
-      color:#fff;
+    .pill-link:hover{ 
+      border-color:rgba(var(--glow),.30); 
+      box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35); 
+      color:#fff; 
+      transform:translateY(-1px); 
     }
 
     /* Modals (탈퇴만 유지) */
@@ -213,13 +225,11 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
     .danger-btn{ background:#c82333; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; }
     .danger-btn:hover{ background:#a51c2b; }
 
-    .gain{ color:#FF6B6B; } /* 빨강(+) */
-    .loss{ color:#84ceff; } /* 파랑(-) */
+    .gain{ color:#FF6B6B; }
+    .loss{ color:#84ceff; }
 
     th:last-child {
-      display: flex;
-      justify-content: space-between; /* 텍스트 왼쪽, 버튼 오른쪽 */
-      align-items: center;
+      position: relative;
     }
 
     .refresh-btn{
@@ -233,19 +243,29 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
     }
     .refresh-btn:hover{ color:#fff; }
 
+    /* 평균매입가 스타일링 */
+    .avg-price {
+      font-weight: 600;
+      color:#ccc;
+    }
+
   </style>
 </head>
 <body>
   <!-- Header -->
   <header>
     <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
-    <a class="navbtn" href="/logout" aria-label="로그아웃">LOGOUT</a>
+    <div class="header-actions">
+      <!-- Admin button - initially hidden, 로그아웃 왼쪽으로 이동 -->
+      <a class="navbtn admin-btn" href="https://app.fabric.microsoft.com/links/OUsnVSaInW?ctid=5fb256f0-fbf2-40d2-81d5-bac1b32c419d&pbi_source=linkShare" id="adminBtn" style="display:none;">🛡️ ADMIN</a>
+      <a class="navbtn" href="/logout" aria-label="로그아웃">LOGOUT</a>
+    </div>
   </header>
 
   <main>
     <div class="pagetitle"><h1>My Page</h1></div>
 
-    <!-- Profile Card (밝게 조정됨) -->
+    <!-- Profile Card -->
     <section class="card" aria-label="프로필 및 지갑">
       <h2>
         <span class="h2-left">Profile</span>
@@ -253,7 +273,6 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
           <span class="dropdown">
             <button class="icon-btn" id="profileMenuBtn" aria-haspopup="true" aria-expanded="false" title="설정">⚙️ 설정</button>
             <div class="menu" id="profileMenu" role="menu" aria-label="프로필 메뉴">
-              <!-- 이름 수정 항목 제거 -->
               <button id="openDeletionFromMenuBtn" class="danger" role="menuitem">회원 탈퇴</button>
             </div>
           </span>
@@ -285,20 +304,24 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
 
       <!-- Wallet -->
       <div class="wallet">
-        <div class="cash"><div>월렛 (현금)</div><div id="cashKRW">0원</div></div>
+        <div class="cash">
+          <div>주문 가능 금액</div>
+          <div id="cashKRW" class="cash-amount">0원</div>
+        </div>
         <div class="holdings">
           <table>
             <thead>
               <tr>
                 <th>종목</th>
                 <th>보유수량</th>
+                <th>평균매입가</th>
                 <th>
                   평가금액 (이익/손실)
-                  <button id="refreshHoldingsBtn" class="refresh-btn" title="새로고침">↺</button>
+                  <button id="refreshHoldingsBtn" class="refresh-btn" title="새로고침" style="position:absolute; right:14px; top:50%; transform:translateY(-50%);">↺</button>
                 </th>
               </tr>
             </thead>
-            <tbody id="holdingsBody"><tr><td colspan="3" style="opacity:.7">로딩 중…</td></tr></tbody>
+            <tbody id="holdingsBody"><tr><td colspan="4" style="opacity:.7">로딩 중…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -307,8 +330,6 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
     <!-- Bottom actions -->
     <div class="actions-row" aria-label="페이지 이동">
       <a class="pill-link" href="report.html">📑 REPORT</a>
-      <!-- Admin button - initially hidden -->
-      <a class="pill-link admin-pill" href="https://app.fabric.microsoft.com/links/OUsnVSaInW?ctid=5fb256f0-fbf2-40d2-81d5-bac1b32c419d&pbi_source=linkShare" id="adminBtn" style="display:none;">🛡️ ADMIN</a>
       <a class="pill-link" href="qna.html">❓ Q&amp;A</a>
     </div>
   </main>
@@ -410,12 +431,10 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
           $('#adminBtn').style.display = 'inline-flex';
         }
 
+        // 주문 가능 금액 표시 (krw_balance 사용)
         const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
-        const fmtQty = (n, d=4) => Number(n).toLocaleString('ko-KR', { maximumFractionDigits:d });
         $('#cashKRW').textContent = fmtKRW(user.krw_balance || 0);
-        $('#btcQty').textContent  = fmtQty(user.btc_balance || 0, 6);
-        $('#ethQty').textContent  = fmtQty(user.eth_balance || 0, 6);
-        $('#xrpQty').textContent  = fmtQty(user.xrp_balance || 0, 2);
+
       }catch(err){
         console.error('Failed to fetch user data:', err);
       }
