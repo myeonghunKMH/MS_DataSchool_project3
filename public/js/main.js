@@ -9,6 +9,10 @@ window.APP_CONSTANTS = { MARKET_CODES, COIN_NAMES };
 
 let app = null;
 
+window.TradingApp = {
+  app: () => app,
+};
+
 // TradingView 라이브러리 로딩 대기
 function waitForLightweightCharts() {
   return new Promise((resolve, reject) => {
