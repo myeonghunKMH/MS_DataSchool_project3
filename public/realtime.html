@@ -473,7 +473,7 @@
         const helpBtn = document.getElementById('helpButton');
         if (!helpBtn) return;
 
-        // 찾을 챗봇 셀렉터 후보 (실제 셀렉터가 있으면 앞에 하나만 남겨)
+        // AI 챗봇 버튼을 찾는 셀렉터들
         const CHAT_SELECTORS = [
           '#aiAssistantToggle',
           '#chatToggle',
@@ -484,7 +484,7 @@
           'button[class*="chat"][class*="toggle"]'
         ];
 
-        // 기본 고정값(챗봇 못찾을 때)
+        // 기본 고정값 (튜토리얼 버튼 기본 위치)
         const DEFAULT_BOTTOM_PX = 18;
         const DEFAULT_RIGHT_PX = 18;
         const GAP_PX = 12;
@@ -503,96 +503,91 @@
           return candidates[0] || null;
         }
 
-        // helpBtn을 body에 붙이고 기본 스타일(모양 유지, 위치는 JS로 설정)
-        function ensureMounted() {
+        // 튜토리얼 버튼을 기본 위치(우하단)에 고정
+        function placeHelpButton() {
           if (helpBtn.parentElement !== document.body) {
             document.body.appendChild(helpBtn);
           }
+          
           helpBtn.style.position = 'fixed';
           helpBtn.style.display = 'inline-flex';
           helpBtn.style.boxSizing = 'border-box';
-          // 초기 visibility hidden -> 계산 후 보여줌
-          helpBtn.style.visibility = 'hidden';
-        }
-
-        function placeRelativeToChat(chatEl) {
-          ensureMounted();
-
-          // 챗봇 버튼 위치/크기
-          const chatRect = chatEl.getBoundingClientRect();
-
-          // helpBtn 크기 계산 (보여주기 전에 측정)
-          helpBtn.style.visibility = 'hidden';
-          helpBtn.style.left = '0px'; // 측정용 초기화
-          helpBtn.style.bottom = '0px';
-          helpBtn.style.right = 'auto';
-          // 강제로 렌더해서 크기 확보
-          const helpWidth = helpBtn.offsetWidth || 56;
-          const helpHeight = helpBtn.offsetHeight || 50;
-
-          // helpBtn을 챗봇 버튼의 왼쪽에 붙이기
-          // left = chatRect.left - gap - helpWidth (픽셀 절대 좌표)
-          const left = Math.max(8, Math.round(chatRect.left - GAP_PX - helpWidth));
-          // bottom = (viewport bottom) - chatRect.bottom
-          const bottom = Math.max(8, Math.round(window.innerHeight - chatRect.bottom));
-
-          helpBtn.style.left = left + 'px';
-          helpBtn.style.right = 'auto';
-          helpBtn.style.bottom = bottom + 'px';
-          helpBtn.style.top = 'auto';
-
-          // z-index: 챗봇보다 한 단계 위로
-          const chatZ = parseInt(getComputedStyle(chatEl).zIndex || '1000', 10);
-          helpBtn.style.zIndex = (isNaN(chatZ) ? 1000 : (chatZ + 1));
-
-          helpBtn.style.visibility = 'visible';
-        }
-
-        function placeDefault() {
-          ensureMounted();
-          helpBtn.style.visibility = 'visible';
           helpBtn.style.left = 'auto';
           helpBtn.style.right = DEFAULT_RIGHT_PX + 'px';
           helpBtn.style.bottom = DEFAULT_BOTTOM_PX + 'px';
           helpBtn.style.top = 'auto';
           helpBtn.style.zIndex = 1000;
+          helpBtn.style.visibility = 'visible';
         }
 
-        // 시도해서 배치 성공하면 true 반환
-        function tryPlace() {
-          const chat = findChatButton();
-          if (chat) {
-            placeRelativeToChat(chat);
-            return true;
-          }
-          return false;
+        // 챗봇 버튼을 튜토리얼 버튼 위에 배치
+        function placeChatButtonAboveHelp(chatEl) {
+          if (!chatEl) return false;
+
+          // 튜토리얼 버튼의 위치와 크기 가져오기
+          const helpRect = helpBtn.getBoundingClientRect();
+          const helpHeight = helpBtn.offsetHeight || 50;
+
+          // 챗봇 버튼을 튜토리얼 버튼 바로 위에 배치
+          const chatBottom = Math.round(window.innerHeight - helpRect.top + GAP_PX);
+          const chatRight = Math.round(window.innerWidth - helpRect.right);
+
+          chatEl.style.position = 'fixed';
+          chatEl.style.left = 'auto';
+          chatEl.style.right = chatRight + 'px';
+          chatEl.style.bottom = chatBottom + 'px';
+          chatEl.style.top = 'auto';
+          
+          // z-index: 튜토리얼 버튼보다 한 단계 위로
+          const helpZ = parseInt(getComputedStyle(helpBtn).zIndex || '1000', 10);
+          chatEl.style.zIndex = (isNaN(helpZ) ? 1001 : (helpZ + 1));
+
+          return true;
         }
 
-        // 초기 실행 + resize 관찰
+        // 초기 배치 및 관찰 시작
         function initPlacement() {
-          // 항상 마운트해서 스크롤 내부에 남지 않게 한다
-          ensureMounted();
+          // 먼저 튜토리얼 버튼을 기본 위치에 고정
+          placeHelpButton();
 
-          // 우선 시도해서 배치. 실패하면 기본 위치로 두고 관찰 시작
-          if (!tryPlace()) {
-            placeDefault();
+          // 챗봇 버튼 찾아서 위에 배치
+          const tryPlaceChat = () => {
+            const chat = findChatButton();
+            if (chat) {
+              return placeChatButtonAboveHelp(chat);
+            }
+            return false;
+          };
+
+          // 초기 시도
+          if (!tryPlaceChat()) {
+            // 챗봇 버튼이 아직 없으면 관찰 시작
             const obs = new MutationObserver(() => {
-              if (tryPlace()) obs.disconnect();
+              if (tryPlaceChat()) {
+                obs.disconnect();
+              }
             });
             obs.observe(document.body, { childList: true, subtree: true });
+            
             // 안전장치: 10초 후에도 안 나타나면 옵저버 끔
             setTimeout(() => obs.disconnect(), 10000);
           }
         }
 
+        // DOM 준비되면 실행
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', initPlacement);
         } else {
           initPlacement();
         }
+
+        // 리사이즈 시 재배치
         window.addEventListener('resize', () => {
-          // 재계산: 챗봇 있으면 왼쪽에, 없으면 기본
-          tryPlace() || placeDefault();
+          placeHelpButton();
+          const chat = findChatButton();
+          if (chat) {
+            placeChatButtonAboveHelp(chat);
+          }
         });
       })();
     </script>

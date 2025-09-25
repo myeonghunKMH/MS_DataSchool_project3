@@ -879,6 +879,7 @@ div.orderbook-price {
 .available-amount-value {
   font-weight: bold;
   margin-top: 2px;
+  color : rgb(226, 197, 68);
 }
 .trading-type {
   align-items: end;
