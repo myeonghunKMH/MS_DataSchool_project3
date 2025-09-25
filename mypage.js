@@ -31,10 +31,13 @@
     const ths = Array.from(hdr.querySelectorAll('th')).map((th) =>
       th.textContent.trim()
     );
-    if (!ths.some((t) => /평가금액/.test(t))) {
-      const th = document.createElement('th');
-      th.textContent = '평가금액 (이익/손실)';
-      hdr.appendChild(th);
+    
+    // 4컬럼 구조 확인: 종목, 보유수량, 평균매입가, 평가금액
+    const expectedCols = ['종목', '보유수량', '평균매입가', '평가금액'];
+    const currentCols = ths.length;
+    
+    if (currentCols < 4) {
+      console.warn('테이블 헤더가 4컬럼 구조가 아닙니다.');
     }
   }
 
@@ -88,13 +91,27 @@
       XRP: Number(user?.xrp_balance || 0),
     };
 
-    // 렌더 대상 심볼: (포지션 수량>0) ∪ (지갑 수량>0)
+    // 렌더 대상 심볼 결정
+    // 수정: 포지션에서 수량이 0보다 크거나, 지갑에서 수량이 0보다 큰 경우만 표시
+    // 단, 매우 작은 값(0.00000001 미만)은 0으로 간주
     const symSet = new Set();
+    const THRESHOLD = 0.00000001; // 아주 작은 수량은 무시
+    
     positions.forEach((p) => {
-      if ((p.quantity || 0) > 0) symSet.add(String(p.symbol).toUpperCase());
+      const qty = Number(p.quantity || 0);
+      if (qty > THRESHOLD) {
+        symSet.add(String(p.symbol).toUpperCase());
+      }
     });
+    
     Object.entries(balanceQty).forEach(([s, q]) => {
-      if ((q || 0) > 0) symSet.add(s);
+      if (q > THRESHOLD) {
+        // 포지션에 없는 경우에만 지갑 잔고 기반으로 추가
+        // 포지션에 이미 있다면 포지션 정보를 우선시
+        if (!posMap[s]) {
+          symSet.add(s);
+        }
+      }
     });
 
     const syms = Array.from(symSet).sort();
@@ -113,42 +130,58 @@
     const fetched = needPrice.length ? await fetchUpbitPrices(needPrice) : {};
     const priceMap = Object.assign({}, havePrice, fetched);
 
-    // 행 구성 (수량: 포지션 수량 우선, 없으면 지갑 잔고)
+    // 4컬럼 행 구성: 종목 | 보유수량 | 평균매입가 | 평가금액(손익)
     const rows = syms.map((s) => {
       const p = posMap[s];
-      const qty =
-        (p && (p.quantity || p.quantity === 0))
-          ? Number(p.quantity)
-          : Number(balanceQty[s] || 0);
-      const price =
+      
+      // 포지션이 있으면 포지션의 수량 사용, 없으면 지갑 잔고 사용
+      // 중요: 포지션 수량이 0이면 표시하지 않아야 함
+      let qty = 0;
+      if (p) {
+        qty = Number(p.quantity || 0);
+        // 포지션이 있는데 수량이 0이면 건너뛰기
+        if (qty <= THRESHOLD) return null;
+      } else {
+        // 포지션이 없으면 지갑 잔고 확인
+        qty = Number(balanceQty[s] || 0);
+        if (qty <= THRESHOLD) return null;
+      }
+      
+      const currentPrice =
         (p && (p.current_price || p.current_price === 0))
           ? Number(p.current_price)
           : Number(priceMap[s] || 0);
-      const value = Math.round(qty * price);
+      const value = Math.round(qty * currentPrice);
 
-      let pnlHTML;
+      // 평균매입가 (avg_cost 또는 avg_price 필드 사용)
+      const avgPrice = p ? (Number(p.avg_cost) || Number(p.avg_price) || 0) : 0;
+      const avgPriceText = avgPrice > 0 ? 
+        `<span class="avg-price">${KRW(avgPrice)}</span>` : 
+        '<span style="opacity:.6">-</span>';
+
+      // 손익 계산
+      let pnlHTML = '';
       if (p && typeof p.pnl === 'number') {
         const sign = p.pnl >= 0 ? '+' : '−';
         const color = p.pnl >= 0 ? plusColor : minusColor;
-        pnlHTML = ` <span style="color:${color}">(${sign} ${KRW(Math.abs(p.pnl))})</span>`;
+        pnlHTML = `<br><small style="color:${color}">(${sign}${KRW(Math.abs(p.pnl))})</small>`;
       } else if (qty > 0) {
-        pnlHTML = ` <span style="opacity:.6">(원가 정보 없음)</span>`;
-      } else {
-        pnlHTML = '';
+        pnlHTML = `<br><small style="opacity:.6">(원가 정보 없음)</small>`;
       }
 
       return `
         <tr>
-          <td>${koLabel(s)}</td>
+          <td><strong>${koLabel(s)}</strong></td>
           <td>${fmtQty(qty)}</td>
+          <td>${avgPriceText}</td>
           <td>${KRW(value)}${pnlHTML}</td>
         </tr>
       `;
-    });
+    }).filter(row => row !== null); // null 값 필터링
 
     tbody.innerHTML = rows.length
       ? rows.join('')
-      : `<tr><td colspan="3" style="opacity:.7">보유 중인 자산이 없습니다.</td></tr>`;
+      : `<tr><td colspan="4" style="opacity:.7; text-align:center;">보유 중인 자산이 없습니다.</td></tr>`;
   }
 
   // 초기 로드 + 새로고침 버튼 이벤트 등록
