@@ -5,10 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>과거 데이터 모의투자</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.0/dist/chartjs-chart-financial.min.js"></script>
 
     <style>
         * {
@@ -28,10 +29,10 @@
             --active: #ffffff;
             --active-600: #a3a3a3;
             --headline: #ffd166;
-            --candle-up: rgb(255, 103, 103);
-            --candle-down: rgb(74, 196, 175);
-            --vol-up: rgba(255, 103, 103, .34);
-            --vol-down: rgba(74, 196, 175, .30);
+            --candle-up: #e12343;
+            --candle-down: #1763b6;
+            --vol-up: rgba(225, 35, 67, 0.34);
+            --vol-down: rgba(23, 99, 182, 0.30);
             --font-sm: 12.5px;
             --font-md: 14.5px;
             --font-lg: 18px;
@@ -1411,14 +1412,11 @@
                         maintainAspectRatio: false,
                         scales: {
                             x: {
-                                type: 'time',
+                                type: 'time',   // ✅ Luxon → date-fns 대응
                                 time: {
                                     unit: 'day',
                                     tooltipFormat: 'yyyy-MM-dd',
                                     displayFormats: { day: 'MM-dd' }
-                                },
-                                adapters: {
-                                    date: luxon
                                 },
                                 grid: { color: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.08)' },
                                 ticks: { color: '#8892b0', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
@@ -1460,7 +1458,7 @@
                 const slicedData = this.historicalData[this.currentMarket].slice(0, this.currentDataIndex + 1);
                 const displayData = slicedData.slice(-70);
 
-                // ✅ 캔들 데이터 (몸통 표시)
+                // ✅ 캔들 데이터
                 const priceData = displayData.map(d => {
                     const isUp = parseFloat(d.trade_price) >= parseFloat(d.opening_price);
                     const candleColor = isUp
@@ -1472,7 +1470,7 @@
                         h: parseFloat(d.high_price),
                         l: parseFloat(d.low_price),
                         c: parseFloat(d.trade_price),
-                        color: candleColor   // 🔹 캔들별 색상 지정
+                        color: candleColor
                     };
                 });
 
@@ -1482,7 +1480,7 @@
                     y: parseFloat(d.volume || 0),
                 }));
 
-                // ✅ 거래량 색상 (상승 = 빨강, 하락 = 파랑)
+                // ✅ 거래량 색상
                 const volumeColors = displayData.map(d =>
                     parseFloat(d.trade_price) >= parseFloat(d.opening_price)
                         ? getComputedStyle(document.documentElement).getPropertyValue('--vol-up').trim()
