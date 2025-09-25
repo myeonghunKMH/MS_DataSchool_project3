@@ -21,6 +21,7 @@ export class UIController {
     this.chart = null; // 🔧 ChartManager 참조 추가
     this.trading = null; // 🔧 TradingManager 참조 추가
     this.setupInitialData();
+    this.setupOrderbookClickHandler(); // 🔧 호가창 클릭 이벤트 위임 설정
   }
 
   // 🔧 매니저 인스턴스 설정 메서드
@@ -34,6 +35,25 @@ export class UIController {
     this.updateCoinTabs();
     this.updateCoinSummary();
     this.updateTradingPanel();
+  }
+
+  // 🔧 호가창 클릭 이벤트 위임 설정 (DOM 재생성에 영향받지 않음)
+  setupOrderbookClickHandler() {
+    // 호가창 컨테이너에 이벤트 위임
+    const orderbookContainer = document.querySelector('.orderbook-container');
+    if (orderbookContainer) {
+      orderbookContainer.addEventListener('click', (event) => {
+        const clickedItem = event.target.closest('.orderbook-unit');
+        if (!clickedItem || !clickedItem._unitData || !clickedItem._priceData) return;
+
+        // 기존 handleOrderbookClick 로직 실행
+        const unit = clickedItem._unitData;
+        const price = clickedItem._priceData;
+        const type = clickedItem.classList.contains('ask-item') ? 'ask' : 'bid';
+
+        this.handleOrderbookClick(unit, price, type, clickedItem);
+      });
+    }
   }
 
   showPendingOrders() {
@@ -352,6 +372,12 @@ export class UIController {
           item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'ask', 0);
         }
+
+        // 🔧 호가창 클릭을 위한 데이터 저장 (이벤트 위임 방식)
+        item._unitData = unit;
+        item._priceData = price;
+        item.style.cursor = 'pointer';
+
         item.style.display = 'grid';
       } else {
         item.style.display = 'none';
@@ -383,6 +409,12 @@ export class UIController {
           item.classList.remove('general-grid');
           this.updateCumulativeItem(item, unit, 'bid', 0);
         }
+
+        // 🔧 호가창 클릭을 위한 데이터 저장 (이벤트 위임 방식)
+        item._unitData = unit;
+        item._priceData = price;
+        item.style.cursor = 'pointer';
+
         item.style.display = 'grid';
       } else {
         item.style.display = 'none';
@@ -717,11 +749,11 @@ export class UIController {
 
     let shouldSetPrice = false;
 
-    if (type === 'ask' && this.state.activeTradingSide === "bid") {
-      // 매수 시에는 매도호가 클릭
+    if (type === 'bid' && this.state.activeTradingSide === "bid") {
+      // 매수 시에는 매수호가(빨간색, 아래쪽) 클릭
       shouldSetPrice = true;
-    } else if (type === 'bid' && this.state.activeTradingSide === "ask") {
-      // 매도 시에는 매수호가 클릭
+    } else if (type === 'ask' && this.state.activeTradingSide === "ask") {
+      // 매도 시에는 매도호가(파란색, 위쪽) 클릭
       shouldSetPrice = true;
     }
 
