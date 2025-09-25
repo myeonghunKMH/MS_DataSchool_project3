@@ -68,12 +68,14 @@ const AIAssistant = (() => {
             // 텍스트가 있으면 내용에 맞춰 높이 조절
             textInput.style.height = 'auto';
             
-            // 실제 줄 수를 계산하여 높이 결정
+            // 실제 줄 수를 계산하여 높이 결정 (스크롤 높이 기반으로 보다 정확하게)
             const lineHeight = 20; // 1줄 높이
-            const lines = Math.max(1, textInput.value.split('\n').length);
             const maxLines = 5; // 최대 5줄
+            const maxHeight = lineHeight * maxLines;
             
-            const newHeight = Math.min(lines * lineHeight, maxLines * lineHeight);
+            // 내용 높이를 측정하여 반영
+            const contentHeight = textInput.scrollHeight;
+            const newHeight = Math.min(contentHeight, maxHeight);
             
             textInput.style.height = `${newHeight}px`;
         });

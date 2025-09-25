@@ -196,9 +196,12 @@
     outline: none;
     resize: none;
     overflow-y: auto;
-    min-height: 20px;
-    max-height: 90px;
-    height: 20px;
+    min-height: 50px;
+    max-height: 250px; /* 5줄(라인 높이) + 패딩을 고려해 충분히 여유롭게 */
+    height: 50px;
+    background-color: #fafafa; /* 다크 모드에서도 입력창은 항상 밝게 */
+    color: #333;
+    caret-color: #333;
     /* 모던한 폰트 적용 */
     font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     font-weight: 400;
