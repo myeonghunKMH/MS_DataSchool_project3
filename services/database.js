@@ -761,6 +761,95 @@ async function cancelPendingOrder(userId, orderId) {
   }
 }
 
+/**
+ * MySQL GET_LOCK을 이용한 분산 락 획득
+ * @param {string} lockName - 락 이름
+ * @param {number} timeout - 타임아웃 (초)
+ * @param {object} connection - DB 연결 (선택사항)
+ * @returns {boolean} - 락 획득 성공 여부
+ */
+async function acquireDistributedLock(lockName, timeout = 10, connection = null) {
+  const conn = connection || tradingPool;
+
+  try {
+    const [result] = await conn.execute(
+      'SELECT GET_LOCK(?, ?) as lock_result',
+      [lockName, timeout]
+    );
+
+    const lockResult = result[0].lock_result;
+
+    if (lockResult === 1) {
+      // 성공한 락 획득은 로그 생략 (너무 빈번함)
+      return true;
+    } else if (lockResult === 0) {
+      // 타임아웃은 정상 상황이므로 로그 생략
+      return false;
+    } else {
+      console.error(`❌ 분산 락 오류: ${lockName}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`❌ 분산 락 획득 실패: ${lockName}`, error);
+    return false;
+  }
+}
+
+/**
+ * MySQL RELEASE_LOCK을 이용한 분산 락 해제
+ * @param {string} lockName - 락 이름
+ * @param {object} connection - DB 연결 (선택사항)
+ * @returns {boolean} - 락 해제 성공 여부
+ */
+async function releaseDistributedLock(lockName, connection = null) {
+  const conn = connection || tradingPool;
+
+  try {
+    const [result] = await conn.execute(
+      'SELECT RELEASE_LOCK(?) as release_result',
+      [lockName]
+    );
+
+    const releaseResult = result[0].release_result;
+
+    if (releaseResult === 1) {
+      // 성공한 락 해제는 로그 생략 (너무 빈번함)
+      return true;
+    } else if (releaseResult === 0) {
+      // 이미 해제된 경우는 로그 생략 (정상 상황)
+      return false;
+    } else {
+      console.error(`❌ 분산 락 해제 오류: ${lockName}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`❌ 분산 락 해제 실패: ${lockName}`, error);
+    return false;
+  }
+}
+
+/**
+ * 특정 마켓의 대기주문 개수만 빠르게 확인 (성능 최적화용)
+ * @param {string} market - 마켓 코드 (예: KRW-BTC)
+ * @returns {number} - 대기주문 개수
+ */
+async function getMarketPendingOrdersCount(market) {
+  try {
+    const [rows] = await tradingPool.execute(
+      `
+      SELECT COUNT(*) as count
+      FROM pending_orders
+      WHERE market = ? AND status IN ('pending', 'partial') AND remaining_quantity > 0
+    `,
+      [market]
+    );
+    return rows[0]?.count || 0;
+  } catch (error) {
+    console.error(`❌ 대기주문 개수 조회 실패: ${market}`, error);
+    return 0;
+  }
+}
+
 async function executeTradeTransaction(
   userId,
   market,
@@ -1154,4 +1243,11 @@ module.exports = {
 
   // KRWUtils 추가
   KRWUtils,
+
+  // 분산 락 함수들
+  acquireDistributedLock,
+  releaseDistributedLock,
+
+  // 성능 최적화 함수들
+  getMarketPendingOrdersCount,
 };

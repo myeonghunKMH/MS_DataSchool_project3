@@ -16,6 +16,21 @@ class OrderMatchingEngine {
       return;
     }
 
+    // 🚀 성능 최적화: 대기주문이 없으면 락 획득 생략
+    const pendingCount = await this.db.getMarketPendingOrdersCount(market);
+    if (pendingCount === 0) {
+      return; // 대기주문 없음, 처리할 것 없음
+    }
+
+    // 🔒 분산 락 획득 (마켓별로 락 이름 생성)
+    const lockName = `order_matching_${market}`;
+    const lockAcquired = await this.db.acquireDistributedLock(lockName, 5);
+
+    if (!lockAcquired) {
+      // 다른 서버에서 처리 중이므로 건너뛰기 (로그 생략)
+      return;
+    }
+
     this.processingMarkets.add(market);
 
     try {
@@ -57,6 +72,8 @@ class OrderMatchingEngine {
     } catch (error) {
       console.error(`❌ 주문 매칭 처리 오류 (${market}):`, error);
     } finally {
+      // 🔓 분산 락 해제
+      await this.db.releaseDistributedLock(lockName);
       this.processingMarkets.delete(market);
     }
   }
