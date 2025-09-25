@@ -62,6 +62,7 @@
     .grid{ display:grid; gap:16px; }
     .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
     .grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .grid.cols-1{ grid-template-columns:1fr; }
     @media (max-width:1024px){ .grid.cols-4{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:760px){ .grid.cols-4,.grid.cols-2{ grid-template-columns:1fr; } }
 
@@ -94,9 +95,9 @@
     .loss{ color:#84ceff; }
 
     .table-container{
-      max-height: 210px;
+      max-height: 300px;
       overflow-y: auto;
-      overflow-x: auto; /* 가로 슬라이드 추가 */
+      overflow-x: auto;
       border:1px solid rgba(255,255,255,.06);
       border-radius:12px;
       background:rgba(255,255,255,.02);
@@ -129,7 +130,7 @@
       const r = (n>>16)&255, g=(n>>8)&255, b=n&255;
       return `rgba(${r},${g},${b},${a})`;
     }
-    const PALETTE = { BTC: '#FFC98A', ETH: '#FF8FB3', XRP: '#7CC7A3' };
+    const PALETTE = { BTC: '#FFC98A', ETH: '#FF8FB3', XRP: '#7CC7A3', ADA: '#9B59B6', DOT: '#E67E22', SOL: '#3498DB', DOGE: '#F39C12' };
   </script>
 </head>
 <body>
@@ -164,19 +165,24 @@
 
     <div class="grid cols-2" style="margin-top:14px;">
       <div class="card"><div class="title">내가 거래한 종목별 비율</div><canvas id="chart_my_top_symbols" height="120"></canvas></div>
+      <div class="card"><div class="title">일별 거래 활동</div><canvas id="chart_daily_activity" height="120"></canvas></div>
+    </div>
+
+    <!-- 최근 체결 히스토리를 별도 행으로 이동 -->
+    <div class="grid cols-1" style="margin-top:14px;">
       <div class="card">
         <div class="title">최근 체결 히스토리</div>
         <div class="table-container">
           <table class="table" id="table_recent">
             <thead>
               <tr>
-                <th>일시</th>
                 <th>종목</th>
                 <th>유형</th>
                 <th>수량</th>
                 <th>가격</th>
                 <th>거래금액</th><!-- qty * price -->
                 <th>실현손익</th><!-- 매도 시 계산 -->
+                <th>일시</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -227,6 +233,32 @@
       btn.style.left = Math.max(left, 0) + 'px';
     }
 
+    // 백엔드에서 제공하는 일별 거래 통계를 사용하는 함수
+    function generateDailyActivityData(days, dailyTradeCounts = []) {
+      const last7Days = days.slice(-7);
+      const last7Labels = last7Days.map(d => {
+        const date = new Date(d + 'T00:00:00+09:00');
+        return date.toLocaleDateString('ko-KR', {month: 'short', day: 'numeric'});
+      });
+
+      // 백엔드에서 제공하는 정확한 일별 거래 건수 사용
+      const trades = dailyTradeCounts.slice(-7); // 최근 7일만 추출
+      
+      console.log('최근 7일:', last7Days);
+      console.log('일별 거래 건수:', trades);
+
+      // 데이터 길이가 맞지 않는 경우 처리
+      while (trades.length < 7) {
+        trades.unshift(0); // 앞쪽에 0 추가
+      }
+
+      return { 
+        days: last7Labels, 
+        trades: trades.slice(0, 7), // 정확히 7개만
+        volumes: new Array(7).fill(0) // 금액은 사용하지 않음
+      };
+    }
+
     window.addEventListener('load', () => {
       positionRefresh();
       requestAnimationFrame(positionRefresh);
@@ -270,22 +302,22 @@
         document.getElementById('kpi_top_symbol_share').textContent = Math.round(my.topSymbols[0].share*100) + '%';
       }
 
-      /* ===== 최근 체결 히스토리 (20개, 가로 슬라이드 포함) ===== */
+      /* ===== 최근 체결 히스토리 (30개로 증가) ===== */
       const tbody = document.querySelector('#table_recent tbody');
       tbody.innerHTML = '';
-      (my.recentFills||[]).slice(0,20).forEach(f=>{
+      (my.recentFills||[]).slice(0,30).forEach(f=>{
         const tr = document.createElement('tr');
         const realizedHTML = (f.realized != null)
           ? `<span class="${f.realized >= 0 ? 'gain' : 'loss'}">${fmtKRW(f.realized)}</span>`
           : '';
         tr.innerHTML = `
-          <td>${fmtDT(f.ts||f.created_at)}</td>
           <td>${cleanSymbol(f.sym||f.market||'')}</td>
           <td>${sideKR(f.side)}</td>
           <td>${f.qty}</td>
           <td>${fmtKRW(f.price)}</td>
           <td>${fmtKRW(f.total)}</td>
-          <td>${realizedHTML}</td>`;
+          <td>${realizedHTML}</td>
+          <td>${fmtDT(f.ts||f.created_at)}</td>`;
         tbody.appendChild(tr);
       });
 
@@ -316,12 +348,53 @@
       });
 
       /* ===== 내가 거래한 종목 수량 ===== */
-      const syms = (my.topSymbols||[]).map(s=>s.symbol);
+      const syms = (my.topSymbols||[]).map(s=>cleanSymbol(s.symbol));
       const shares = (my.topSymbols||[]).map(s=>Math.round((s.share||0)*100));
       new Chart(document.getElementById('chart_my_top_symbols'), {
         type:'bar',
         data:{ labels:syms, datasets:[{ label:'비중(%)', data:shares, borderWidth:0, backgroundColor: syms.map(s=>hexA(PALETTE[s]||'#4bc0c0', .65)) }] },
         options:{ plugins:{ legend:{display:false}, tooltip }, scales:{ x:{ grid:{display:false}, ticks:baseTicks }, y:{ grid:baseGrid, ticks:baseTicks, beginAtZero:true, suggestedMax:100 } } }
+      });
+
+      /* ===== 새로운 차트: 일별 거래 활동 (정확한 통계) ===== */
+      const dailyActivity = generateDailyActivityData(days, my.dailyTradeCounts || []);
+      new Chart(document.getElementById('chart_daily_activity'), {
+        type:'bar',
+        data:{ 
+          labels: dailyActivity.days, 
+          datasets:[
+            { 
+              label:'거래 횟수', 
+              data: dailyActivity.trades, 
+              borderWidth:0, 
+              backgroundColor: 'rgba(255, 107, 107, 0.7)'
+            }
+          ] 
+        },
+        options:{ 
+          responsive: true,
+          plugins:{ 
+            legend:{display:false}, 
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `거래 횟수: ${context.parsed.y}건`;
+                }
+              }
+            }
+          }, 
+          scales:{ 
+            x:{ grid:{display:false}, ticks:baseTicks }, 
+            y: { 
+              grid: baseGrid, 
+              ticks: {...baseTicks, callback: function(value) { 
+                return Number.isInteger(value) ? value + '건' : ''; 
+              }}, 
+              beginAtZero: true,
+              stepSize: 1
+            }
+          } 
+        }
       });
     }
   </script>
