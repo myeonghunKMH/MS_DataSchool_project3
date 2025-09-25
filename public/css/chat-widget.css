@@ -39,13 +39,12 @@
     font-size: 24px;
     box-shadow: var(--chat-widget-box-shadow);
     transition: transform 0.2s ease-in-out;
-    z-index: 9998;
+    z-index: 1001; /* 튜토리얼 버튼보다 높게 설정 */
 }
 
 #ai-chat-button:hover {
     transform: scale(1.1);
 }
-
 
 /* 버튼 내부에 배경 이미지로 코인 채팅 아이콘 적용 (비율 유지) */
 #ai-chat-button {
@@ -57,12 +56,12 @@
 
 #ai-chat-widget {
     position: fixed;
-    bottom: 100px;
+    bottom: 160px; /* 100px → 160px로 증가하여 마스코트 위로 올림 */
     right: 30px;
     width: 370px;
     max-width: 90vw;
     height: 500px;
-    max-height: 70vh;
+    max-height: 60vh; /* 70vh → 60vh로 줄여서 화면 상단과의 여백 확보 */
     background-color: var(--chat-widget-background-color);
     border-radius: var(--chat-widget-border-radius);
     box-shadow: var(--chat-widget-box-shadow);
@@ -70,7 +69,7 @@
     flex-direction: column;
     overflow: hidden;
     display: none;
-    z-index: 9999;
+    z-index: 999; /* 마스코트보다 낮게 설정 (보통 튜토리얼 시스템은 10000 이상) */
 }
 
 #ai-chat-widget.visible {
@@ -196,9 +195,12 @@
     outline: none;
     resize: none;
     overflow-y: auto;
-    min-height: 20px;
-    max-height: 90px;
-    height: 20px;
+    min-height: 50px;
+    max-height: 250px; /* 5줄(라인 높이) + 패딩을 고려해 충분히 여유롭게 */
+    height: 50px;
+    background-color: #fafafa; /* 다크 모드에서도 입력창은 항상 밝게 */
+    color: #333;
+    caret-color: #333;
     /* 모던한 폰트 적용 */
     font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     font-weight: 400;
@@ -261,12 +263,23 @@
     background: #a8a8a8;
 }
 
+/* 튜토리얼 활성화 시 챗봇 위젯 숨기기 */
+body.tutorial-active #ai-chat-widget {
+    display: none !important;
+}
+
+body.tutorial-active #ai-chat-button {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 /* 반응형 개선 */
 @media (max-width: 480px) {
     #ai-chat-widget {
         width: 95vw;
         right: 2.5vw;
-        height: 60vh;
+        height: 50vh; /* 60vh → 50vh로 줄여서 모바일에서도 여백 확보 */
+        bottom: 120px; /* 모바일에서도 마스코트와 겹치지 않도록 */
     }
     
     .chat-message {

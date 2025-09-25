@@ -74,12 +74,12 @@ class ReportAIAssistant {
             // 텍스트가 있으면 내용에 맞춰 높이 조절
             this.textInput.style.height = 'auto';
             
-            // 실제 줄 수를 계산하여 높이 결정
+            // 스크롤 높이를 이용해 보다 정확하게 계산
             const lineHeight = 20; // 1줄 높이
-            const lines = Math.max(1, this.textInput.value.split('\n').length);
             const maxLines = 5; // 최대 5줄
-            
-            const newHeight = Math.min(lines * lineHeight, maxLines * lineHeight);
+            const maxHeight = lineHeight * maxLines;
+            const contentHeight = this.textInput.scrollHeight;
+            const newHeight = Math.min(contentHeight, maxHeight);
             
             this.textInput.style.height = `${newHeight}px`;
         });
@@ -137,18 +137,88 @@ class ReportAIAssistant {
     }
 
     async fetchReportContext() {
-        const kpi_trades = document.getElementById('kpi_trades')?.textContent || 'N/A';
-        const kpi_volume = document.getElementById('kpi_volume')?.textContent || 'N/A';
-        const kpi_return = document.getElementById('kpi_return')?.textContent || 'N/A';
-        const kpi_top_symbol = document.getElementById('kpi_top_symbol')?.textContent || 'N/A';
-        
-        return {
-            summary: `이번 달 거래 횟수는 ${kpi_trades}회, 총 거래액은 ${kpi_volume}이며, 수익률은 ${kpi_return}입니다. 가장 많이 거래한 종목은 ${kpi_top_symbol}입니다.`
-        };
+        const text = (el) => (el?.textContent || '').trim();
+
+        // 상단 KPI
+        const kpi_trades = text(document.getElementById('kpi_trades')) || 'N/A';
+        const kpi_pnl = text(document.getElementById('kpi_pnl')) || 'N/A'; // 이번 달 수익
+        const kpi_return = text(document.getElementById('kpi_return')) || 'N/A';
+        const kpi_top_symbol = text(document.getElementById('kpi_top_symbol')) || 'N/A';
+        const kpi_top_symbol_share = text(document.getElementById('kpi_top_symbol_share')) || '';
+
+        // 총자산(최근 값) - Chart.js에서 데이터 읽기
+        let equityLastKRW = null;
+        try {
+            const equityCanvas = document.getElementById('chart_equity');
+            const equityChart = window.Chart?.getChart?.(equityCanvas);
+            if (equityChart) {
+                const ds = equityChart.data?.datasets?.[0];
+                const arr = Array.isArray(ds?.data) ? ds.data : [];
+                const last = arr.length ? arr[arr.length - 1] : null;
+                if (last != null && !isNaN(last)) {
+                    equityLastKRW = '₩' + Number(last).toLocaleString('ko-KR');
+                }
+            }
+        } catch {}
+
+        // 전체 평균 수익률(최근 값) - 리포트 차트 기준으로 항상 시도
+        let peerAvgReturnLast = null;
+        try {
+            const rcCanvas = document.getElementById('chart_return_compare');
+            const rcChart = window.Chart?.getChart?.(rcCanvas);
+            if (rcChart) {
+                const datasets = rcChart.data?.datasets || [];
+                // 우선 '전체 평균 수익률' 라벨을 찾고, 없으면 두 번째 데이터셋(기준선 0% 대체)을 사용
+                let peerDs = datasets.find(d => String(d.label).includes('전체 평균 수익률'));
+                if (!peerDs && datasets.length >= 2) {
+                    peerDs = datasets[1];
+                }
+                if (peerDs) {
+                    const arr = Array.isArray(peerDs.data) ? peerDs.data : [];
+                    const last = arr.length ? arr[arr.length - 1] : null;
+                    if (last != null && !isNaN(last)) {
+                        peerAvgReturnLast = Number(last).toFixed(2) + '%';
+                    }
+                }
+            }
+        } catch {}
+
+        // 최근 체결 히스토리 (최대 20건 요약)
+        const fills = [];
+        try {
+            const rows = Array.from(document.querySelectorAll('#table_recent tbody tr')).slice(0, 20);
+            for (const tr of rows) {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length >= 6) {
+                    const when = text(tds[0]);
+                    const sym = text(tds[1]);
+                    const side = text(tds[2]);
+                    const qty = text(tds[3]);
+                    const price = text(tds[4]);
+                    const total = text(tds[5]);
+                    const realized = tds[6] ? text(tds[6]) : '';
+                    fills.push(`• ${when} ${sym} ${side} 수량:${qty}, 가격:${price}, 금액:${total}${realized ? `, 손익:${realized}` : ''}`);
+                }
+            }
+        } catch {}
+
+        // 요약 문 구성
+        let summary = '';
+        summary += `이번 달 거래 횟수: ${kpi_trades}`;
+        summary += `\n이번 달 수익: ${kpi_pnl}`;
+        summary += `\n수익률: ${kpi_return}`;
+        if (kpi_top_symbol && kpi_top_symbol !== '—' && kpi_top_symbol !== 'N/A') {
+            summary += `\n가장 많이 거래한 종목: ${kpi_top_symbol}${kpi_top_symbol_share ? ` (${kpi_top_symbol_share})` : ''}`;
+        }
+        if (equityLastKRW) summary += `\n총자산(최근): ${equityLastKRW}`;
+        if (peerAvgReturnLast) summary += `\n전체 평균 수익률(최근): ${peerAvgReturnLast}`;
+        if (fills.length) summary += `\n최근 체결 ${fills.length}건:\n` + fills.join('\n');
+
+        return { summary };
     }
 
     createReportPrompt(context, isInitial) {
-        let promptText = `너는 유능한 개인 자산 관리 어드바이저야. 아래의 사용자 리포트 데이터를 보고, 사용자의 질문에 친절하게 답변해줘. 주어진 대화 내역 중 암호화폐나 자산 관리와 직접 관련 없는 질문은 응답하지 말고, 그 경우에는 간결히 '저는 사용자 리포트 분석에 집중하고 있습니다.' 라고 답해.\n\n`;
+        let promptText = `너는 유능한 개인 암호화폐 자산 관리 어드바이저야. 아래의 사용자 리포트 데이터를 보고, 사용자의 질문에 친절하게 답변해줘. 주어진 대화 내역 중 암호화폐나 자산 관리와 직접 관련 없는 질문은 응답하지 말고, 그 경우에는 간결히 '저는 사용자 리포트 분석에 집중하고 있습니다.' 라고 답해.\n\n`;
         promptText += `== 사용자 리포트 요약 ==\n${context.summary}\n\n`;
 
         if (isInitial) {

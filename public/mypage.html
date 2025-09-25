@@ -182,6 +182,18 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
     }
     .pill-link:hover{ border-color:rgba(var(--glow),.30); box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35); color:#fff; transform:translateY(-1px); }
 
+    /* Admin button special styling */
+    .admin-pill{
+      background:linear-gradient(135deg, rgba(255,215,0,.08), rgba(255,165,0,.06));
+      border:1px solid rgba(255,215,0,.3);
+      color:#ffd700;
+    }
+    .admin-pill:hover{
+      border-color:rgba(255,215,0,.6);
+      box-shadow:0 0 16px rgba(255,215,0,.3), 0 10px 20px rgba(0,0,0,.45);
+      color:#fff;
+    }
+
     /* Modals (탈퇴만 유지) */
     .modal-overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.7);
@@ -295,6 +307,8 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
     <!-- Bottom actions -->
     <div class="actions-row" aria-label="페이지 이동">
       <a class="pill-link" href="report.html">📑 REPORT</a>
+      <!-- Admin button - initially hidden -->
+      <a class="pill-link admin-pill" href="https://app.fabric.microsoft.com/links/OUsnVSaInW?ctid=5fb256f0-fbf2-40d2-81d5-bac1b32c419d&pbi_source=linkShare" id="adminBtn" style="display:none;">🛡️ ADMIN</a>
       <a class="pill-link" href="qna.html">❓ Q&amp;A</a>
     </div>
   </main>
@@ -316,6 +330,17 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
 
   <script>
     const $ = (sel) => document.querySelector(sel);
+
+    // 관리자 사용자 목록
+    const adminUsers = [
+      '1dt021@msacademy.msai.kr',
+      '1dt030@msacademy.msai.kr',
+      '1dt019@msacademy.msai.kr',
+      '1dt037@msacademy.msai.kr',
+      '1dt035@msacademy.msai.kr',
+      '1dt001@msacademy.msai.kr',
+      '1dt137@msacademy.msai.kr'
+    ];
 
     /* dropdown */
     const profileMenuBtn = $('#profileMenuBtn');
@@ -363,6 +388,7 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
       }
     });
 
+    // 사용자 데이터 로드 및 관리자 권한 확인
     (async ()=>{
       try{
         const res = await fetch('/api/user');
@@ -372,10 +398,17 @@ th:nth-child(2), td:nth-child(2){ width:30%; border-right:1px solid var(--stroke
           return;
         }
         const user = await res.json();
-        $('#userName').textContent = user.username || '사용자';
-        $('#avatarInitial').textContent = (user.username || 'U').trim().charAt(0).toUpperCase();
+        const username = user.username || '';
+        
+        $('#userName').textContent = username || '사용자';
+        $('#avatarInitial').textContent = username.trim().charAt(0).toUpperCase() || 'U';
         const joined = user.created_at ? new Date(user.created_at) : new Date();
         $('#signupDate').textContent = joined.toLocaleDateString('ko-KR');
+
+        // 관리자 권한 확인 및 ADMIN 버튼 표시
+        if (adminUsers.includes(username)) {
+          $('#adminBtn').style.display = 'inline-flex';
+        }
 
         const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
         const fmtQty = (n, d=4) => Number(n).toLocaleString('ko-KR', { maximumFractionDigits:d });

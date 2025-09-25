@@ -169,36 +169,59 @@ module.exports = function registerReport(app) {
           realized
         };
       });
+      /* ===== 일별 거래 통계 (최근 7일) ===== */
+      const [dailyTradeStats] = await tradingPool.query(
+        `SELECT DATE(CONVERT_TZ(t.created_at, '+00:00', '+09:00')) as day_kst,
+                COUNT(*) as trade_count
+          FROM (${UNION_SQL}) t
+          WHERE t.user_id=? 
+            AND t.created_at >= CONVERT_TZ(?, '+09:00', '+00:00')
+            AND t.created_at < CONVERT_TZ(?, '+09:00', '+00:00')
+          GROUP BY DATE(CONVERT_TZ(t.created_at, '+00:00', '+09:00'))
+          ORDER BY day_kst ASC`,
+        [userId, daysKST[0] + ' 00:00:00', daysKST[daysKST.length-1] + ' 23:59:59']
+      );
 
+      // 일별 통계를 객체로 변환
+      const dailyTradeMap = {};
+      dailyTradeStats.forEach(row => {
+        dailyTradeMap[row.day_kst] = Number(row.trade_count);
+      });
+
+      // 7일 전체 배열 생성 (데이터 없는 날은 0)
+      const dailyTradeCounts = daysKST.map(day => dailyTradeMap[day] || 0);
       /* ===== 응답 ===== */
       const monthlyReturnPct = openingEq_base
         ? round1(safePct((equityCurve.at(-1) ?? openingEq_base) - openingEq_base, openingEq_base))
         : 0;
 
-      res.json({
-        days: daysKST, // 그래프 구간: 최근 15일
-        my: {
-          monthlyTrades: trades_mtd,
-          monthlyTradesDiff: null,
+    res.json({
+      days: daysKST, 
+      my: {
+        monthlyTrades: trades_mtd,
+        monthlyTradesDiff: null,
 
-          monthlyPnL: Math.round(monthlyPnL || 0),
-          monthlyPnLDiff: null,
+        monthlyPnL: Math.round(monthlyPnL || 0),
+        monthlyPnLDiff: null,
 
-          monthlyReturnPct,
-          returnRankPctile: null,
+        monthlyReturnPct,
+        returnRankPctile: null,
 
-          topSymbols,
+        topSymbols,
 
-          equityCurve: equityCurve.map(v => (Number.isFinite(v) ? v : 0)),
-          returnSeries: returnSeries.map(round1),
+        equityCurve: equityCurve.map(v => (Number.isFinite(v) ? v : 0)),
+        returnSeries: returnSeries.map(round1),
 
-          peerAvgReturnSeries: (peerAvgReturnSeries || []).map(round1),
+        peerAvgReturnSeries: (peerAvgReturnSeries || []).map(round1),
 
-          marketReturnSeries: new Array(daysKST.length).fill(0),
+        marketReturnSeries: new Array(daysKST.length).fill(0),
 
-          recentFills
-        }
-      });
+        recentFills,
+
+        // 새로 추가
+        dailyTradeCounts: dailyTradeCounts
+      }
+    });
     } catch (e) {
       console.error('report api error:', e);
       res.status(500).json({ error: 'Failed to build report' });
