@@ -392,12 +392,6 @@
     
     <div class="tutorial-mascot" id="tutorialMascot">
       <img class="mascot-img" id="mascotImg" src="/images/coin_good1.png" alt="마스코트">
-      <div class="tts-icon" id="ttsIcon" title="음성으로 듣기">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path
-            d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-        </svg>
-      </div>
     </div>
     
     <div class="tutorial-bubble" id="tutorialBubble">
@@ -590,6 +584,93 @@
           }
         });
       })();
+      (function() {
+      // available-amount 요소 감시 및 localStorage 동기화
+      const availableAmountElement = document.getElementById('available-amount');
+      
+      if (availableAmountElement) {
+        // 값이 변경될 때마다 localStorage에 저장
+        const observer = new MutationObserver(() => {
+          const currentValue = availableAmountElement.textContent.trim();
+          
+          // 유효한 값인지 확인 (0 KRW가 아니고 실제 값이 있을 때)
+          if (currentValue && currentValue !== '0 KRW' && !currentValue.includes('로딩')) {
+            const balanceData = {
+              available_amount: currentValue,
+              updated_at: Date.now(),
+              source: 'realtime_page',
+              page: 'realtime'
+            };
+            
+            localStorage.setItem('realtime_balance', JSON.stringify(balanceData));
+            
+            // BroadcastChannel로 즉시 알림 (다른 탭에 열린 mypage용)
+            if (typeof BroadcastChannel !== 'undefined') {
+              try {
+                const channel = new BroadcastChannel('realtime_balance');
+                channel.postMessage(balanceData);
+                channel.close();
+              } catch (e) {
+                // BroadcastChannel 오류 무시
+              }
+            }
+            
+            console.log('💰 realtime 잔고 저장됨:', currentValue);
+          }
+        });
+        
+        // 텍스트 변경 감시 시작
+        observer.observe(availableAmountElement, { 
+          childList: true, 
+          subtree: true, 
+          characterData: true 
+        });
+        
+        // 초기 값도 저장
+        const initialValue = availableAmountElement.textContent.trim();
+        if (initialValue && initialValue !== '0 KRW') {
+          const initialData = {
+            available_amount: initialValue,
+            updated_at: Date.now(),
+            source: 'realtime_page',
+            page: 'realtime'
+          };
+          localStorage.setItem('realtime_balance', JSON.stringify(initialData));
+        }
+      }
+      
+      // 페이지 언로드 시 최신 값 저장
+      window.addEventListener('beforeunload', () => {
+        if (availableAmountElement) {
+          const finalValue = availableAmountElement.textContent.trim();
+          if (finalValue && finalValue !== '0 KRW') {
+            const finalData = {
+              available_amount: finalValue,
+              updated_at: Date.now(),
+              source: 'realtime_page',
+              page: 'realtime'
+            };
+            localStorage.setItem('realtime_balance', JSON.stringify(finalData));
+          }
+        }
+      });
+      
+      // 30초마다 현재 값 저장 (안전장치)
+      setInterval(() => {
+        if (availableAmountElement) {
+          const currentValue = availableAmountElement.textContent.trim();
+          if (currentValue && currentValue !== '0 KRW' && !currentValue.includes('로딩')) {
+            const data = {
+              available_amount: currentValue,
+              updated_at: Date.now(),
+              source: 'realtime_page',
+              page: 'realtime'
+            };
+            localStorage.setItem('realtime_balance', JSON.stringify(data));
+          }
+        }
+      }, 30000);
+    })();
     </script>
 
     <script type="module" src="js/main.js"></script>
