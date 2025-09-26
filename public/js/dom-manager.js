@@ -133,7 +133,8 @@ export class DOMManager {
     toast.style.cssText = `
       position: fixed;
       top: ${topOffset}px;
-      right: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       background: ${backgroundColor};
       color: white;
       padding: 12px 16px;
