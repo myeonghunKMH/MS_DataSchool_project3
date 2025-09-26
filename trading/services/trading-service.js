@@ -137,7 +137,7 @@ class TradingService {
           executedQuantity: finalQuantity,
           remainingQuantity: 0,
           totalAmount: this.KRWUtils.toInteger(totalAmount),
-          status: "filled" // 시장가는 항상 완전체결
+          status: "market" // 시장가 체결
         });
       }
 

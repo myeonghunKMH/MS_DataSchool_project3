@@ -136,21 +136,23 @@ export class WebSocketManager {
       message = `${coinSymbol} ${sideText} 주문이 부분체결되었습니다! ⚡\n체결가: ${Utils.formatKRW(
         orderData.executionPrice
       )}원\n체결량: ${executedQuantityText}개`;
+    } else if (orderData.status === "market") {
+      message = `${coinSymbol} ${sideText} 주문이 체결되었습니다! 💰\n체결가: ${Utils.formatKRW(
+        orderData.executionPrice
+      )}원`;
     } else {
       message = `${coinSymbol} ${sideText} 주문이 체결되었습니다!\n체결가: ${Utils.formatKRW(
         orderData.executionPrice
       )}원`;
     }
 
+    // 체결 알림을 우상단에 표시
     if (this.ui?.dom?.showOrderResult) {
       this.ui.dom.showOrderResult(message, true);
     }
 
     // 체결 사운드 효과 재생
     this.playFillSound(orderData.status);
-
-    // 체결 애니메이션 효과
-    this.showFillAnimation(orderData);
 
     // 관련 데이터 새로고침
     setTimeout(async () => {
@@ -170,8 +172,8 @@ export class WebSocketManager {
       const audioContext = new (window.AudioContext ||
         window.webkitAudioContext)();
 
-      if (status === "filled") {
-        // 완전체결 - 높은 음의 2음
+      if (status === "filled" || status === "market") {
+        // 완전체결 및 시장가 - 높은 음의 2음
         this.playTone(audioContext, 880, 0.1, 0.3); // 높은 도
         setTimeout(() => {
           this.playTone(audioContext, 1108, 0.1, 0.3); // 높은 레
