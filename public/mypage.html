@@ -181,7 +181,7 @@
     /* Wallet */
     .wallet{ margin-top:8px; padding-top:16px; border-top:1px dashed #616161; display:grid; gap:14px; }
     
-    /* 총 자산 스타일 */
+    /* 총 자산 스타일 - 성과 표시 추가 */
     .total-assets {
       display:flex; align-items:center; justify-content:space-between;
       background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
@@ -190,6 +190,11 @@
         inset 0 1px 0 rgba(255,255,255,.1),
         0 4px 12px rgba(0,0,0,.15);
       margin-bottom:10px;
+    }
+    .total-assets-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .total-assets-label {
       font-weight: 700;
@@ -201,6 +206,37 @@
       font-weight: 800;
       font-size: 18px;
       text-shadow: 0 0 8px rgba(0, 212, 170, 0.3);
+    }
+    .total-assets-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .performance-change {
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .performance-percent {
+      font-weight: 800;
+      font-size: 14px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+    }
+    .gain {
+      color: #ff6b6b;
+      text-shadow: 0 0 6px rgba(255, 107, 107, 0.4);
+    }
+    .loss {
+      color: #84ceff;
+      text-shadow: 0 0 6px rgba(132, 206, 255, 0.4);
+    }
+    .neutral {
+      color: #ccc;
     }
     
     .cash{
@@ -294,9 +330,6 @@
     .danger-btn{ background:#c82333; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; }
     .danger-btn:hover{ background:#a51c2b; }
 
-    .gain{ color:#FF6B6B; }
-    .loss{ color:#84ceff; }
-
     th:last-child {
       position: relative;
     }
@@ -324,6 +357,21 @@
         right: 16px;
         padding: 10px 16px;
         font-size: 13px;
+      }
+      
+      .total-assets {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      
+      .total-assets-right {
+        align-items: flex-start;
+      }
+      
+      .performance-change {
+        justify-content: space-between;
+        width: 100%;
       }
     }
 
@@ -384,10 +432,18 @@
 
       <!-- Wallet -->
       <div class="wallet">
-        <!-- 총 자산 표시 (새로 추가) -->
+        <!-- 총 자산 표시 (성과 표시 추가) -->
         <div class="total-assets">
-          <div class="total-assets-label">💰 총 자산</div>
-          <div id="totalAssets" class="total-assets-amount">0원</div>
+          <div class="total-assets-left">
+            <div class="total-assets-label">💰 총 자산</div>
+            <div id="totalAssets" class="total-assets-amount">0원</div>
+          </div>
+          <div class="total-assets-right">
+            <div id="performanceChange" class="performance-change neutral">
+              <span id="changeAmount">±0원</span>
+            </div>
+            <div id="performancePercent" class="performance-percent neutral">0.00%</div>
+          </div>
         </div>
         
         <div class="cash">
@@ -442,6 +498,9 @@
 
   <script>
     const $ = (sel) => document.querySelector(sel);
+
+    // 초기 자본 설정 (1천만원)
+    const INITIAL_CAPITAL = 10000000;
 
     // 관리자 사용자 목록
     const adminUsers = [
@@ -522,7 +581,45 @@
       }
     }
 
-    // 총 자산 업데이트 함수
+    // 숫자 포맷팅 함수
+    const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
+    const fmtPercent = n => n.toFixed(2) + '%';
+
+    // 성과 표시 업데이트 함수
+    function updatePerformance(totalAssets) {
+      const changeAmount = totalAssets - INITIAL_CAPITAL;
+      const changePercent = ((totalAssets - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100;
+      
+      const changeAmountEl = $('#changeAmount');
+      const changePercentEl = $('#performancePercent');
+      const performanceChangeEl = $('#performanceChange');
+      
+      // 금액 변동 표시
+      if (changeAmount > 0) {
+        changeAmountEl.textContent = '+' + fmtKRW(changeAmount);
+        changePercentEl.textContent = '+' + fmtPercent(changePercent);
+        performanceChangeEl.className = 'performance-change gain';
+        changePercentEl.className = 'performance-percent gain';
+      } else if (changeAmount < 0) {
+        changeAmountEl.textContent = fmtKRW(changeAmount);
+        changePercentEl.textContent = fmtPercent(changePercent);
+        performanceChangeEl.className = 'performance-change loss';
+        changePercentEl.className = 'performance-percent loss';
+      } else {
+        changeAmountEl.textContent = '±' + fmtKRW(0);
+        changePercentEl.textContent = fmtPercent(0);
+        performanceChangeEl.className = 'performance-change neutral';
+        changePercentEl.className = 'performance-percent neutral';
+      }
+      
+      console.log('성과 업데이트:', {
+        totalAssets: fmtKRW(totalAssets),
+        changeAmount: fmtKRW(changeAmount),
+        changePercent: fmtPercent(changePercent)
+      });
+    }
+
+    // 총 자산 업데이트 함수 (성과 표시 포함)
     function updateTotalAssets() {
       // 주문 가능 금액
       const cashText = $('#cashKRW').textContent;
@@ -563,9 +660,11 @@
         totalAssets
       });
       
-      // 천단위 쉼표와 원 단위로 포맷팅
-      const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
+      // 총 자산 표시
       $('#totalAssets').textContent = fmtKRW(totalAssets);
+      
+      // 성과 표시 업데이트
+      updatePerformance(totalAssets);
     }
 
     // 전역으로 노출하여 mypage.js에서 호출할 수 있도록
@@ -597,11 +696,12 @@
         }
 
         // 주문 가능 금액 표시 (krw_balance 사용)
-        const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
         $('#cashKRW').textContent = fmtKRW(user.krw_balance || 0);
         
-        // 초기에는 주문 가능 금액만 표시 (보유 종목 로딩 전)
-        $('#totalAssets').textContent = fmtKRW(user.krw_balance || 0);
+        // 초기에는 주문 가능 금액만으로 총 자산 및 성과 표시
+        const initialAssets = user.krw_balance || 0;
+        $('#totalAssets').textContent = fmtKRW(initialAssets);
+        updatePerformance(initialAssets);
 
       }catch(err){
         console.error('Failed to fetch user data:', err);
@@ -658,6 +758,120 @@
         updateTotalAssets();
       }, 2000);
     });
+    
+    // realtime 페이지 잔고 동기화
+    (function() {
+      // realtime 페이지 잔고 값을 가져와서 적용
+      function loadRealtimeBalance() {
+        try {
+          const stored = localStorage.getItem('realtime_balance');
+          if (stored) {
+            const data = JSON.parse(stored);
+            
+            // 5분 이내 데이터만 사용
+            const age = Date.now() - data.updated_at;
+            if (age < 5 * 60 * 1000 && data.source === 'realtime_page') {
+              
+              // realtime의 available_amount 값을 그대로 사용
+              const realtimeValue = data.available_amount;
+              const cashElement = document.getElementById('cashKRW');
+              
+              if (cashElement && realtimeValue) {
+                // "0 KRW" 형태를 "0원" 형태로 변환
+                let formattedValue = realtimeValue.replace(' KRW', '원').replace('KRW', '원');
+                
+                // 숫자만 추출해서 한국어 형식으로 변환
+                const numbers = formattedValue.match(/[\d,]+/);
+                if (numbers && numbers[0]) {
+                  const numValue = parseInt(numbers[0].replace(/,/g, ''));
+                  formattedValue = numValue.toLocaleString('ko-KR') + '원';
+                }
+                
+                // 현재 값과 다를 때만 업데이트
+                const currentValue = cashElement.textContent.trim();
+                if (currentValue !== formattedValue) {
+                  // 업데이트 애니메이션
+                  cashElement.style.transition = 'all 0.3s ease';
+                  cashElement.style.transform = 'scale(1.05)';
+                  cashElement.style.color = '#00d4aa';
+                  
+                  setTimeout(() => {
+                    cashElement.textContent = formattedValue;
+                    cashElement.style.transform = 'scale(1)';
+                    cashElement.style.color = '#ffd700';
+                    
+                    // 총 자산 및 성과도 업데이트
+                    if (window.updateTotalAssets) {
+                      setTimeout(window.updateTotalAssets, 300);
+                    }
+                  }, 150);
+                  
+                  console.log('💰 realtime에서 잔고 복사됨:', formattedValue);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('realtime 잔고 로드 실패:', error);
+        }
+      }
+      
+      // BroadcastChannel로 실시간 수신
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const channel = new BroadcastChannel('realtime_balance');
+          channel.addEventListener('message', (event) => {
+            const data = event.data;
+            if (data.source === 'realtime_page') {
+              
+              const realtimeValue = data.available_amount;
+              const cashElement = document.getElementById('cashKRW');
+              
+              if (cashElement && realtimeValue) {
+                // 값 변환
+                let formattedValue = realtimeValue.replace(' KRW', '원').replace('KRW', '원');
+                const numbers = formattedValue.match(/[\d,]+/);
+                if (numbers && numbers[0]) {
+                  const numValue = parseInt(numbers[0].replace(/,/g, ''));
+                  formattedValue = numValue.toLocaleString('ko-KR') + '원';
+                }
+                
+                // 즉시 업데이트 (깜빡이 효과)
+                cashElement.style.backgroundColor = 'rgba(0, 212, 170, 0.3)';
+                cashElement.textContent = formattedValue;
+                
+                setTimeout(() => {
+                  cashElement.style.backgroundColor = '';
+                  if (window.updateTotalAssets) {
+                    window.updateTotalAssets();
+                  }
+                }, 1000);
+                
+                console.log('💰 realtime 실시간 잔고 수신:', formattedValue);
+              }
+            }
+          });
+        } catch (e) {
+          console.log('BroadcastChannel 미지원, localStorage만 사용');
+        }
+      }
+      
+      // 페이지 로드시 realtime 잔고 확인
+      loadRealtimeBalance();
+      
+      // 페이지 포커스시 realtime 잔고 확인
+      window.addEventListener('focus', loadRealtimeBalance);
+      
+      // 30초마다 realtime 잔고 확인
+      setInterval(loadRealtimeBalance, 30000);
+      
+      // localStorage 변경 감지 (다른 탭에서 realtime 사용시)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'realtime_balance' && e.newValue) {
+          loadRealtimeBalance();
+        }
+      });
+    })(); 
   </script>
   <script src="/mypage.js"></script>
 </body>
