@@ -61,6 +61,21 @@ class TradingServer {
         );
       }
 
+      // 🔧 클라이언트로부터 메시지 처리 (사용자 인증용)
+      ws.on("message", (data) => {
+        try {
+          const message = JSON.parse(data);
+
+          // 사용자 인증 처리
+          if (message.type === 'auth' && message.userId) {
+            ws.userId = message.userId;
+            console.log(`👤 사용자 인증됨 - ID: ${message.userId} (IP: ${clientIP})`);
+          }
+        } catch (error) {
+          console.error("클라이언트 메시지 처리 오류:", error);
+        }
+      });
+
       ws.on("close", () => {
         console.log(`🔌 클라이언트 연결 끊김 (IP: ${clientIP})`);
       });

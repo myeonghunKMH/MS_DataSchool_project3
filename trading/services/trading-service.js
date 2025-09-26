@@ -127,6 +127,20 @@ class TradingService {
         type
       );
 
+      // 🔧 시장가 주문 체결 시에도 알림 전송
+      if (this.ws) {
+        this.ws.broadcastOrderFillNotification(userId, {
+          orderId: `market_${Date.now()}`, // 시장가는 임시 ID 생성
+          market: market,
+          side: side,
+          executionPrice: this.KRWUtils.toInteger(finalPrice),
+          executedQuantity: finalQuantity,
+          remainingQuantity: 0,
+          totalAmount: this.KRWUtils.toInteger(totalAmount),
+          status: "filled" // 시장가는 항상 완전체결
+        });
+      }
+
       return {
         market,
         side,
