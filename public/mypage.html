@@ -180,6 +180,29 @@
 
     /* Wallet */
     .wallet{ margin-top:8px; padding-top:16px; border-top:1px dashed #616161; display:grid; gap:14px; }
+    
+    /* 총 자산 스타일 */
+    .total-assets {
+      display:flex; align-items:center; justify-content:space-between;
+      background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:14px 16px;
+      box-shadow: 
+        inset 0 1px 0 rgba(255,255,255,.1),
+        0 4px 12px rgba(0,0,0,.15);
+      margin-bottom:10px;
+    }
+    .total-assets-label {
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+    }
+    .total-assets-amount {
+      color: #00d4aa; /* 총 자산은 청록색으로 */
+      font-weight: 800;
+      font-size: 18px;
+      text-shadow: 0 0 8px rgba(0, 212, 170, 0.3);
+    }
+    
     .cash{
       display:flex; align-items:center; justify-content:space-between;
       background:rgba(255,255,255,.05);
@@ -361,6 +384,12 @@
 
       <!-- Wallet -->
       <div class="wallet">
+        <!-- 총 자산 표시 (새로 추가) -->
+        <div class="total-assets">
+          <div class="total-assets-label">💰 총 자산</div>
+          <div id="totalAssets" class="total-assets-amount">0원</div>
+        </div>
+        
         <div class="cash">
           <div>주문 가능 금액</div>
           <div id="cashKRW" class="cash-amount">0원</div>
@@ -493,6 +522,55 @@
       }
     }
 
+    // 총 자산 업데이트 함수
+    function updateTotalAssets() {
+      // 주문 가능 금액
+      const cashText = $('#cashKRW').textContent;
+      const cashAmount = parseFloat(cashText.replace(/[^\d]/g, '')) || 0;
+      
+      // 보유 종목의 평가금액 합계 계산
+      let totalHoldingsValue = 0;
+      const holdingRows = document.querySelectorAll('#holdingsBody tr');
+      
+      console.log('총 자산 계산 중...', {
+        cashAmount,
+        holdingRowsCount: holdingRows.length
+      });
+      
+      holdingRows.forEach((row, index) => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 4 && !cells[0].textContent.includes('로딩') && !cells[0].textContent.includes('보유 종목이 없습니다')) {
+          const evaluationCell = cells[3].textContent;
+          console.log(`행 ${index}: ${evaluationCell}`);
+          
+          // 평가금액에서 숫자만 추출 (원, 쉼표 제거) - 더 정확한 패턴 매칭
+          const numbers = evaluationCell.match(/[\d,]+/g);
+          if (numbers && numbers.length > 0) {
+            // 첫 번째 숫자가 평가금액
+            const value = parseFloat(numbers[0].replace(/,/g, '')) || 0;
+            totalHoldingsValue += value;
+            console.log(`  -> 추출된 값: ${value}`);
+          }
+        }
+      });
+      
+      // 총 자산 = 주문 가능 금액 + 보유 종목 평가금액
+      const totalAssets = cashAmount + totalHoldingsValue;
+      
+      console.log('총 자산 계산 결과:', {
+        cashAmount,
+        totalHoldingsValue,
+        totalAssets
+      });
+      
+      // 천단위 쉼표와 원 단위로 포맷팅
+      const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
+      $('#totalAssets').textContent = fmtKRW(totalAssets);
+    }
+
+    // 전역으로 노출하여 mypage.js에서 호출할 수 있도록
+    window.updateTotalAssets = updateTotalAssets;
+
     // 사용자 데이터 로드 및 관리자 권한 확인
     (async ()=>{
       try{
@@ -521,11 +599,65 @@
         // 주문 가능 금액 표시 (krw_balance 사용)
         const fmtKRW = n => Number(n).toLocaleString('ko-KR') + '원';
         $('#cashKRW').textContent = fmtKRW(user.krw_balance || 0);
+        
+        // 초기에는 주문 가능 금액만 표시 (보유 종목 로딩 전)
+        $('#totalAssets').textContent = fmtKRW(user.krw_balance || 0);
 
       }catch(err){
         console.error('Failed to fetch user data:', err);
       }
     })();
+    
+    // 더 강력한 보유 종목 변경 감지
+    let debounceTimer;
+    const debouncedUpdate = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        console.log('보유 종목 변경 감지됨, 총 자산 업데이트 중...');
+        updateTotalAssets();
+      }, 200);
+    };
+    
+    // MutationObserver로 테이블 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.id === 'holdingsBody' || 
+            mutation.target.closest('#holdingsBody')) {
+          debouncedUpdate();
+        }
+      });
+    });
+    
+    // 보유 종목 테이블 변경 감지
+    const holdingsBody = $('#holdingsBody');
+    if (holdingsBody) {
+      observer.observe(holdingsBody, { 
+        childList: true, 
+        subtree: true,
+        characterData: true 
+      });
+    }
+    
+    // 새로고침 버튼에 총 자산 업데이트 추가
+    document.addEventListener('DOMContentLoaded', () => {
+      const refreshBtn = $('#refreshHoldingsBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          setTimeout(() => {
+            console.log('새로고침 버튼 클릭 후 총 자산 업데이트');
+            updateTotalAssets();
+          }, 1000); // 1초 후 업데이트
+        });
+      }
+    });
+    
+    // 페이지 완전 로딩 후 총 자산 업데이트
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        console.log('페이지 로딩 완료 후 총 자산 업데이트');
+        updateTotalAssets();
+      }, 2000);
+    });
   </script>
   <script src="/mypage.js"></script>
 </body>
