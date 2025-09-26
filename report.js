@@ -169,17 +169,33 @@ module.exports = function registerReport(app) {
           realized
         };
       });
-      /* ===== 일별 거래 통계 (최근 7일) ===== */
+
+      /* ===== 일별 거래 통계 (최근 7일) - 서버 한국시간 기준 ===== */
+      // 서버가 한국시간이므로 현재 시간을 그대로 사용
+      const today = new Date();
+      const todayString = today.toISOString().slice(0, 10); // YYYY-MM-DD
+      
+      // 오늘부터 6일 전까지 (총 7일)의 날짜 배열 생성
+      const last7DaysKST = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        last7DaysKST.push(date.toISOString().slice(0, 10));
+      }
+      
+      // 날짜 범위 설정 (서버 한국시간 기준)
+      const startDay = last7DaysKST[0];
+      const endDay = last7DaysKST[last7DaysKST.length - 1];
+
       const [dailyTradeStats] = await tradingPool.query(
-        `SELECT DATE(CONVERT_TZ(t.created_at, '+00:00', '+09:00')) as day_kst,
+        `SELECT DATE(t.created_at) as day_kst,
                 COUNT(*) as trade_count
           FROM (${UNION_SQL}) t
           WHERE t.user_id=? 
-            AND t.created_at >= CONVERT_TZ(?, '+09:00', '+00:00')
-            AND t.created_at < CONVERT_TZ(?, '+09:00', '+00:00')
-          GROUP BY DATE(CONVERT_TZ(t.created_at, '+00:00', '+09:00'))
+            AND DATE(t.created_at) >= ?
+            AND DATE(t.created_at) <= ?
+          GROUP BY DATE(t.created_at)
           ORDER BY day_kst ASC`,
-        [userId, daysKST[0] + ' 00:00:00', daysKST[daysKST.length-1] + ' 23:59:59']
+        [userId, startDay, endDay]
       );
 
       // 일별 통계를 객체로 변환
@@ -188,40 +204,41 @@ module.exports = function registerReport(app) {
         dailyTradeMap[row.day_kst] = Number(row.trade_count);
       });
 
-      // 7일 전체 배열 생성 (데이터 없는 날은 0)
-      const dailyTradeCounts = daysKST.map(day => dailyTradeMap[day] || 0);
+      // 최근 7일 전체 배열 생성 (데이터 없는 날은 0)
+      const dailyTradeCounts = last7DaysKST.map(day => dailyTradeMap[day] || 0);
+
       /* ===== 응답 ===== */
       const monthlyReturnPct = openingEq_base
         ? round1(safePct((equityCurve.at(-1) ?? openingEq_base) - openingEq_base, openingEq_base))
         : 0;
 
-    res.json({
-      days: daysKST, 
-      my: {
-        monthlyTrades: trades_mtd,
-        monthlyTradesDiff: null,
+      res.json({
+        days: daysKST, 
+        my: {
+          monthlyTrades: trades_mtd,
+          monthlyTradesDiff: null,
 
-        monthlyPnL: Math.round(monthlyPnL || 0),
-        monthlyPnLDiff: null,
+          monthlyPnL: Math.round(monthlyPnL || 0),
+          monthlyPnLDiff: null,
 
-        monthlyReturnPct,
-        returnRankPctile: null,
+          monthlyReturnPct,
+          returnRankPctile: null,
 
-        topSymbols,
+          topSymbols,
 
-        equityCurve: equityCurve.map(v => (Number.isFinite(v) ? v : 0)),
-        returnSeries: returnSeries.map(round1),
+          equityCurve: equityCurve.map(v => (Number.isFinite(v) ? v : 0)),
+          returnSeries: returnSeries.map(round1),
 
-        peerAvgReturnSeries: (peerAvgReturnSeries || []).map(round1),
+          peerAvgReturnSeries: (peerAvgReturnSeries || []).map(round1),
 
-        marketReturnSeries: new Array(daysKST.length).fill(0),
+          marketReturnSeries: new Array(daysKST.length).fill(0),
 
-        recentFills,
+          recentFills,
 
-        // 새로 추가
-        dailyTradeCounts: dailyTradeCounts
-      }
-    });
+          // 새로 추가 - 최근 7일 기준으로 수정
+          dailyTradeCounts: dailyTradeCounts
+        }
+      });
     } catch (e) {
       console.error('report api error:', e);
       res.status(500).json({ error: 'Failed to build report' });
