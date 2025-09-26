@@ -141,10 +141,26 @@
     .profile-wrap{ display:flex; gap:20px; align-items:center; margin:6px 0 18px; }
     .avatar{
       width:84px; height:84px; border-radius:50%; flex:none;
-      background:#0f0f0f; border:1px solid var(--stroke);
+      background:linear-gradient(135deg, #1a1a1a, #2a2a2a);
+      border:1px solid var(--stroke);
       display:flex; align-items:center; justify-content:center;
       font-size:30px; font-weight:800; color:#bcd9ff;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.2),
+        0 4px 12px rgba(0,0,0,.3);
+      overflow: hidden;
+    }
+    .avatar img {
+      width: 70%;
+      height: 70%;
+      object-fit: contain; /* 실루엣이 잘리지 않도록 */
+      display: block;
+      filter: 
+        brightness(0) 
+        invert(1) 
+        opacity(0.85);
+      /* 검은 실루엣을 흰색으로 변환하고 약간 투명하게 */
     }
     .profile{ display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); }
     .field .label{ opacity:.7; font-size:13px; }
@@ -320,7 +336,9 @@
 
       <!-- Avatar + Basic info -->
       <div class="profile-wrap">
-        <div class="avatar" id="avatarInitial">U</div>
+        <div class="avatar" id="avatarContainer">
+          <span id="avatarInitial">U</span>
+        </div>
         <div class="profile">
           <div class="field">
             <div class="label">계정</div>
@@ -460,6 +478,21 @@
       }
     });
 
+    // 아바타 설정 함수
+    function setAvatar(gender, username) {
+      const avatarContainer = $('#avatarContainer');
+      const avatarInitial = $('#avatarInitial');
+      
+      if (gender === '남' || gender === '여') {
+        // 성별 정보가 있으면 이미지 사용
+        const imageSrc = gender === '남' ? '/images/man.jpg' : '/images/woman.jpg';
+        avatarContainer.innerHTML = `<img src="${imageSrc}" alt="${gender}성 아바타" />`;
+      } else {
+        // 성별 정보가 없으면 기존 이니셜 사용
+        avatarInitial.textContent = username.trim().charAt(0).toUpperCase() || 'U';
+      }
+    }
+
     // 사용자 데이터 로드 및 관리자 권한 확인
     (async ()=>{
       try{
@@ -473,7 +506,10 @@
         const username = user.username || '';
         
         $('#userName').textContent = username || '사용자';
-        $('#avatarInitial').textContent = username.trim().charAt(0).toUpperCase() || 'U';
+        
+        // 아바타 설정 (gender 기반)
+        setAvatar(user.gender, username);
+        
         const joined = user.created_at ? new Date(user.created_at) : new Date();
         $('#signupDate').textContent = joined.toLocaleDateString('ko-KR');
 
