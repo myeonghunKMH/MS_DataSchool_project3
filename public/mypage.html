@@ -72,8 +72,8 @@
     /* Layout */
     main{
       width:min(1100px,92vw);
-      margin:130px auto 48px;
-      display:flex; flex-direction:column; gap:22px;
+      margin:120px auto 40px;
+      display:flex; flex-direction:column; gap:20px;
       position: relative;
     }
     .pagetitle h1{
@@ -95,10 +95,10 @@
         inset 0 0 30px rgba(255,255,255,.03);
       overflow:hidden;
       transition:.28s;
-      padding:22px;
+      padding:20px;
     }
     .card::after{
-      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      content:""; position:absolute; inset:auto 0 0 0; height:40px;
       background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.08));
       pointer-events:none;
     }
@@ -109,7 +109,7 @@
     }
 
     .card h2{
-      margin:0 0 16px; font-size:20px; font-weight:800;
+      margin:0 0 14px; font-size:20px; font-weight:800;
       display:flex; align-items:center; justify-content:space-between;
     }
     .h2-left{ display:flex; align-items:center; gap:10px; }
@@ -138,13 +138,13 @@
     .menu .logout{ color:#7e7a6e; }
 
     /* Profile info */
-    .profile-wrap{ display:flex; gap:20px; align-items:center; margin:6px 0 18px; }
+    .profile-wrap{ display:flex; gap:18px; align-items:center; margin:6px 0 16px; }
     .avatar{
-      width:84px; height:84px; border-radius:50%; flex:none;
+      width:80px; height:80px; border-radius:50%; flex:none;
       background:linear-gradient(135deg, #1a1a1a, #2a2a2a);
       border:1px solid var(--stroke);
       display:flex; align-items:center; justify-content:center;
-      font-size:30px; font-weight:800; color:#bcd9ff;
+      font-size:28px; font-weight:800; color:#bcd9ff;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,.08),
         inset 0 -1px 0 rgba(0,0,0,.2),
@@ -162,7 +162,7 @@
         opacity(0.85);
       /* 검은 실루엣을 흰색으로 변환하고 약간 투명하게 */
     }
-    .profile{ display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .profile{ display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
     .field .label{ opacity:.7; font-size:13px; }
     .field .value{ font-size:17px; margin-top:2px; }
     @media (max-width:640px){ .profile{ grid-template-columns:1fr; } }
@@ -179,17 +179,17 @@
     .qbtn img{ width:18px; height:18px; display:block; }
 
     /* Wallet */
-    .wallet{ margin-top:8px; padding-top:16px; border-top:1px dashed #616161; display:grid; gap:14px; }
+    .wallet{ margin-top:6px; padding-top:14px; border-top:1px dashed #616161; display:grid; gap:12px; }
     
     /* 총 자산 스타일 - 성과 표시 추가 */
     .total-assets {
       display:flex; align-items:center; justify-content:space-between;
       background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:14px 16px;
+      border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:12px 14px;
       box-shadow: 
         inset 0 1px 0 rgba(255,255,255,.1),
         0 4px 12px rgba(0,0,0,.15);
-      margin-bottom:10px;
+      margin-bottom:8px;
     }
     .total-assets-left {
       display: flex;
@@ -255,8 +255,8 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
     }
 
-    table{ width:100%; border-collapse:collapse; font-size:15px; table-layout:fixed; }
-    th,td{ padding:12px 14px; border-bottom:1px solid #262626; text-align:left; }
+    table{ width:100%; border-collapse:collapse; font-size:14px; table-layout:fixed; }
+    th,td{ padding:10px 12px; border-bottom:1px solid #262626; text-align:left; }
     th{ background:rgba(255,255,255,.04); font-weight:700; }
     tr:last-child td{ border-bottom:none; }
 
@@ -268,13 +268,13 @@
 
     /* Bottom links */
     .actions-row{
-      width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:-4px;
+      width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:-8px;
     }
     .pill-link{
       background:rgba(255,255,255,.04);
       border:1px solid var(--stroke); color:#f2f2f2;
-      border-radius:11px; height:40px; padding:0 14px; text-decoration:none; font-weight:800;
-      display:inline-flex; align-items:center; gap:10px; transition:.24s;
+      border-radius:11px; height:36px; padding:0 12px; text-decoration:none; font-weight:800;
+      display:inline-flex; align-items:center; gap:8px; transition:.24s;
     }
     .pill-link:hover{ 
       border-color:rgba(var(--glow),.30); 
