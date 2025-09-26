@@ -16,6 +16,8 @@ export class DOMManager {
   // HTML DOM 요소 접근 및 조작 담당 클래스
   constructor() {
     this.elements = this.getElements();
+    // 알림 스택 관리를 위한 배열
+    this.activeToasts = [];
   }
 
   getElements() {
@@ -107,7 +109,7 @@ export class DOMManager {
     }
   }
 
-  // 🔧 개선된 주문 결과 표시 (체결 타입별 다른 스타일)
+  // 🔧 개선된 주문 결과 표시 (알림 스택 시스템)
   showOrderResult(message, isSuccess = true, orderType = null) {
     const toast = document.createElement("div");
 
@@ -125,9 +127,12 @@ export class DOMManager {
       borderColor = "#C84A31";
     }
 
+    // 현재 활성화된 알림들의 높이를 계산하여 위치 결정
+    const topOffset = this.calculateToastPosition();
+
     toast.style.cssText = `
       position: fixed;
-      top: 20px;
+      top: ${topOffset}px;
       right: 20px;
       background: ${backgroundColor};
       color: white;
@@ -139,7 +144,7 @@ export class DOMManager {
       z-index: 10000;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: all 0.3s ease;
       max-width: 300px;
       word-wrap: break-word;
     `;
@@ -152,20 +157,58 @@ export class DOMManager {
       toast.textContent = message;
     }
 
+    // 활성 알림 배열에 추가
+    this.activeToasts.push(toast);
+
     document.body.appendChild(toast);
 
     setTimeout(() => (toast.style.opacity = "1"), 10);
 
-    setTimeout(
-      () => {
-        toast.style.opacity = "0";
-        setTimeout(() => {
-          if (document.body.contains(toast)) {
-            document.body.removeChild(toast);
-          }
-        }, 300);
-      },
-      isSuccess ? 3000 : 4000
-    ); // 에러는 4초간 표시
+    const displayDuration = isSuccess ? 3000 : 4000;
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+        // 배열에서 제거
+        const index = this.activeToasts.indexOf(toast);
+        if (index > -1) {
+          this.activeToasts.splice(index, 1);
+        }
+        // 남은 알림들 위치 재조정
+        this.repositionToasts();
+      }, 300);
+    }, displayDuration);
+  }
+
+  // 새 알림의 위치 계산
+  calculateToastPosition() {
+    let totalHeight = 20; // 상단 여백
+
+    this.activeToasts.forEach((toast) => {
+      if (toast.offsetHeight) {
+        totalHeight += toast.offsetHeight + 10; // 알림 높이 + 여백
+      } else {
+        totalHeight += 60; // 예상 높이 (기본값)
+      }
+    });
+
+    return totalHeight;
+  }
+
+  // 기존 알림들 위치 재조정
+  repositionToasts() {
+    let currentTop = 20;
+
+    this.activeToasts.forEach((toast) => {
+      toast.style.top = `${currentTop}px`;
+      if (toast.offsetHeight) {
+        currentTop += toast.offsetHeight + 10;
+      } else {
+        currentTop += 60;
+      }
+    });
   }
 }
