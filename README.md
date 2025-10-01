@@ -1,144 +1,134 @@
-# 프로젝트 개발 및 배포 가이드
+# Bitcoin Chart Node
 
-## 1. 개요 (Overview)
+실시간 비트코인 거래 시스템
 
-이 문서는 우리 프로젝트의 개발 및 배포 절차를 안내합니다. 우리 프로젝트는 **CI/CD**가 적용된 자동화 환경을 사용합니다.
+## 개요
 
-- **CI (Continuous Integration, 지속적인 통합)**: 각 팀원이 수정한 코드를 `main` 브랜치에 통합할 때마다, 코드가 자동으로 검증되고 테스트되는 과정입니다.
-- **CD (Continuous Deployment, 지속적인 배포)**: CI를 통과한 새로운 버전의 코드가 자동으로 실제 서버에 반영(배포)되는 과정입니다.
+이 프로젝트는 WebSocket 기반의 실시간 비트코인 차트 및 거래 시스템입니다. 사용자는 실시간으로 비트코인 가격을 확인하고, 매수/매도 주문을 생성하며, 주문 매칭 엔진을 통해 거래를 체결할 수 있습니다.
 
-쉽게 말해, 우리 프로젝트는 **‘Push-to-Deploy’** 방식으로, 코드를 원격 저장소에 올리기만 하면 위 CI/CD 과정이 자동으로 실행되어 서버에 반영됩니다. 이 가이드를 통해 팀원 누구나 쉽게 코드를 수정하고, 서버에 안전하게 배포하는 방법을 익힐 수 있습니다.
+## 주요 기능
 
-## 2. 개발 환경 준비 (Prerequisites)
+- **실시간 차트**: WebSocket을 통한 실시간 비트코인 가격 업데이트
+- **주문 관리**: 매수/매도 주문 생성 및 관리
+- **자동 매칭 엔진**: 주문 간 자동 매칭 및 체결
+- **거래 내역**: 체결된 거래 이력 조회
+- **Keycloak 인증**: 안전한 사용자 인증 및 세션 관리
+- **데이터베이스 연동**: MySQL 기반 거래 데이터 저장
 
-개발에 참여하기 위해 아래 프로그램을 컴퓨터에 미리 설치해주세요.
+## 기술 스택
 
-- **Visual Studio Code**: 코드 편집기입니다. [여기에서 다운로드](https://code.visualstudio.com/)
-- **Git**: 버전 관리 시스템입니다. [여기에서 다운로드](https://git-scm.com/downloads)
+- **Backend**: Node.js, Express
+- **Database**: MySQL
+- **WebSocket**: ws
+- **Authentication**: Keycloak
+- **Frontend**: HTML, CSS, JavaScript
+- **API Communication**: Axios
 
-> **계정 안내**: 프로젝트에 참여하는 모든 팀원의 계정은 사전에 Azure DevOps에 등록되어 있습니다.
+## 프로젝트 구조
 
-## 3. 초기 설정 (Initial Setup)
-
-프로젝트에 처음 참여하는 경우, 아래 절차에 따라 코드를 컴퓨터로 내려받습니다.
-
-### 3.1. 코드 내려받기 및 인증 (Clone & Authentication)
-
-**▶️ VS Code 사용 (권장)**
-
-VS Code의 UI는 GitHub를 기본으로 보여주는 경우가 있어 혼동될 수 있습니다. 아래는 어떤 Git 저장소든 URL로 복제하는 가장 확실한 방법입니다.
-
-1.  VS Code를 엽니다.
-2.  `Ctrl+Shift+P`를 눌러 **명령 팔레트(Command Palette)**를 엽니다.
-3.  `Git: Clone`을 입력하고 Enter 키를 누릅니다.
-4.  화면 상단에 URL을 입력하는 텍스트 상자가 나타납니다. 여기에 아래 저장소 URL을 붙여넣습니다.
-    -   `https://dev.azure.com/1dt021/1dt-team1-final/_git/itc`
-5.  **(중요) 인증**: 이 과정에서 인증을 요청하는 브라우저 창이 나타날 수 있습니다. Azure DevOps에 등록된 본인의 Microsoft 계정으로 로그인하여 인증을 완료해주세요.
-6.  인증이 완료되면 코드를 저장할 내 컴퓨터의 폴더를 선택합니다.
-7.  복제가 완료되면 우측 하단에 뜨는 "Open Repository" 버튼을 눌러 프로젝트를 엽니다.
-
-**▶️ CLI 사용 (선택)**
-```bash
-# 아래 명령어를 실행하면 인증 절차가 진행됩니다.
-git clone "https://dev.azure.com/1dt021/1dt-team1-final/_git/itc"
+```
+bitcoin-chart-node/
+├── src/
+│   ├── js/
+│   │   └── app.js              # 메인 서버 애플리케이션
+│   ├── managers/
+│   │   ├── database-manager.js  # 데이터베이스 관리
+│   │   └── websocket-manager.js # WebSocket 연결 관리
+│   ├── services/
+│   │   ├── trading-service.js   # 거래 로직
+│   │   └── order-matching-engine.js # 주문 매칭 엔진
+│   ├── routes/
+│   │   └── api-router.js        # REST API 라우터
+│   ├── utils/
+│   │   ├── validation-utils.js  # 유효성 검사
+│   │   └── krw-utils.js         # 원화 관련 유틸리티
+│   └── config.js                # 설정 파일
+├── public/                      # 정적 파일 (HTML, CSS, JS)
+├── trading/
+│   └── managers/
+│       └── database-manager.js  # 거래 데이터베이스 관리
+├── database.js                  # 데이터베이스 연결
+├── email.js                     # 이메일 기능
+├── keycloak-config.js           # Keycloak 설정
+└── server.js                    # 서버 진입점
 ```
 
-## 4. 일일 개발 절차 (Daily Workflow)
+## 시작하기
 
-일상적인 코드 수정 및 배포 절차입니다.
+### 사전 요구사항
 
-### 4.1. 코드 수정 및 커밋 (저장)
+- Node.js (v14 이상)
+- MySQL
+- Keycloak 서버
 
-코드를 수정한 후, 변경 이력을 남기기 위해 "커밋"을 수행합니다.
+### 설치
 
-**▶️ VS Code 사용 (권장)**
-1.  VS Code 왼쪽의 **Source Control** 탭(가지 모양 아이콘)을 엽니다.
-2.  'Changes' 목록에 나타난 수정된 파일들 옆의 **`+`** 아이콘을 눌러 모든 변경사항을 스테이징(Staging)합니다.
-3.  상단의 'Message' 입력란에 **어떤 작업을 했는지 요약**하여 커밋 메시지를 작성합니다.
-4.  상단의 **체크 ✔️ 아이콘 (Commit)** 버튼을 누릅니다.
-
-**▶️ CLI 사용 (선택)**
 ```bash
-# 모든 변경사항을 스테이징
-git add .
-
-# 커밋 메시지와 함께 커밋
-git commit -m "Feat: 로그인 기능 추가"
+# 의존성 설치
+npm install
 ```
 
-### 4.2. 자동 배포 실행 (Push)
+### 환경 변수 설정
 
-내 컴퓨터에 저장된 커밋을 Azure DevOps 원격 저장소로 업로드하면, CI/CD 파이프라인이 자동으로 배포를 시작합니다.
+프로젝트 루트에 `.env` 파일을 생성하고 다음 정보를 입력하세요:
 
-**▶️ VS Code 사용 (권장)**
-1.  VS Code 좌측 하단의 파란색 상태 바에 있는 **'Sync Changes' 🔄 버튼**을 클릭합니다.
-2.  이 버튼은 원격 저장소의 최신 코드를 받아오는 동시에(Pull), 내 커밋을 업로드(Push)하여 가장 안전하고 편리합니다.
+```env
+# Database
+DB_HOST=your_database_host
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_NAME=your_database_name
 
-**▶️ CLI 사용 (선택)**
-```bash
-git push origin main
+# Keycloak
+KEYCLOAK_URL=your_keycloak_url
+KEYCLOAK_REALM=your_realm
+KEYCLOAK_CLIENT_ID=your_client_id
+KEYCLOAK_CLIENT_SECRET=your_client_secret
+
+# Server
+PORT=3000
 ```
 
-## 5. 환경 변수 관리 (Azure Key Vault)
+### 실행
 
-**중요:** 이 프로젝트는 보안을 위해 `.env` 파일을 Git 저장소에 포함시키지 않습니다. 모든 환경 변수(API 키, DB 접속 정보 등)는 Azure의 **itc-kv** Key Vault에서 중앙 관리됩니다.
-
-새로운 환경 변수를 코드에 추가하거나 기존 변수의 쓰임새를 변경하는 경우, 해당 코드를 `Push`하기 전에 **반드시 Key Vault의 값을 먼저 수정해야 합니다.** 이 절차를 생략하면 자동 배포(CD) 과정에서 에러가 발생하거나, 배포된 애플리케이션이 오작동하게 됩니다.
-
-### Key Vault 시크릿 추가 및 수정 방법
-
-1.  [Azure Portal](https://portal.azure.com/)에 로그인합니다.
-2.  상단 검색창에서 `Key Vaults`를 검색하고, 목록에서 **`itc-kv`**를 선택합니다.
-3.  왼쪽 메뉴에서 **Secrets** 탭으로 이동합니다.
-
-#### 새 변수 추가하기
-1.  상단의 **+ Generate/Import** 버튼을 클릭합니다.
-2.  **Name** — 변수 이름을 입력합니다. (예: `NEW_FEATURE_FLAG`)
-3.  **Value** — 변수에 해당하는 값을 입력합니다.
-4.  **Create** 버튼을 눌러 생성을 완료합니다.
-
-#### 기존 변수 값 수정하기
-1.  Secrets 목록에서 수정하고 싶은 변수를 클릭합니다.
-2.  해당 변수의 상세 페이지에서 **+ New Version** 버튼을 클릭합니다.
-3.  **Value**에 새로운 값을 입력합니다.
-4.  **Create** 버튼을 눌러 업데이트를 완료합니다. (이전 버전은 비활성화됩니다)
-
-## 6. CI/CD 자동화 프로세스 상세
-
-`Push` 이후에 Azure DevOps에서 일어나는 일들입니다.
-
--   **1단계 (코드 통합 - CI)**: 개발자가 올린 코드를 `main` 브랜치의 기존 코드와 합칩니다. 이때 간단한 자동 검사를 수행합니다.
--   **2단계 (빌드)**: 통합된 코드를 서버에서 실행될 수 있는 하나의 완성된 프로그램(**Docker 이미지**)으로 만듭니다.
--   **3단계 (배포 - CD)**: 완성된 프로그램을 실제 서버(AKS)에 전달하여, 기존에 실행되던 구버전 프로그램을 중단 없이 새로운 버전으로 교체합니다.
-
-## 7. 실수 되돌리기 및 주요 명령어
-
-### 7.1. Push 하기 전의 변경사항 취소
-
-커밋은 했지만 아직 Push 하지 않은 경우, 방금 한 커밋을 취소할 수 있습니다.
-
-**▶️ VS Code 사용 (권장)**
-1.  `Ctrl+Shift+P`를 눌러 명령 팔레트를 엽니다.
-2.  `Git: Undo Last Commit`을 입력하고 선택합니다.
-3.  마지막 커밋이 취소되고, 변경된 파일들은 다시 'Changes' 목록으로 돌아옵니다.
-
-**▶️ CLI 사용 (선택)**
 ```bash
-# 마지막 커밋을 취소 (변경 내용은 보존)
-git reset HEAD~1
+# 서버 시작
+npm start
 ```
 
-### 7.2. 배포된 변경사항 되돌리기 (롤백)
+서버는 기본적으로 `http://localhost:3000`에서 실행됩니다.
 
-이미 Push 하여 배포까지 완료된 변경사항을 되돌려야 할 때 사용합니다. **이 작업은 기록을 남기고 안전하게 실행하기 위해 CLI 사용을 권장합니다.**
+## API 엔드포인트
 
-1.  터미널을 열고 `git log --oneline`을 실행하여 되돌리고 싶은 커밋의 **커밋 ID** (예: `a1b2c3d`)를 찾습니다.
-2.  `git revert [커밋 ID]` 명령어를 실행합니다.
-    -   예: `git revert a1b2c3d`
-3.  새로운 커밋 메시지 창이 나타나면 그대로 저장하고 닫습니다. (`:wq` 입력 후 엔터)
-4.  `git push origin main`을 실행하여 '되돌리기 커밋'을 업로드합니다.
-    -   이 작업은 기존 내용을 지우는 게 아니라, "A를 취소하는 B"라는 새로운 커밋을 만들어 이력을 남기는 안전한 방법입니다.
+### 주문 관리
+- `POST /api/orders` - 새 주문 생성
+- `GET /api/orders` - 주문 목록 조회
+- `DELETE /api/orders/:id` - 주문 취소
 
-### 7.3. ⚠️ 주의사항: `git push --force`
+### 거래 내역
+- `GET /api/trades` - 체결된 거래 내역 조회
 
-이 명령어는 원격 저장소의 이력을 강제로 덮어쓰기 때문에 다른 팀원의 작업 내용을 유실시킬 수 있는 매우 위험한 명령어입니다. **`main` 브랜치에서는 절대 사용하지 마세요.**
+### 사용자
+- `GET /api/user` - 사용자 정보 조회
+- `GET /api/balance` - 잔액 조회
+
+## WebSocket 이벤트
+
+### 클라이언트 → 서버
+- `subscribe` - 실시간 데이터 구독
+- `createOrder` - 주문 생성
+- `cancelOrder` - 주문 취소
+
+### 서버 → 클라이언트
+- `priceUpdate` - 가격 업데이트
+- `orderUpdate` - 주문 상태 업데이트
+- `tradeExecuted` - 거래 체결 알림
+- `balanceUpdate` - 잔액 업데이트
+
+## 개발
+
+자세한 개발 및 배포 가이드는 [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md)를 참고하세요.
+
+## 라이선스
+
+ISC
