@@ -2,7 +2,7 @@
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
-const db = require("./services/database.js");
+const db = require("../config/database.js");
 
 // 설정값 - 통합된 설정 사용
 const CONFIG = {

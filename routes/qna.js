@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
-const { qnaPool } = require("./services/database.js");
-const { keycloak } = require("./services/keycloak-config.js");
+const { qnaPool } = require("../config/database.js");
+const { keycloak } = require("../config/keycloak.js");
 
 // ---------------------- 헬퍼 (기존 로직 그대로) ----------------------
 function getTokenContent(req) {

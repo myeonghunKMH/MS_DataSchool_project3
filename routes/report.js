@@ -1,8 +1,8 @@
 // report.js — 최근 15일(그래프), 월(MTD) KPI, MtM(일봉) + 오늘 현재가 반영, 월 실현손익(FIFO),
 // 피어 평균 수익률: 이상치 클리핑(±300%) + 상하 10% 트림 평균(로버스트)
 const axios = require('axios');
-const { keycloak } = require("./services/keycloak-config.js");
-const { tradingPool } = require("./services/database.js");
+const { keycloak } = require("../config/keycloak.js");
+const { tradingPool } = require("../config/database.js");
 
 const INIT_CASH = Number(process.env.INIT_CASH || 10_000_000); // 초기 현금(백테스트/기본값)
 const MS9H = 9 * 60 * 60 * 1000;

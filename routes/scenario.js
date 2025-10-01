@@ -1,4 +1,4 @@
-const { pool } = require("./services/database.js"); // 필요 시 ./services/db.js 등으로 경로 변경
+const { pool } = require("../config/database.js");
 
 module.exports = function registerScenarioRoutes(app) {
 

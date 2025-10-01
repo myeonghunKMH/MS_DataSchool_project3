@@ -10,14 +10,14 @@ const session = require("express-session");
 const crypto = require("crypto");
 const path = require("path");
 const bcrypt = require("bcryptjs");
-const { keycloak, memoryStore } = require("./services/keycloak-config.js");
+const { keycloak, memoryStore } = require("./config/keycloak.js");
 
-const db = require("./services/database.js");
+const db = require("./config/database.js");
 // 메인(크립토) DB 풀
 const pool = db.pool;
 // QnA 전용 풀
-const { qnaPool } = require("./services/database.js");
-const { sendDeletionConfirmationEmail } = require("./services/email.js");
+const { qnaPool } = require("./config/database.js");
+const { sendDeletionConfirmationEmail } = require("./utils/email.js");
 const mysql = require("mysql2");
 
 // ===== Azure MySQL (뉴스 DB) 연결 설정 =====
@@ -231,7 +231,7 @@ app.get("/api/health", async (req, res) => {
 });
 
 // ===== qna 라우트 연결 =====
-const registerQnaRoutes = require('./qna');
+const registerQnaRoutes = require('./routes/qna');
 registerQnaRoutes(app);
 
 // ===== 실시간 거래 모듈 연결 =====
@@ -265,11 +265,11 @@ try {
 }
 
 // ===== 시나리오 라우트 연결 =====
-const registerScenarioRoutes = require("./scenario");
+const registerScenarioRoutes = require("./routes/scenario");
 registerScenarioRoutes(app);
 
 // ===== 실시간 기능 연결 =====
-const registerRealtime = require("./realtime");
+const registerRealtime = require("./routes/realtime");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
@@ -291,17 +291,17 @@ if (tradingWebSocketManager === null) {
 const realtimeDisposer = registerRealtime(app, wss);
 
 // ===== 뉴스 라우트 연결 =====
-const registerNews = require("./news");
+const registerNews = require("./routes/news");
 registerNews(app, newsDbConnection);
 
 // ===== 리포트 라우트 연결 =====
-const registerReport = require("./report");
+const registerReport = require("./routes/report");
 registerReport(app);
 
 // ===== 보유자산(마이페이지) 라우트 연결 =====
-const registerHoldings = require("./services/holdings");
+const registerHoldings = require("./routes/holdings");
 registerHoldings(app);
-app.use('/mypage.js', express.static(path.join(__dirname, 'mypage.js')));
+app.use('/mypage.js', express.static(path.join(__dirname, 'routes', 'mypage.js')));
 
 
 // ===== AI 챗봇 프록시 =====
