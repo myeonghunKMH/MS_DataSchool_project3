@@ -1,4 +1,4 @@
-# Bitcoin Chart Node
+# Project ITC
 
 실시간 비트코인 거래 시스템
 
