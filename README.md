@@ -84,11 +84,16 @@
 
 ```
 server.js
-  ├── realtime.js (실시간 거래)
-  ├── scenario.js (과거 시나리오)
-  ├── report.js (리포트)
-  ├── news.js (뉴스)
-  ├── qna.js (커뮤니티)
+  ├── routes/
+  │   ├── realtime.js (실시간 거래)
+  │   ├── scenario.js (과거 시나리오)
+  │   ├── report.js (리포트)
+  │   ├── news.js (뉴스)
+  │   ├── qna.js (커뮤니티)
+  │   ├── holdings.js (보유자산)
+  │   └── mypage.js (마이페이지)
+  ├── config/ (설정 파일)
+  ├── utils/ (유틸리티)
   └── trading/ (주문 처리 + 매칭 엔진)
 ```
 
@@ -99,19 +104,34 @@ server.js
 ```
 bitcoin-chart-node/
 ├── server.js                  # 메인 진입점
-├── services/                  # DB, Email, Keycloak
+├── config/                    # 설정 파일 통합
+│   ├── database.js            # DB 연결 설정
+│   ├── keycloak.js            # Keycloak 인증 설정
+│   └── index.js               # 기타 설정
+├── routes/                    # 라우터 모듈
+│   ├── realtime.js            # 실시간 거래
+│   ├── scenario.js            # 과거 시나리오
+│   ├── report.js              # 투자 리포트
+│   ├── news.js                # 뉴스
+│   ├── qna.js                 # QnA 커뮤니티
+│   ├── holdings.js            # 보유자산
+│   └── mypage.js              # 마이페이지
+├── utils/                     # 유틸리티 함수
+│   ├── email.js               # 이메일 발송
+│   └── price-cache.js         # 가격 캐싱
 ├── trading/                   # 거래 핵심 로직
 │   ├── services/              # 주문 처리, 매칭 엔진
 │   ├── managers/              # DB, WebSocket 관리
 │   └── routes/                # REST API
-├── public/                    # HTML, CSS, JS
+├── public/                    # 정적 파일 (HTML, CSS, JS)
 │   ├── realtime.html
-│   ├── scenarios/
-│   ├── crypto.html (AI 챗봇)
+│   ├── crypto.html            # AI 챗봇
 │   ├── news.html
 │   ├── report.html
 │   ├── qna.html
 │   └── mypage.html
+├── database/                  # DB 스키마/마이그레이션
+├── k8s/                       # Kubernetes 배포 설정
 └── DEVELOPMENT_GUIDE.md       # 개발/배포 가이드
 ```
 
